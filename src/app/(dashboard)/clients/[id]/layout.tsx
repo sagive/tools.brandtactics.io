@@ -1,14 +1,14 @@
 "use client";
 
-import React from "react";
-
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, CheckCircle2, Trash2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Trash2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
 export default function ClientLayout({
   children,
@@ -27,6 +27,34 @@ export default function ClientLayout({
     { href: `/clients/${clientId}/emails`, label: "Email Updates" },
   ];
 
+  const [formData, setFormData] = useState({
+    name: "Acme Corp",
+    website: "acme.com",
+    contactName: "Jane Doe",
+    contactEmail: "jane@acme.com",
+    contactPhone: "+1 (555) 123-4567",
+    type: "Retainer",
+    monthlyFee: "2500"
+  });
+  const [isDirty, setIsDirty] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setIsDirty(true);
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    // Simulate API call
+    await new Promise(r => setTimeout(r, 600));
+    setIsSaving(false);
+    setIsDirty(false);
+    toast.success("Client details updated successfully.");
+  };
+
+  const inputClasses = "h-auto px-2 py-1 -ml-2 w-full bg-transparent hover:bg-gray-50 border-transparent hover:border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-gray-900 shadow-none";
+
   return (
     <div className="space-y-6 pb-10">
       
@@ -37,61 +65,90 @@ export default function ClientLayout({
           Lobby
         </Link>
         <span className="mx-2">/</span>
-        <span className="text-gray-900">Acme Corp</span>
+        <span className="text-gray-900">{formData.name}</span>
       </div>
 
       <div className="flex flex-col xl:flex-row gap-6">
         
         {/* Left Sidebar: Client Info Card */}
         <div className="w-full xl:w-72 shrink-0 space-y-4">
-          <Card className="shadow-sm border-t-4 border-t-blue-600">
+          <Card className="shadow-sm border-t-4 border-t-blue-600 relative overflow-hidden">
+            {isDirty && (
+               <div className="absolute top-0 inset-x-0 h-1 bg-yellow-400 animate-pulse" />
+            )}
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xl">
-                  AC
+                <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xl shrink-0">
+                  {formData.name.substring(0,2).toUpperCase()}
                 </div>
-                <div className="bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
+                <div className="bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 shrink-0">
                   <CheckCircle2 className="w-3 h-3" />
                   Active
                 </div>
               </div>
 
-              <h2 className="text-xl font-bold tracking-tight mb-1">Acme Corp</h2>
-              <a href="https://acme.com" target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline block mb-6">
-                acme.com
-              </a>
+              <div className="mb-6 space-y-1">
+                 <Input 
+                   name="name" 
+                   value={formData.name} 
+                   onChange={handleChange} 
+                   className={cn(inputClasses, "text-xl font-bold tracking-tight h-10")} 
+                 />
+                 <div className="flex items-center">
+                   <span className="text-gray-400 text-sm pl-2">https://</span>
+                   <Input 
+                     name="website" 
+                     value={formData.website} 
+                     onChange={handleChange} 
+                     className={cn(inputClasses, "text-sm text-blue-600 border-none font-normal pl-0 ml-0 hover:bg-transparent placeholder:text-gray-300")} 
+                   />
+                 </div>
+              </div>
 
               <div className="space-y-4 text-sm">
                 <div>
-                  <div className="text-gray-500 font-medium text-xs uppercase tracking-wider mb-1">Primary Contact</div>
-                  <div className="font-medium">Jane Doe</div>
-                  <a href="mailto:jane@acme.com" className="text-gray-500 hover:text-blue-600 truncate block">jane@acme.com</a>
-                  <div className="text-gray-500">+1 (555) 123-4567</div>
+                  <div className="text-gray-500 font-medium text-xs uppercase tracking-wider mb-1 px-2">Primary Contact</div>
+                  <Input name="contactName" value={formData.contactName} onChange={handleChange} className={inputClasses} placeholder="Contact Name" />
+                  <Input name="contactEmail" value={formData.contactEmail} onChange={handleChange} className={cn(inputClasses, "text-gray-500 font-normal")} placeholder="Email Address" />
+                  <Input name="contactPhone" value={formData.contactPhone} onChange={handleChange} className={cn(inputClasses, "text-gray-500 font-normal")} placeholder="Phone Number" />
                 </div>
 
                 <div className="h-px bg-gray-100" />
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <div className="text-gray-500 font-medium text-xs uppercase tracking-wider mb-1">Type</div>
-                    <div className="font-medium">Retainer</div>
+                    <div className="text-gray-500 font-medium text-xs uppercase tracking-wider mb-1 px-2">Type</div>
+                    <Input name="type" value={formData.type} onChange={handleChange} className={inputClasses} />
                   </div>
                   <div>
-                    <div className="text-gray-500 font-medium text-xs uppercase tracking-wider mb-1">Monthly Fee</div>
-                    <div className="font-medium">$2,500</div>
+                    <div className="text-gray-500 font-medium text-xs uppercase tracking-wider mb-1 px-2">Fee/mo ($)</div>
+                    <Input name="monthlyFee" type="number" value={formData.monthlyFee} onChange={handleChange} className={inputClasses} />
                   </div>
                 </div>
 
                 <div className="h-px bg-gray-100" />
 
                 <div>
-                  <div className="text-gray-500 font-medium text-xs uppercase tracking-wider mb-2">Basic Tools</div>
-                  <ul className="space-y-1 text-gray-700 list-disc pl-4 marker:text-blue-600">
+                  <div className="text-gray-500 font-medium text-xs uppercase tracking-wider mb-2 px-2">Basic Tools</div>
+                  <ul className="space-y-1 text-gray-700 list-disc pl-4 marker:text-blue-600 px-2 mt-2">
                     <li>Google Analytics</li>
                     <li>Google Search Console</li>
                     <li>Ahrefs Tracker</li>
                   </ul>
                 </div>
+
+                {isDirty && (
+                  <div className="pt-4 mt-4 border-t border-gray-100">
+                     <Button 
+                       onClick={handleSave} 
+                       disabled={isSaving}
+                       className="w-full bg-green-600 hover:bg-green-700 text-white"
+                     >
+                        <Save className="w-4 h-4 mr-2" />
+                        {isSaving ? "Saving..." : "Save Changes"}
+                     </Button>
+                  </div>
+                )}
 
                 <div className="h-px bg-gray-100" />
                 
