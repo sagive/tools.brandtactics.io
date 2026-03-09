@@ -119,7 +119,7 @@ export default function ClientLayout({
         
         {/* Left Sidebar: Client Info Card */}
         <div className="w-full xl:w-72 shrink-0 space-y-4">
-          <Card className="shadow-sm border-t-4 border-t-blue-600 relative overflow-hidden">
+          <Card className="shadow-sm relative overflow-hidden">
             {isDirty && (
                <div className="absolute top-0 inset-x-0 h-1 bg-yellow-400 animate-pulse" />
             )}

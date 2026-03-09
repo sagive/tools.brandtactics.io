@@ -92,9 +92,9 @@ export default function GlobalTasksPage() {
       </div>
 
       <div className="space-y-6">
-        <TaskSection title="Pending & In Progress" tasks={pending} headerColor="border-l-4 border-blue-500" />
-        <TaskSection title="Need Help / Stuck" tasks={stuck} headerColor="border-l-4 border-red-500" />
-        <TaskSection title="Completed" tasks={completed} headerColor="border-l-4 border-green-500" />
+        <TaskSection title="Pending & In Progress" tasks={pending} />
+        <TaskSection title="Need Help / Stuck" tasks={stuck} />
+        <TaskSection title="Completed" tasks={completed} />
         
         {filteredTasks.length === 0 && (
            <div className="text-center py-10 text-gray-500 bg-white border rounded-lg border-dashed">
@@ -106,12 +106,12 @@ export default function GlobalTasksPage() {
   );
 }
 
-function TaskSection({ title, tasks, headerColor }: { title: string, tasks: any[], headerColor: string }) {
+function TaskSection({ title, tasks }: { title: string, tasks: any[] }) {
   if (tasks.length === 0) return null;
 
   return (
     <Card className="overflow-hidden shadow-sm">
-      <div className={`bg-gray-50/80 px-4 py-3 border-b font-medium text-gray-900 ${headerColor}`}>
+      <div className="bg-gray-50/80 px-4 py-3 border-b font-medium text-gray-900">
         {title} ({tasks.length})
       </div>
       <div className="divide-y divide-gray-100">
