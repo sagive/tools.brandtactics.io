@@ -9,7 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Send, Blocks, ChartNoAxesCombined, MousePointerClick, TrendingUp } from "lucide-react";
+import { Send, Blocks, ChartNoAxesCombined, MousePointerClick, TrendingUp, Search } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import Link from "next/link";
+import { useEffect } from "react";
 
 // Tools Mock Data
 const TOOLS = [
@@ -36,8 +39,23 @@ export default function DashboardPage() {
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [filter, setFilter] = useState("All");
+  
+  const [clients, setClients] = useState<any[]>([]);
+  const [clientSearch, setClientSearch] = useState("");
+
+  useEffect(() => {
+    async function fetchClients() {
+      const { data } = await supabase.from("clients").select("id, name, contact_email").order("name");
+      if (data) setClients(data);
+    }
+    fetchClients();
+  }, []);
 
   const filteredTools = filter === "All" ? TOOLS : TOOLS.filter(t => t.category === filter);
+  
+  const filteredWidgetClients = clients
+    .filter(c => (c.name || "").toLowerCase().includes(clientSearch.toLowerCase()))
+    .slice(0, 15);
 
   const handleSendUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,11 +88,55 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Email Form Section */}
-        <div className="lg:col-span-1">
+        {/* Left Column */}
+        <div className="lg:col-span-1 space-y-6">
+          
+          {/* Active Clients Mini-Widget */}
           <Card className="shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg">Send SEO Update to Client</CardTitle>
+            <CardHeader className="pb-3 border-b">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Clients</CardTitle>
+                <Link href="/clients" className="text-xs text-blue-600 hover:underline">View All</Link>
+              </div>
+              <div className="relative mt-2">
+                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-500" />
+                <Input
+                  placeholder="Search clients..."
+                  className="pl-8 h-8 text-sm bg-gray-50/50"
+                  value={clientSearch}
+                  onChange={(e) => setClientSearch(e.target.value)}
+                />
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="max-h-[260px] overflow-y-auto">
+                <ul className="divide-y divide-gray-100">
+                  {filteredWidgetClients.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-gray-500">No clients found.</div>
+                  ) : (
+                    filteredWidgetClients.map(client => (
+                      <li key={client.id} className="p-3 hover:bg-gray-50 transition-colors">
+                        <Link href={`/clients/${client.id}`} className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-xs shrink-0">
+                            {(client.name || "UN").substring(0, 2).toUpperCase()}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-medium text-gray-900 truncate">{client.name}</div>
+                            {client.contact_email && <div className="text-xs text-gray-500 truncate">{client.contact_email}</div>}
+                          </div>
+                        </Link>
+                      </li>
+                    ))
+                  )}
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Email Form Section */}
+          <Card className="shadow-sm">
+            <CardHeader className="pb-4 border-b mb-4">
+              <CardTitle className="text-lg">Send SEO Update</CardTitle>
               <CardDescription>Rapidly send status updates and reports.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -86,9 +148,9 @@ export default function DashboardPage() {
                       <SelectValue placeholder="Select shortcode/client" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Acme Corp</SelectItem>
-                      <SelectItem value="2">Globex</SelectItem>
-                      <SelectItem value="3">Initech</SelectItem>
+                      {clients.map(client => (
+                        <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
