@@ -7,7 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -111,6 +112,9 @@ function TaskSection({ title, tasks, headerColor }: { title: string, tasks: any[
               </Badge>
               <Button variant="ghost" size="sm" className="hidden sm:inline-flex text-gray-400 hover:text-blue-600">
                 Edit
+              </Button>
+              <Button variant="ghost" size="sm" className="hidden sm:inline-flex text-red-400 hover:text-red-600 hover:bg-red-50" onClick={() => toast.success("Task deleted.")}>
+                <Trash2 className="w-4 h-4" />
               </Button>
             </div>
           </div>

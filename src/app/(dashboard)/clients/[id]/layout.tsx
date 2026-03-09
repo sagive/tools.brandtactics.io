@@ -6,7 +6,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function ClientLayout({
   children,
@@ -26,7 +28,7 @@ export default function ClientLayout({
   ];
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-10">
+    <div className="space-y-6 pb-10">
       
       {/* Breadcrumb / Back Navigation */}
       <div className="flex items-center text-sm text-gray-500 font-medium">
@@ -95,6 +97,12 @@ export default function ClientLayout({
                 
                 <div className="text-xs text-gray-400 text-center">
                   Joined Oct 12, 2023
+                </div>
+                
+                <div className="pt-4 mt-4 border-t border-gray-100">
+                  <Button variant="outline" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200" onClick={() => toast.success("Client deleted.")}>
+                    <Trash2 className="w-4 h-4 mr-2" /> Delete Client
+                  </Button>
                 </div>
               </div>
             </CardContent>
