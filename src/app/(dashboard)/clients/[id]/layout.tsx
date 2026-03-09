@@ -9,6 +9,7 @@ import { ArrowLeft, CheckCircle2, Trash2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/lib/supabase";
 
 export default function ClientLayout({
   children,
@@ -28,16 +29,41 @@ export default function ClientLayout({
   ];
 
   const [formData, setFormData] = useState({
-    name: "Acme Corp",
-    website: "acme.com",
-    contactName: "Jane Doe",
-    contactEmail: "jane@acme.com",
-    contactPhone: "+1 (555) 123-4567",
-    type: "Retainer",
-    monthlyFee: "2500"
+    name: "",
+    website: "",
+    contactName: "",
+    contactEmail: "",
+    contactPhone: "",
+    type: "",
+    monthlyFee: ""
   });
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    async function getClient() {
+      const { data, error } = await supabase
+        .from("clients")
+        .select("*")
+        .eq("id", clientId)
+        .single();
+        
+      if (data) {
+        setFormData({
+          name: data.name || "",
+          website: data.website || "",
+          contactName: "", // Add these columns to schema if needed, or map them if existing
+          contactEmail: data.contact_email || "",
+          contactPhone: data.contact_phone || "",
+          type: data.type || "",
+          monthlyFee: data.monthly_fee ? data.monthly_fee.toString() : ""
+        });
+      }
+      setIsLoading(false);
+    }
+    getClient();
+  }, [clientId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -46,14 +72,35 @@ export default function ClientLayout({
 
   const handleSave = async () => {
     setIsSaving(true);
-    // Simulate API call
-    await new Promise(r => setTimeout(r, 600));
+    
+    const { error } = await supabase
+      .from("clients")
+      .update({
+        name: formData.name,
+        website: formData.website,
+        contact_email: formData.contactEmail,
+        contact_phone: formData.contactPhone,
+        type: formData.type,
+        monthly_fee: parseInt(formData.monthlyFee) || 0
+      })
+      .eq("id", clientId);
+
     setIsSaving(false);
+    
+    if (error) {
+      toast.error("Failed to save: " + error.message);
+      return;
+    }
+    
     setIsDirty(false);
     toast.success("Client details updated successfully.");
   };
 
   const inputClasses = "h-auto px-2 py-1 -ml-2 w-full bg-transparent hover:bg-gray-50 border-transparent hover:border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-gray-900 shadow-none";
+
+  if (isLoading) {
+    return <div className="p-10 flex justify-center text-gray-500">Loading client data...</div>;
+  }
 
   return (
     <div className="space-y-6 pb-10">
