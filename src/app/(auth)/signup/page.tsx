@@ -20,6 +20,12 @@ export default function SignupPage() {
     e.preventDefault();
     setLoading(true);
 
+    if (email.toLowerCase() !== "imrisagive@gmail.com") {
+      toast.error("Registrations are restricted to invited users only.");
+      setLoading(false);
+      return;
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
