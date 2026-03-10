@@ -286,29 +286,33 @@ export default function DashboardPage() {
                       {/* Right elements (Settings & Rank) */}
                       <div className="flex items-center gap-2 shrink-0">
                         <div className="relative z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-gray-600 bg-gray-50/50 hover:bg-gray-100">
-                                <SlidersHorizontal className="w-3.5 h-3.5" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <Dialog>
-                                <DialogTrigger>
-                                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs gap-2">
-                                     Edit Tool
-                                  </DropdownMenuItem>
-                                </DialogTrigger>
-                                <EditToolDialog tool={tool} onToolSaved={fetchTools} />
-                              </Dialog>
-                              <DropdownMenuItem 
-                                className="text-xs text-red-600 gap-2" 
-                                onClick={(e) => { e.stopPropagation(); handleDeleteTool(tool.id); }}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" /> Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <Dialog>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger 
+                                render={
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-gray-600 bg-gray-50/50 hover:bg-gray-100">
+                                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                                  </Button>
+                                }
+                              />
+                              <DropdownMenuContent align="end">
+                                <DialogTrigger 
+                                  render={
+                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs gap-2">
+                                       <Settings2 className="w-3.5 h-3.5" /> Edit Tool
+                                    </DropdownMenuItem>
+                                  }
+                                />
+                                <DropdownMenuItem 
+                                  className="text-xs text-red-600 gap-2" 
+                                  onClick={(e) => { e.stopPropagation(); handleDeleteTool(tool.id); }}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" /> Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                            <EditToolDialog tool={tool} onToolSaved={fetchTools} />
+                          </Dialog>
                         </div>
 
                         <div className="bg-gray-50 text-[11px] font-bold px-2 py-1 rounded border border-gray-200 text-gray-500 shadow-sm shrink-0 relative z-10 pointer-events-none">
