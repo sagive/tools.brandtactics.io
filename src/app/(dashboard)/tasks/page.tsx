@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { SortableTaskList } from "@/components/sortable-task-list";
 
 const MOCK_ALL_TASKS = [
   ...Array.from({ length: 3 }).map((_, i) => ({ id: `p${i}`, client: "Acme Corp", title: `Review Analytics ${i}`, status: "Pending", due: "2023-11-20", priority: "Medium" })),
@@ -92,9 +93,9 @@ export default function GlobalTasksPage() {
       </div>
 
       <div className="space-y-6">
-        <TaskSection title="Pending & In Progress" tasks={pending} />
-        <TaskSection title="Need Help / Stuck" tasks={stuck} />
-        <TaskSection title="Completed" tasks={completed} />
+        <SortableTaskList title="Pending & In Progress" initialTasks={pending} />
+        <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} />
+        <SortableTaskList title="Completed" initialTasks={completed} />
         
         {filteredTasks.length === 0 && (
            <div className="text-center py-10 text-gray-500 bg-white border rounded-lg border-dashed">
@@ -106,46 +107,3 @@ export default function GlobalTasksPage() {
   );
 }
 
-function TaskSection({ title, tasks }: { title: string, tasks: any[] }) {
-  if (tasks.length === 0) return null;
-
-  return (
-    <Card className="overflow-hidden shadow-sm">
-      <div className="bg-gray-50/80 px-4 py-3 border-b font-medium text-gray-900">
-        {title} ({tasks.length})
-      </div>
-      <div className="divide-y divide-gray-100">
-        {tasks.map((task) => (
-          <div key={task.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50 transition-colors cursor-pointer">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                 <p className="font-medium text-gray-900">{task.title}</p>
-                 <Badge variant="outline" className="text-xs">{task.client}</Badge>
-              </div>
-              <div className="flex gap-3 text-xs text-gray-500">
-                <span>Due: {task.due}</span>
-                <span>Priority: {task.priority}</span>
-              </div>
-            </div>
-            <div className="shrink-0 flex items-center gap-3">
-              <Badge variant={task.status === 'Completed' ? 'outline' : 'secondary'} className={
-                task.status === 'Stuck' ? 'bg-red-50 text-red-700' :
-                task.status === 'In Progress' ? 'bg-blue-50 text-blue-700' :
-                task.status === 'Completed' ? 'bg-green-50 text-green-700 border-green-200' :
-                'bg-gray-100 text-gray-700'
-              }>
-                {task.status}
-              </Badge>
-              <Button variant="ghost" size="sm" className="hidden sm:inline-flex text-gray-400 hover:text-blue-600">
-                Edit
-              </Button>
-              <Button variant="ghost" size="sm" className="hidden sm:inline-flex text-red-400 hover:text-red-600 hover:bg-red-50" onClick={() => toast.success("Task deleted.")}>
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </Card>
-  );
-}
