@@ -109,11 +109,12 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Top Row: Email Form and Clients List */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         
-        {/* Left Column: Email Form */}
-        <div className="md:col-span-3 space-y-6">
+        {/* Left: Email Form */}
+        <div className="md:col-span-4 space-y-6">
           <Card className="shadow-sm border-gray-200">
             <CardHeader className="pb-4 border-b mb-4">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -166,9 +167,9 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Center Column: Clients List */}
-        <div className="md:col-span-4 space-y-6">
-          <Card className="shadow-sm border-gray-200">
+        {/* Right: Clients List (Stretched) */}
+        <div className="md:col-span-8 space-y-6">
+          <Card className="shadow-sm border-gray-200 h-full">
             <CardHeader className="pb-3 border-b flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-lg">Clients</CardTitle>
@@ -188,7 +189,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <CardContent className="p-0">
-              <div className="max-h-[600px] overflow-y-auto">
+              <div className="max-h-[400px] overflow-y-auto">
                 <ul className="divide-y divide-gray-100">
                   {filteredWidgetClients.length === 0 ? (
                     <div className="p-8 text-center text-sm text-gray-500">No clients found.</div>
@@ -215,89 +216,89 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
 
-        {/* Right Column: Agency Tools */}
-        <div className="md:col-span-5 space-y-4">
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <h2 className="text-xl font-bold tracking-tight text-gray-900">Agency Tools</h2>
-              <p className="text-xs text-gray-500">Quick access to your workspace</p>
-            </div>
-            <Dialog>
-              <DialogTrigger>
-                <Button size="sm" variant="outline" className="h-8 gap-1.5 border-dashed border-gray-300 hover:border-blue-500">
-                  <Plus className="w-3.5 h-3.5" /> Add Tool
-                </Button>
-              </DialogTrigger>
-              <EditToolDialog onToolSaved={fetchTools} />
-            </Dialog>
+      {/* Agency Tools Row (Below) */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-gray-900">Agency Tools</h2>
+            <p className="text-xs text-gray-500">Quick access to your workspace</p>
           </div>
-
-          <Tabs defaultValue="All" value={filter} onValueChange={setFilter} className="w-full">
-            <TabsList className="bg-gray-100/80 mb-4 h-9 p-1 flex-nowrap overflow-x-auto justify-start shadow-none border-none">
-              {CATEGORIES.map(cat => (
-                 <TabsTrigger key={cat} value={cat} className="text-xs data-[state=active]:bg-white whitespace-nowrap px-4 tracking-tight shadow-none">
-                   {cat}
-                 </TabsTrigger>
-              ))}
-            </TabsList>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {filteredTools.length === 0 ? (
-                <div className="col-span-full py-12 text-center border-2 border-dashed rounded-xl bg-gray-50/50">
-                   <LayoutGrid className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                   <p className="text-sm text-gray-500">No tools found for this category.</p>
-                </div>
-              ) : (
-                filteredTools.map((tool) => {
-                  const styles = CATEGORY_STYLES[tool.category] || CATEGORY_STYLES.Other;
-                  return (
-                    <Card key={tool.id} className="group relative overflow-hidden hover:shadow-lg transition-all border-gray-200">
-                      <div className="p-4 flex flex-col items-center text-center space-y-3">
-                        <div className={`p-3.5 rounded-2xl ${styles.bg} ${styles.color} transition-transform group-hover:scale-105 group-hover:rotate-3`}>
-                          <IconRenderer name={tool.icon_name} className="w-7 h-7" />
-                        </div>
-                        <div className="min-w-0">
-                          <h3 className="font-bold text-gray-900 text-sm truncate">{tool.name}</h3>
-                          <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 mt-0.5">{tool.category}</p>
-                        </div>
-                        <div className="flex items-center gap-2 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="outline" size="sm" className="h-7 px-3 text-[11px] rounded-lg shadow-sm">
-                            <a href={tool.url} target="_blank" rel="noopener noreferrer">Open</a>
-                          </Button>
-                          
-                          <DropdownMenu>
-                            <DropdownMenuTrigger>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400">
-                                <Settings2 className="w-3.5 h-3.5" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <Dialog>
-                                <DialogTrigger>
-                                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs gap-2">
-                                     Edit Tool
-                                  </DropdownMenuItem>
-                                </DialogTrigger>
-                                <EditToolDialog tool={tool} onToolSaved={fetchTools} />
-                              </Dialog>
-                              <DropdownMenuItem 
-                                className="text-xs text-red-600 gap-2" 
-                                onClick={() => handleDeleteTool(tool.id)}
-                              >
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                    </Card>
-                  );
-                })
-              )}
-            </div>
-          </Tabs>
+          <Dialog>
+            <DialogTrigger>
+              <Button size="sm" variant="outline" className="h-8 gap-1.5 border-dashed border-gray-300 hover:border-blue-500">
+                <Plus className="w-3.5 h-3.5" /> Add Tool
+              </Button>
+            </DialogTrigger>
+            <EditToolDialog onToolSaved={fetchTools} />
+          </Dialog>
         </div>
+
+        <Tabs defaultValue="All" value={filter} onValueChange={setFilter} className="w-full">
+          <TabsList className="bg-gray-100/80 mb-4 h-9 p-1 flex-nowrap overflow-x-auto justify-start shadow-none border-none">
+            {CATEGORIES.map(cat => (
+               <TabsTrigger key={cat} value={cat} className="text-xs data-[state=active]:bg-white whitespace-nowrap px-4 tracking-tight shadow-none">
+                 {cat}
+               </TabsTrigger>
+            ))}
+          </TabsList>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {filteredTools.length === 0 ? (
+              <div className="col-span-full py-12 text-center border-2 border-dashed rounded-xl bg-gray-50/50">
+                 <LayoutGrid className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                 <p className="text-sm text-gray-500">No tools found for this category.</p>
+              </div>
+            ) : (
+              filteredTools.map((tool) => {
+                const styles = CATEGORY_STYLES[tool.category] || CATEGORY_STYLES.Other;
+                return (
+                  <Card key={tool.id} className="group relative overflow-hidden hover:shadow-lg transition-all border-gray-200">
+                    <div className="p-4 flex flex-col items-center text-center space-y-3">
+                      <div className={`p-3.5 rounded-2xl ${styles.bg} ${styles.color} transition-transform group-hover:scale-105 group-hover:rotate-3`}>
+                        <IconRenderer name={tool.icon_name} className="w-7 h-7" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-bold text-gray-900 text-sm truncate">{tool.name}</h3>
+                        <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 mt-0.5">{tool.category}</p>
+                      </div>
+                      <div className="flex items-center gap-2 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="outline" size="sm" className="h-7 px-3 text-[11px] rounded-lg shadow-sm">
+                          <a href={tool.url} target="_blank" rel="noopener noreferrer">Open</a>
+                        </Button>
+                        
+                        <DropdownMenu>
+                          <DropdownMenuTrigger>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400">
+                              <Settings2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <Dialog>
+                              <DialogTrigger>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs gap-2">
+                                   Edit Tool
+                                </DropdownMenuItem>
+                              </DialogTrigger>
+                              <EditToolDialog tool={tool} onToolSaved={fetchTools} />
+                            </Dialog>
+                            <DropdownMenuItem 
+                              className="text-xs text-red-600 gap-2" 
+                              onClick={() => handleDeleteTool(tool.id)}
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        </Tabs>
       </div>
     </div>
   );
