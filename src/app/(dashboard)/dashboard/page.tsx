@@ -9,29 +9,34 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Send, Blocks, ChartNoAxesCombined, MousePointerClick, TrendingUp, Search } from "lucide-react";
+import { Send, Blocks, ChartNoAxesCombined, MousePointerClick, TrendingUp, Search, Plus, ExternalLink, Settings2, Trash2, LayoutGrid } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { useEffect } from "react";
+import { EditToolDialog } from "@/components/edit-tool-dialog";
+import { Dialog, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
-// Tools Mock Data
-const TOOLS = [
-  { name: "Google Analytics", icon: ChartNoAxesCombined, category: "Analytics", color: "text-orange-500", bg: "bg-orange-100" },
-  { name: "Google Search Console", icon: SearchIcon, category: "SEO", color: "text-blue-500", bg: "bg-blue-100" },
-  { name: "Ahrefs", icon: TrendingUp, category: "SEO", color: "text-red-500", bg: "bg-red-100" },
-  { name: "Figma", icon: Blocks, category: "Design", color: "text-purple-500", bg: "bg-purple-100" },
-  { name: "Mailchimp", icon: Send, category: "Marketing", color: "text-yellow-500", bg: "bg-yellow-100" },
-  { name: "HubSpot", icon: MousePointerClick, category: "Marketing", color: "text-orange-600", bg: "bg-orange-50" },
-];
+const CATEGORIES = ["All", "SEO", "Analytics", "Design", "Marketing", "Other"];
 
-function SearchIcon(props: any) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.3-4.3" />
-    </svg>
-  );
-}
+const IconRenderer = ({ name, className }: { name: string, className?: string }) => {
+  const Icon = (LucideIcons as any)[name] || Blocks;
+  return <Icon className={className} />;
+};
+
+const CATEGORY_STYLES: Record<string, { color: string, bg: string }> = {
+  SEO: { color: "text-blue-500", bg: "bg-blue-100" },
+  Analytics: { color: "text-orange-500", bg: "bg-orange-100" },
+  Design: { color: "text-purple-500", bg: "bg-purple-100" },
+  Marketing: { color: "text-yellow-600", bg: "bg-yellow-100" },
+  Other: { color: "text-gray-500", bg: "bg-gray-100" },
+};
 
 export default function DashboardPage() {
   const [clientId, setClientId] = useState("");
@@ -42,16 +47,35 @@ export default function DashboardPage() {
   
   const [clients, setClients] = useState<any[]>([]);
   const [clientSearch, setClientSearch] = useState("");
+  const [tools, setTools] = useState<any[]>([]);
 
   useEffect(() => {
-    async function fetchClients() {
-      const { data } = await supabase.from("clients").select("id, name, contact_email").order("name");
-      if (data) setClients(data);
-    }
     fetchClients();
+    fetchTools();
   }, []);
 
-  const filteredTools = filter === "All" ? TOOLS : TOOLS.filter(t => t.category === filter);
+  async function fetchClients() {
+    const { data } = await supabase.from("clients").select("id, name, contact_email").order("name");
+    if (data) setClients(data);
+  }
+
+  async function fetchTools() {
+    const { data } = await supabase.from("agency_tools").select("*").order("name");
+    if (data) setTools(data);
+  }
+
+  const handleDeleteTool = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this tool?")) return;
+    const { error } = await supabase.from('agency_tools').delete().eq('id', id);
+    if (error) {
+      toast.error("Failed to delete tool");
+    } else {
+      toast.success("Tool deleted");
+      fetchTools();
+    }
+  };
+
+  const filteredTools = filter === "All" ? tools : tools.filter(t => t.category === filter);
   
   const filteredWidgetClients = clients
     .filter(c => (c.name || "").toLowerCase().includes(clientSearch.toLowerCase()))
@@ -86,66 +110,25 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         
-        {/* Left Column */}
-        <div className="lg:col-span-1 space-y-6">
-          
-          {/* Active Clients Mini-Widget */}
-          <Card className="shadow-sm">
-            <CardHeader className="pb-3 border-b">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Clients</CardTitle>
-                <Link href="/clients" className="text-xs text-blue-600 hover:underline">View All</Link>
-              </div>
-              <div className="relative mt-2">
-                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-500" />
-                <Input
-                  placeholder="Search clients..."
-                  className="pl-8 h-8 text-sm bg-gray-50/50"
-                  value={clientSearch}
-                  onChange={(e) => setClientSearch(e.target.value)}
-                />
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="max-h-[260px] overflow-y-auto">
-                <ul className="divide-y divide-gray-100">
-                  {filteredWidgetClients.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-gray-500">No clients found.</div>
-                  ) : (
-                    filteredWidgetClients.map(client => (
-                      <li key={client.id} className="p-3 hover:bg-gray-50 transition-colors">
-                        <Link href={`/clients/${client.id}`} className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-xs shrink-0">
-                            {(client.name || "UN").substring(0, 2).toUpperCase()}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="text-sm font-medium text-gray-900 truncate">{client.name}</div>
-                            {client.contact_email && <div className="text-xs text-gray-500 truncate">{client.contact_email}</div>}
-                          </div>
-                        </Link>
-                      </li>
-                    ))
-                  )}
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Email Form Section */}
-          <Card className="shadow-sm">
+        {/* Left Column: Email Form */}
+        <div className="md:col-span-3 space-y-6">
+          <Card className="shadow-sm border-gray-200">
             <CardHeader className="pb-4 border-b mb-4">
-              <CardTitle className="text-lg">Send SEO Update</CardTitle>
-              <CardDescription>Rapidly send status updates and reports.</CardDescription>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Send className="w-4 h-4 text-blue-600" />
+                Send Status
+              </CardTitle>
+              <CardDescription>Rapidly send updates to clients.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSendUpdate} className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Client</Label>
+                  <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Client</Label>
                   <Select value={clientId} onValueChange={(val) => setClientId(val || "")}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select shortcode/client" />
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Select client" />
                     </SelectTrigger>
                     <SelectContent>
                       {clients.map(client => (
@@ -156,68 +139,164 @@ export default function DashboardPage() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label>Subject</Label>
+                  <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Subject</Label>
                   <Input 
                     value={subject} 
                     onChange={e => setSubject(e.target.value)}
+                    className="bg-white"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Message Body</Label>
+                  <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Message</Label>
                   <Textarea 
                     value={body}
                     onChange={e => setBody(e.target.value)}
-                    placeholder="Hello, here are your latest metrics..." 
-                    className="min-h-[150px] resize-none"
+                    placeholder="Brief update details..." 
+                    className="min-h-[120px] resize-none bg-white"
                   />
                 </div>
 
-                <Button type="submit" disabled={sending} className="w-full bg-blue-600 hover:bg-blue-700">
+                <Button type="submit" disabled={sending} className="w-full bg-[#4640A0] hover:bg-[#342e81]">
                   <Send className="w-4 h-4 mr-2" />
                   {sending ? "Sending..." : "Send Update"}
                 </Button>
-                
-                <p className="text-xs text-center text-gray-500 mt-4">
-                  Last update sent: {new Date().toLocaleDateString()}
-                </p>
               </form>
             </CardContent>
           </Card>
         </div>
 
-        {/* Tools Section */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold tracking-tight text-gray-900">Agency Tools</h2>
+        {/* Center Column: Clients List */}
+        <div className="md:col-span-4 space-y-6">
+          <Card className="shadow-sm border-gray-200">
+            <CardHeader className="pb-3 border-b flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">Clients</CardTitle>
+                <CardDescription>Recently active clients</CardDescription>
+              </div>
+              <Link href="/clients" className="text-xs text-blue-600 hover:underline font-medium">View All</Link>
+            </CardHeader>
+            <div className="px-4 py-3 bg-gray-50/50 border-b">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search clients..."
+                  className="pl-9 h-9 text-sm bg-white border-gray-200"
+                  value={clientSearch}
+                  onChange={(e) => setClientSearch(e.target.value)}
+                />
+              </div>
+            </div>
+            <CardContent className="p-0">
+              <div className="max-h-[600px] overflow-y-auto">
+                <ul className="divide-y divide-gray-100">
+                  {filteredWidgetClients.length === 0 ? (
+                    <div className="p-8 text-center text-sm text-gray-500">No clients found.</div>
+                  ) : (
+                    filteredWidgetClients.map(client => (
+                      <li key={client.id} className="hover:bg-blue-50/30 transition-colors group">
+                        <Link href={`/clients/${client.id}`} className="flex items-center gap-4 p-4">
+                          <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0 shadow-sm border border-blue-200">
+                            {(client.name || "UN").substring(0, 2).toUpperCase()}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-bold text-gray-900 truncate">{client.name}</div>
+                            {client.contact_email && <div className="text-xs text-gray-500 truncate mt-0.5">{client.contact_email}</div>}
+                          </div>
+                          <div className="hidden group-hover:block">
+                            <ExternalLink className="w-4 h-4 text-gray-300" />
+                          </div>
+                        </Link>
+                      </li>
+                    ))
+                  )}
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column: Agency Tools */}
+        <div className="md:col-span-5 space-y-4">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-gray-900">Agency Tools</h2>
+              <p className="text-xs text-gray-500">Quick access to your workspace</p>
+            </div>
+            <Dialog>
+              <DialogTrigger>
+                <Button size="sm" variant="outline" className="h-8 gap-1.5 border-dashed border-gray-300 hover:border-blue-500">
+                  <Plus className="w-3.5 h-3.5" /> Add Tool
+                </Button>
+              </DialogTrigger>
+              <EditToolDialog onToolSaved={fetchTools} />
+            </Dialog>
           </div>
 
           <Tabs defaultValue="All" value={filter} onValueChange={setFilter} className="w-full">
-            <TabsList className="bg-gray-100/50 mb-4 inline-flex flex-wrap h-auto p-1">
-              <TabsTrigger value="All" className="data-[state=active]:bg-white">All</TabsTrigger>
-              <TabsTrigger value="SEO" className="data-[state=active]:bg-white">SEO</TabsTrigger>
-              <TabsTrigger value="Analytics" className="data-[state=active]:bg-white">Analytics</TabsTrigger>
-              <TabsTrigger value="Design" className="data-[state=active]:bg-white">Design</TabsTrigger>
-              <TabsTrigger value="Marketing" className="data-[state=active]:bg-white">Marketing</TabsTrigger>
+            <TabsList className="bg-gray-100/80 mb-4 h-9 p-1 flex-nowrap overflow-x-auto justify-start shadow-none border-none">
+              {CATEGORIES.map(cat => (
+                 <TabsTrigger key={cat} value={cat} className="text-xs data-[state=active]:bg-white whitespace-nowrap px-4 tracking-tight shadow-none">
+                   {cat}
+                 </TabsTrigger>
+              ))}
             </TabsList>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {filteredTools.map((tool) => (
-                <Card key={tool.name} className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer group">
-                  <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
-                    <div className={`p-4 rounded-full ${tool.bg} ${tool.color} group-hover:scale-110 transition-transform`}>
-                      <tool.icon className="w-8 h-8" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{tool.name}</h3>
-                      <p className="text-xs text-gray-500 mt-1">{tool.category}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {filteredTools.length === 0 ? (
+                <div className="col-span-full py-12 text-center border-2 border-dashed rounded-xl bg-gray-50/50">
+                   <LayoutGrid className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                   <p className="text-sm text-gray-500">No tools found for this category.</p>
+                </div>
+              ) : (
+                filteredTools.map((tool) => {
+                  const styles = CATEGORY_STYLES[tool.category] || CATEGORY_STYLES.Other;
+                  return (
+                    <Card key={tool.id} className="group relative overflow-hidden hover:shadow-lg transition-all border-gray-200">
+                      <div className="p-4 flex flex-col items-center text-center space-y-3">
+                        <div className={`p-3.5 rounded-2xl ${styles.bg} ${styles.color} transition-transform group-hover:scale-105 group-hover:rotate-3`}>
+                          <IconRenderer name={tool.icon_name} className="w-7 h-7" />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-gray-900 text-sm truncate">{tool.name}</h3>
+                          <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 mt-0.5">{tool.category}</p>
+                        </div>
+                        <div className="flex items-center gap-2 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="outline" size="sm" className="h-7 px-3 text-[11px] rounded-lg shadow-sm">
+                            <a href={tool.url} target="_blank" rel="noopener noreferrer">Open</a>
+                          </Button>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400">
+                                <Settings2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <Dialog>
+                                <DialogTrigger>
+                                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs gap-2">
+                                     Edit Tool
+                                  </DropdownMenuItem>
+                                </DialogTrigger>
+                                <EditToolDialog tool={tool} onToolSaved={fetchTools} />
+                              </Dialog>
+                              <DropdownMenuItem 
+                                className="text-xs text-red-600 gap-2" 
+                                onClick={() => handleDeleteTool(tool.id)}
+                              >
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })
+              )}
             </div>
           </Tabs>
-
         </div>
       </div>
     </div>
