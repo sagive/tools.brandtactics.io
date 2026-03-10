@@ -1,27 +1,58 @@
 "use client";
 
-import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, BellIcon, Link2, List, Bold, Italic, Underline, Strikethrough, SmilePlus } from "lucide-react";
+import { BellIcon, Link2, List, Bold, Italic, Underline, Strikethrough, SmilePlus, X } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function EditTaskDialog({ task }: { task?: any }) {
   const isEditing = !!task;
 
   return (
-    <DialogContent className="max-w-[100%] sm:max-w-none sm:min-w-[850px] w-full sm:w-auto p-0 overflow-hidden bg-white">
+    <DialogContent showCloseButton={false} className="max-w-[100%] sm:max-w-none sm:min-w-[850px] w-full sm:w-auto p-0 overflow-hidden bg-white">
       <div className="flex flex-col h-full max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <DialogTitle className="text-xl font-bold">{isEditing ? "Edit Task" : "New Task"}</DialogTitle>
-          <div className="flex items-center gap-4 text-sm text-gray-500">
-             <span className="font-medium">Due: 04/30/2026</span>
-             <CalendarIcon className="w-4 h-4 cursor-pointer hover:text-gray-900" />
-             <BellIcon className="w-4 h-4 cursor-pointer hover:text-gray-900" />
+          <div className="flex items-center gap-6 text-sm text-gray-500">
+             
+             {/* Date Picker Auto-save wrapper */}
+             <div className="relative flex items-center gap-2 group cursor-pointer hover:text-gray-900">
+               <span className="font-medium">Due: 04/30/2026</span>
+               <Input 
+                 type="date" 
+                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full p-0 m-0 z-10" 
+                 onChange={() => { /* Auto Save Logic */ }}
+               />
+             </div>
+             
+             {/* Reminder Dropdown */}
+             <DropdownMenu>
+               <DropdownMenuTrigger className="hover:text-gray-900 focus:outline-none outline-none ring-0 border-0 bg-transparent p-0 flex items-center shadow-none h-auto w-auto">
+                 <BellIcon className="w-4 h-4" />
+               </DropdownMenuTrigger>
+               <DropdownMenuContent align="end" className="w-48">
+                 <div className="px-2 py-1.5 text-xs font-semibold text-gray-500">Remind me in...</div>
+                 <DropdownMenuItem>1 hour</DropdownMenuItem>
+                 <DropdownMenuItem>4 hours</DropdownMenuItem>
+                 <DropdownMenuItem>1 day</DropdownMenuItem>
+                 <DropdownMenuItem>3 days</DropdownMenuItem>
+                 <DropdownMenuItem>1 week</DropdownMenuItem>
+                 <DropdownMenuItem>Next month</DropdownMenuItem>
+               </DropdownMenuContent>
+             </DropdownMenu>
+
+             {/* Close Button inline with gap */}
+             <DialogClose className="hover:text-gray-900 focus:outline-none rounded-sm opacity-70 transition-opacity hover:opacity-100 outline-none ring-0 border-0 bg-transparent p-0 flex items-center shadow-none h-auto w-auto">
+               <X className="w-5 h-5" />
+               <span className="sr-only">Close</span>
+             </DialogClose>
+
           </div>
         </div>
 
@@ -89,103 +120,84 @@ export function EditTaskDialog({ task }: { task?: any }) {
           {/* Right Column Component */}
           <div className="w-full md:w-80 bg-gray-50/30 p-6 space-y-6">
             
-            <div className="space-y-2">
-              <Label className="text-gray-600 font-semibold">Status</Label>
-              <Select defaultValue={task?.status || "Working on it"}>
-                <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Working on it">
-                    <span className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-sm bg-blue-500" /> Working on it
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="Review">
-                    <span className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-sm bg-purple-500" /> Review
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="Stuck">
-                    <span className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-sm bg-red-500" /> Stuck
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="Completed">
-                    <span className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-sm bg-green-500" /> Completed
-                    </span>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-gray-600 font-semibold">Status</Label>
+                <Select defaultValue={task?.status || "Working on it"}>
+                  <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Pending">Pending</SelectItem>
+                    <SelectItem value="Working on it">
+                      <span className="flex items-center gap-2 truncate">
+                        <div className="w-2.5 h-2.5 rounded-sm bg-blue-500 shrink-0" /> Working on it
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="Review">
+                      <span className="flex items-center gap-2 truncate">
+                        <div className="w-2.5 h-2.5 rounded-sm bg-purple-500 shrink-0" /> Review
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="Stuck">
+                      <span className="flex items-center gap-2 truncate">
+                        <div className="w-2.5 h-2.5 rounded-sm bg-red-500 shrink-0" /> Stuck
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="Completed">
+                      <span className="flex items-center gap-2 truncate">
+                        <div className="w-2.5 h-2.5 rounded-sm bg-green-500 shrink-0" /> Completed
+                      </span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-2">
-              <Label className="text-gray-600 font-semibold">Created by</Label>
-              <Select defaultValue="mark">
-                <SelectTrigger className="bg-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="mark">
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold">MJ</div>
-                      <span>Mark Johnson</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-gray-600 font-semibold">Assignee</Label>
-              <Select defaultValue="mark">
-                <SelectTrigger className="bg-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="mark">
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold">MJ</div>
-                      <span>Mark Johnson</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <Label className="text-gray-600 font-semibold">Priority</Label>
+                <Select defaultValue={task?.priority || "High"}>
+                  <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Low"><span className="text-gray-600 font-medium">Low</span></SelectItem>
+                    <SelectItem value="Medium"><span className="text-yellow-600 font-medium">Medium</span></SelectItem>
+                    <SelectItem value="High"><span className="text-red-600 font-medium">High</span></SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-gray-600 font-semibold">Start Date</Label>
-                <Input type="date" className="bg-white text-sm" defaultValue="2024-04-24" />
+                <Label className="text-gray-600 font-semibold">Created by</Label>
+                <Select defaultValue="mark">
+                  <SelectTrigger className="bg-white px-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mark">
+                      <div className="flex items-center gap-2 truncate">
+                        <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold shrink-0">MJ</div>
+                        <span className="truncate">Mark J.</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+
               <div className="space-y-2">
-                <Label className="text-gray-600 font-semibold">End Date</Label>
-                <Input type="date" className="bg-white text-sm" />
+                <Label className="text-gray-600 font-semibold">Assignee</Label>
+                <Select defaultValue="mark">
+                  <SelectTrigger className="bg-white px-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mark">
+                      <div className="flex items-center gap-2 truncate">
+                        <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold shrink-0">MJ</div>
+                        <span className="truncate">Mark J.</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-gray-600 font-semibold">Estimate</Label>
-              <Select defaultValue="10h">
-                <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="5h">5h</SelectItem>
-                  <SelectItem value="10h">10h</SelectItem>
-                  <SelectItem value="20h">20h</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-gray-600 font-semibold">Priority</Label>
-              <Select defaultValue={task?.priority || "High"}>
-                <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Low"><span className="text-gray-600 font-medium">Low</span></SelectItem>
-                  <SelectItem value="Medium"><span className="text-yellow-600 font-medium">Medium</span></SelectItem>
-                  <SelectItem value="High"><span className="text-red-600 font-medium">High</span></SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
           </div>
