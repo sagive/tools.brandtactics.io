@@ -47,17 +47,15 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="flex flex-col gap-6">
         
         {/* Tasks Overview */}
         <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg font-bold">Tasks Overview</CardTitle>
-            <Button >
-              <Link href={`/clients/${id}/tasks`}>
-                View All <ChevronRight className="w-4 h-4 ml-1" />
-              </Link>
-            </Button>
+            <Link href={`/clients/${id}/tasks`} className="text-sm font-medium text-blue-600 hover:underline flex items-center">
+              View All <ChevronRight className="w-4 h-4 ml-1" />
+            </Link>
           </CardHeader>
           <CardContent>
             <div className="flex gap-2 mb-4">
@@ -79,9 +77,6 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
                 </div>
               ))}
             </div>
-            <Button >
-              <Link href={`/clients/${id}/tasks`}>View All Tasks</Link>
-            </Button>
           </CardContent>
         </Card>
 
@@ -89,11 +84,9 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
         <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg font-bold">Articles Overview</CardTitle>
-            <Button >
-              <Link href={`/clients/${id}/articles`}>
-                View All <ChevronRight className="w-4 h-4 ml-1" />
-              </Link>
-            </Button>
+            <Link href={`/clients/${id}/articles`} className="text-sm font-medium text-blue-600 hover:underline flex items-center">
+              View All <ChevronRight className="w-4 h-4 ml-1" />
+            </Link>
           </CardHeader>
           <CardContent>
             <div className="flex gap-2 mb-4">
@@ -114,21 +107,16 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
                 </div>
               ))}
             </div>
-            <Button >
-              <Link href={`/clients/${id}/articles`}>View All Articles</Link>
-            </Button>
           </CardContent>
         </Card>
 
         {/* Client Email Updates Overview */}
-        <Card className="shadow-sm lg:col-span-2">
+        <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg font-bold">Recent Updates Sent</CardTitle>
-            <Button >
-              <Link href={`/clients/${id}/emails`}>
-                View Log <ChevronRight className="w-4 h-4 ml-1" />
-              </Link>
-            </Button>
+            <Link href={`/clients/${id}/emails`} className="text-sm font-medium text-blue-600 hover:underline flex items-center">
+              View Log <ChevronRight className="w-4 h-4 ml-1" />
+            </Link>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
