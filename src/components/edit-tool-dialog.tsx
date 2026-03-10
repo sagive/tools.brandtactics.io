@@ -93,12 +93,18 @@ export function EditToolDialog({ tool, onToolSaved }: { tool?: any, onToolSaved?
           </div>
           <div className="space-y-2">
             <Label>Rank</Label>
-            <Input 
-              type="number" 
-              value={rank} 
-              onChange={(e) => setRank(parseInt(e.target.value) || 0)} 
-              placeholder="0" 
-            />
+            <Select value={rank.toString()} onValueChange={(val) => setRank(parseInt(val))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select rank" />
+              </SelectTrigger>
+              <SelectContent>
+                {[...Array(10)].map((_, i) => (
+                  <SelectItem key={i + 1} value={(i + 1).toString()}>
+                    {i + 1 === 10 ? "10 (Top)" : i + 1}
+                  </SelectItem>
+                )).reverse()}
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <div className="space-y-2">
