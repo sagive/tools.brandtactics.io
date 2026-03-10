@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SortableTaskList } from "@/components/sortable-task-list";
+import { EditTaskDialog } from "@/components/edit-task-dialog";
 import { supabase } from "@/lib/supabase";
 
 export default function ClientTasks({ params }: { params: Promise<{ id: string }> }) {
@@ -71,31 +72,7 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
           <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-9 px-4 py-2 w-full sm:w-auto bg-blue-600 text-white hover:bg-blue-700">
             <Plus className="w-4 h-4 mr-2" /> New Task
           </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Task</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label>Title</Label>
-                <Input placeholder="Task title..." />
-              </div>
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select defaultValue="Pending">
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Working on it">Working on it</SelectItem>
-                    <SelectItem value="Review">Review</SelectItem>
-                    <SelectItem value="Stuck">Stuck</SelectItem>
-                    <SelectItem value="Completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button className="w-full">Save Task</Button>
-            </div>
-          </DialogContent>
+          <EditTaskDialog defaultClientId={id} onTaskCreated={fetchTasks} />
         </Dialog>
       </div>
 
@@ -104,10 +81,10 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
           <div className="py-12 text-center text-gray-500">Loading tasks...</div>
         ) : (
           <>
-            <SortableTaskList title="Pending" initialTasks={pending} />
-            <SortableTaskList title="Working on it / Review" initialTasks={active} />
-            <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} />
-            <SortableTaskList title="Completed" initialTasks={completed} />
+            <SortableTaskList title="Pending" initialTasks={pending} onRefresh={fetchTasks} />
+            <SortableTaskList title="Working on it / Review" initialTasks={active} onRefresh={fetchTasks} />
+            <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} onRefresh={fetchTasks} />
+            <SortableTaskList title="Completed" initialTasks={completed} onRefresh={fetchTasks} />
             {filteredTasks.length === 0 && (
                <div className="text-center py-10 text-gray-500 bg-white border rounded-lg border-dashed">
                  No tasks found for this client.

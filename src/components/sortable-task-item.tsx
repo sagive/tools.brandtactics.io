@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2 } from "lucide-react";
+import { GripVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
-export function SortableTaskItem({ task, onDelete }: { task: any, onDelete?: () => void }) {
+export function SortableTaskItem({ task, onDelete, onUpdate }: { task: any, onDelete?: () => void, onUpdate?: () => void }) {
   const [status, setStatus] = useState(task.status);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
 
@@ -83,7 +83,7 @@ export function SortableTaskItem({ task, onDelete }: { task: any, onDelete?: () 
                <span className="flex items-center gap-1 w-32 shrink-0">Priority: <span className={task.priority === 'High' ? 'text-red-500 font-medium' : task.priority === 'Medium' ? 'text-yellow-600 font-medium' : 'text-gray-500'}>{task.priority}</span></span>
             </div>
           </DialogTrigger>
-          <EditTaskDialog task={task} />
+          <EditTaskDialog task={task} onTaskCreated={onUpdate} />
         </Dialog>
       </div>
 
@@ -118,15 +118,10 @@ export function SortableTaskItem({ task, onDelete }: { task: any, onDelete?: () 
           <DialogTrigger className="text-gray-400 text-xs font-semibold hover:text-blue-600 cursor-pointer hidden sm:inline-block bg-transparent border-0 p-0 outline-none w-10 text-center shrink-0">
              Edit
           </DialogTrigger>
-          <EditTaskDialog task={task} />
+          <EditTaskDialog task={task} onTaskCreated={onUpdate} />
         </Dialog>
         
-        <button 
-          onClick={handleDelete}
-          className="text-gray-300 hover:text-red-600 p-1 sm:opacity-0 group-hover:opacity-100 transition-opacity w-8 flex justify-center shrink-0"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        {/* Delete functionality removed per user request */}
       </div>
 
     </div>

@@ -13,8 +13,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
-export function EditTaskDialog({ task }: { task?: any }) {
+export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?: any, defaultClientId?: string, onTaskCreated?: () => void }) {
   const isEditing = !!task;
+  const [isOpen, setIsOpen] = useState(true); // Internal state for Dialog if needed, but we typically use DialogClose or parent state.
+  // Actually, the dialog is controlled by the parent <Dialog> in sortable-task-item and client-tasks.
+  // However, DialogClose can be triggered via a ref or by just clicking it.
+  // But wait, the standard way in Shadcn is to provide an onOpenChange.
+  // Let's check how it's called.
   const [newComment, setNewComment] = useState("");
   const [isEditingComment, setIsEditingComment] = useState(false);
   
@@ -23,7 +28,34 @@ export function EditTaskDialog({ task }: { task?: any }) {
   const [status, setStatus] = useState(task?.status || "Pending");
   const [priority, setPriority] = useState(task?.priority || "Medium");
   const [assignee, setAssignee] = useState(task?.assignee || "mark");
+  const [estimateHours, setEstimateHours] = useState<number>(task?.estimate_hours || 0);
   const [comments, setComments] = useState<any[]>(task?.comments || []);
+  const [clientId, setClientId] = useState(task?.client_id || defaultClientId || "");
+  const [dueDate, setDueDate] = useState<string>(task?.end_date ? new Date(task.end_date).toISOString().split('T')[0] : "");
+  const [clients, setClients] = useState<any[]>([]);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Field display names for toasts
+  const FIELD_LABELS: Record<string, string> = {
+    title: "Title",
+    description: "Description",
+    status: "Status",
+    priority: "Priority",
+    assignee: "Assignee",
+    estimate_hours: "Estimate",
+    end_date: "Due Date",
+    comments: "Comments",
+    client_id: "Client"
+  };
+
+  useEffect(() => {
+    if (!isEditing && !defaultClientId) {
+      supabase.from('clients').select('id, name').order('name').then(({data}) => {
+         if (data) setClients(data);
+      });
+    }
+  }, [isEditing, defaultClientId]);
 
   const createdDate = task?.created_at 
     ? new Date(task.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
@@ -48,9 +80,43 @@ export function EditTaskDialog({ task }: { task?: any }) {
     try {
       const { error } = await supabase.from('tasks').update({ [field]: value }).eq('id', task.id);
       if (error) throw error;
-      toast.success(`${field} saved`);
+      toast.success(`${FIELD_LABELS[field] || field} saved`);
     } catch (err: any) {
-      toast.error(`Failed to save ${field}`);
+      toast.error(`Failed to save ${FIELD_LABELS[field] || field}`);
+    }
+  };
+
+  const handleUpdateTask = async () => {
+    if (!isEditing) return;
+    if (!title.trim()) { toast.error("Title is required"); return; }
+    
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase.from('tasks').update({
+        title,
+        description,
+        status,
+        priority,
+        assignee,
+        estimate_hours: estimateHours,
+        end_date: dueDate || null,
+        comments
+      }).eq('id', task.id);
+      
+      if (error) throw error;
+      toast.success("Task updated successfully");
+      onTaskCreated?.(); // Refresh parent list
+      
+      // We need a way to close the dialog. Since we are inside DialogContent, 
+      // the CSS class "DialogClose" or a click on it works. 
+      // For programmatic close, we usually need the state from the parent or a hidden button.
+      const closeButton = document.querySelector('[data-slot="dialog-close"]') as HTMLButtonElement;
+      if (closeButton) closeButton.click();
+      
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update task");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -68,6 +134,39 @@ export function EditTaskDialog({ task }: { task?: any }) {
     await updateField("comments", updatedComments);
   };
 
+  const handleCreateTask = async () => {
+    if (!title.trim()) { toast.error("Title is required"); return; }
+    if (!clientId) { toast.error("Client is required"); return; }
+    
+    setIsCreating(true);
+    try {
+      const { data, error } = await supabase.from('tasks').insert([{
+        title,
+        description,
+        status,
+        priority,
+        assignee,
+        estimate_hours: estimateHours,
+        end_date: dueDate || null,
+        client_id: clientId,
+        comments
+      }]).select().single();
+      
+      if (error) throw error;
+      toast.success("Task created successfully");
+      onTaskCreated?.();
+      
+      // Programmatic close
+      const closeButton = document.querySelector('[data-slot="dialog-close"]') as HTMLButtonElement;
+      if (closeButton) closeButton.click();
+      
+    } catch (err: any) {
+      toast.error(err.message || "Failed to create task");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <DialogContent showCloseButton={false} className="max-w-[100%] sm:max-w-none sm:min-w-[850px] w-full sm:w-auto p-0 overflow-hidden bg-white">
       <div className="flex flex-col h-full max-h-[90vh]">
@@ -78,11 +177,15 @@ export function EditTaskDialog({ task }: { task?: any }) {
              
              {/* Date Picker Auto-save wrapper */}
              <div className="relative flex items-center gap-2 group cursor-pointer hover:text-gray-900">
-               <span className="font-medium">Due: 04/30/2026</span>
+               <span className="font-medium">Due: {dueDate ? new Date(dueDate).toLocaleDateString('en-US', { timeZone: 'UTC' }) : "Set Date"}</span>
                <Input 
                  type="date" 
+                 value={dueDate}
                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full p-0 m-0 z-10" 
-                 onChange={() => { /* Auto Save Logic */ }}
+                 onChange={(e) => { 
+                   setDueDate(e.target.value); 
+                   updateField('end_date', e.target.value); 
+                 }}
                />
              </div>
              
@@ -218,6 +321,22 @@ export function EditTaskDialog({ task }: { task?: any }) {
           {/* Right Column Component */}
           <div className="w-full md:w-80 bg-gray-50/30 p-6 space-y-6 flex flex-col">
             
+            {!isEditing && !defaultClientId && (
+              <div className="space-y-2">
+                <Label className="text-gray-600 text-[13px] font-medium">Client <span className="text-red-500">*</span></Label>
+                <Select value={clientId} onValueChange={setClientId}>
+                  <SelectTrigger className="bg-white px-3 w-full border-gray-200">
+                    <SelectValue placeholder="Select a client" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clients.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-gray-600 text-[13px] font-medium">Status</Label>
@@ -276,20 +395,18 @@ export function EditTaskDialog({ task }: { task?: any }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-gray-600 text-[13px] font-medium">Created by</Label>
-                <Select defaultValue="mark">
-                  <SelectTrigger className="bg-white px-2 w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mark">
-                      <div className="flex items-center gap-2 truncate">
-                        <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold shrink-0">MJ</div>
-                        <span className="truncate">Mark J.</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label className="text-gray-600 text-[13px] font-medium">Estimate (Hours)</Label>
+                <Input 
+                  type="number" 
+                  min="0"
+                  value={estimateHours} 
+                  onChange={(e) => { 
+                    const val = Number(e.target.value);
+                    setEstimateHours(val); 
+                    updateField("estimate_hours", val); 
+                  }}
+                  className="bg-white h-9"
+                />
               </div>
 
               <div className="space-y-2">
@@ -317,7 +434,27 @@ export function EditTaskDialog({ task }: { task?: any }) {
             </div>
 
             <hr className="border-gray-200 mt-6" />
-            <p className="text-center text-[12px] text-gray-400 font-medium mt-6">Created: {createdDate}</p>
+            
+            {isEditing ? (
+              <div className="space-y-4 mt-6">
+                <Button 
+                  onClick={handleUpdateTask} 
+                  disabled={isUpdating || !title.trim()}
+                  className="w-full bg-[#4640A0] hover:bg-[#342e81] text-white shadow-sm font-semibold"
+                >
+                  {isUpdating ? "Saving..." : "Save Changes"}
+                </Button>
+                <p className="text-center text-[12px] text-gray-400 font-medium">Created: {createdDate}</p>
+              </div>
+            ) : (
+              <Button 
+                onClick={handleCreateTask} 
+                disabled={isCreating || !title.trim() || !clientId}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm mt-4 font-semibold"
+              >
+                {isCreating ? "Creating..." : "Create Task"}
+              </Button>
+            )}
 
           </div>
         </div>
