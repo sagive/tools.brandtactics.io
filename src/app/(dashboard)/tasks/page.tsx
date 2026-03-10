@@ -13,9 +13,10 @@ import { toast } from "sonner";
 import { SortableTaskList } from "@/components/sortable-task-list";
 
 const MOCK_ALL_TASKS = [
-  ...Array.from({ length: 3 }).map((_, i) => ({ id: `p${i}`, client: "Acme Corp", title: `Review Analytics ${i}`, status: "Pending", due: "2023-11-20", priority: "Medium" })),
-  ...Array.from({ length: 2 }).map((_, i) => ({ id: `s${i}`, client: "Globex", title: `Content Strategy ${i}`, status: "Stuck", due: "2023-11-15", priority: "High" })),
-  ...Array.from({ length: 4 }).map((_, i) => ({ id: `i${i}`, client: "Initech", title: `On-Page SEO ${i}`, status: "In Progress", due: "2023-11-25", priority: "Medium" })),
+  ...Array.from({ length: 3 }).map((_, i) => ({ id: `p${i}`, client: "Acme Corp", title: `Review Analytics ${i}`, status: "Pending", due: "2023-11-20", priority: "Medium", assignee: "imri" })),
+  ...Array.from({ length: 2 }).map((_, i) => ({ id: `s${i}`, client: "Globex", title: `Content Strategy ${i}`, status: "Stuck", due: "2023-11-15", priority: "High", assignee: "sarah" })),
+  ...Array.from({ length: 2 }).map((_, i) => ({ id: `i${i}`, client: "Initech", title: `On-Page SEO ${i}`, status: "Working on it", due: "2023-11-25", priority: "Medium", assignee: "mark" })),
+  ...Array.from({ length: 2 }).map((_, i) => ({ id: `r${i}`, client: "Initech", title: `Content Edits ${i}`, status: "Review", due: "2023-11-28", priority: "Medium", assignee: "mark" })),
 ];
 
 export default function GlobalTasksPage() {
@@ -26,7 +27,8 @@ export default function GlobalTasksPage() {
     t.client.toLowerCase().includes(search.toLowerCase())
   );
 
-  const pending = filteredTasks.filter(t => t.status === "Pending" || t.status === "In Progress");
+  const pending = filteredTasks.filter(t => t.status === "Pending");
+  const active = filteredTasks.filter(t => t.status === "Working on it" || t.status === "Review");
   const stuck = filteredTasks.filter(t => t.status === "Stuck");
   const completed = filteredTasks.filter(t => t.status === "Completed");
 
@@ -80,7 +82,8 @@ export default function GlobalTasksPage() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
+                    <SelectItem value="Working on it">Working on it</SelectItem>
+                    <SelectItem value="Review">Review</SelectItem>
                     <SelectItem value="Stuck">Stuck</SelectItem>
                     <SelectItem value="Completed">Completed</SelectItem>
                   </SelectContent>
@@ -93,7 +96,8 @@ export default function GlobalTasksPage() {
       </div>
 
       <div className="space-y-6">
-        <SortableTaskList title="Pending & In Progress" initialTasks={pending} />
+        <SortableTaskList title="Pending" initialTasks={pending} />
+        <SortableTaskList title="Working on it / Review" initialTasks={active} />
         <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} />
         <SortableTaskList title="Completed" initialTasks={completed} />
         

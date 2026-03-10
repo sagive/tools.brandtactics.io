@@ -13,7 +13,7 @@ export function EditTaskDialog({ task }: { task?: any }) {
   const isEditing = !!task;
 
   return (
-    <DialogContent className="max-w-4xl p-0 overflow-hidden bg-white">
+    <DialogContent className="max-w-[100%] sm:max-w-none sm:min-w-[850px] w-full sm:w-auto p-0 overflow-hidden bg-white">
       <div className="flex flex-col h-full max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
@@ -91,17 +91,30 @@ export function EditTaskDialog({ task }: { task?: any }) {
             
             <div className="space-y-2">
               <Label className="text-gray-600 font-semibold">Status</Label>
-              <Select defaultValue={task?.status || "In Progress"}>
+              <Select defaultValue={task?.status || "Working on it"}>
                 <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="In Progress">
+                  <SelectItem value="Working on it">
                     <span className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-sm bg-yellow-400" /> In Progress
+                      <div className="w-2.5 h-2.5 rounded-sm bg-blue-500" /> Working on it
                     </span>
                   </SelectItem>
-                  <SelectItem value="Stuck">Stuck</SelectItem>
-                  <SelectItem value="Completed">Completed</SelectItem>
+                  <SelectItem value="Review">
+                    <span className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-sm bg-purple-500" /> Review
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="Stuck">
+                    <span className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-sm bg-red-500" /> Stuck
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="Completed">
+                    <span className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-sm bg-green-500" /> Completed
+                    </span>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

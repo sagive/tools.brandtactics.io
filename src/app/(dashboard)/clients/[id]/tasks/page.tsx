@@ -15,10 +15,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SortableTaskList } from "@/components/sortable-task-list";
 
 const MOCK_TASKS = [
-  ...Array.from({ length: 4 }).map((_, i) => ({ id: `p${i}`, title: `Pending Task ${i}`, status: "Pending", due: "2023-11-20", priority: "Medium" })),
-  ...Array.from({ length: 3 }).map((_, i) => ({ id: `s${i}`, title: `Stuck Task ${i}`, status: "Stuck", due: "2023-11-15", priority: "High" })),
-  ...Array.from({ length: 5 }).map((_, i) => ({ id: `i${i}`, title: `In Progress Task ${i}`, status: "In Progress", due: "2023-11-25", priority: "Medium" })),
-  ...Array.from({ length: 6 }).map((_, i) => ({ id: `c${i}`, title: `Completed Task ${i}`, status: "Completed", due: "2023-11-01", priority: "Low" })),
+  ...Array.from({ length: 4 }).map((_, i) => ({ id: `p${i}`, title: `Pending Task ${i}`, status: "Pending", due: "2023-11-20", priority: "Medium", assignee: "mark" })),
+  ...Array.from({ length: 3 }).map((_, i) => ({ id: `s${i}`, title: `Stuck Task ${i}`, status: "Stuck", due: "2023-11-15", priority: "High", assignee: "sarah" })),
+  ...Array.from({ length: 2 }).map((_, i) => ({ id: `w${i}`, title: `Working Task ${i}`, status: "Working on it", due: "2023-11-25", priority: "Medium", assignee: "imri" })),
+  ...Array.from({ length: 2 }).map((_, i) => ({ id: `r${i}`, title: `Review Task ${i}`, status: "Review", due: "2023-11-28", priority: "Medium", assignee: "mark" })),
+  ...Array.from({ length: 6 }).map((_, i) => ({ id: `c${i}`, title: `Completed Task ${i}`, status: "Completed", due: "2023-11-01", priority: "Low", assignee: "imri" })),
 ];
 
 export default function ClientTasks({ params }: { params: Promise<{ id: string }> }) {
@@ -27,7 +28,8 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
 
   const filteredTasks = MOCK_TASKS.filter(t => t.title.toLowerCase().includes(search.toLowerCase()));
 
-  const pending = filteredTasks.filter(t => t.status === "Pending" || t.status === "In Progress");
+  const pending = filteredTasks.filter(t => t.status === "Pending");
+  const active = filteredTasks.filter(t => t.status === "Working on it" || t.status === "Review");
   const stuck = filteredTasks.filter(t => t.status === "Stuck");
   const completed = filteredTasks.filter(t => t.status === "Completed");
 
@@ -63,7 +65,8 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
+                    <SelectItem value="Working on it">Working on it</SelectItem>
+                    <SelectItem value="Review">Review</SelectItem>
                     <SelectItem value="Stuck">Stuck</SelectItem>
                     <SelectItem value="Completed">Completed</SelectItem>
                   </SelectContent>
@@ -76,7 +79,8 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
       </div>
 
       <div className="space-y-6">
-        <SortableTaskList title="Pending & In Progress" initialTasks={pending} />
+        <SortableTaskList title="Pending" initialTasks={pending} />
+        <SortableTaskList title="Working on it / Review" initialTasks={active} />
         <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} />
         <SortableTaskList title="Completed" initialTasks={completed} />
       </div>
