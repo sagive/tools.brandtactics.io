@@ -23,8 +23,6 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 
-const CATEGORIES = ["All", "SEO", "Analytics", "Design", "Marketing", "Other"];
-
 const IconRenderer = ({ name, className }: { name: string, className?: string }) => {
   const Icon = (LucideIcons as any)[name] || Blocks;
   return <Icon className={className} />;
@@ -48,10 +46,12 @@ export default function DashboardPage() {
   const [clients, setClients] = useState<any[]>([]);
   const [clientSearch, setClientSearch] = useState("");
   const [tools, setTools] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
 
   useEffect(() => {
     fetchClients();
     fetchTools();
+    fetchCategories();
   }, []);
 
   async function fetchClients() {
@@ -60,8 +60,13 @@ export default function DashboardPage() {
   }
 
   async function fetchTools() {
-    const { data } = await supabase.from("agency_tools").select("*").order("name");
+    const { data } = await supabase.from("agency_tools").select("*").order("rank");
     if (data) setTools(data);
+  }
+
+  async function fetchCategories() {
+    const { data } = await supabase.from("tool_categories").select("*").order("rank");
+    if (data) setCategories([{ name: "All" }, ...data]);
   }
 
   const handleDeleteTool = async (id: string) => {
@@ -223,7 +228,11 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-2">
           <div>
             <h2 className="text-xl font-bold tracking-tight text-gray-900">Agency Tools</h2>
-            <p className="text-xs text-gray-500">Quick access to your workspace</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-gray-500">Quick access to your workspace</p>
+              <span className="text-gray-300">•</span>
+              <Link href="/tools" className="text-xs text-blue-600 hover:underline font-medium">View Full Dashboard</Link>
+            </div>
           </div>
           <Dialog>
             <DialogTrigger>
@@ -237,9 +246,9 @@ export default function DashboardPage() {
 
         <Tabs defaultValue="All" value={filter} onValueChange={setFilter} className="w-full">
           <TabsList className="bg-gray-100/80 mb-4 h-9 p-1 flex-nowrap overflow-x-auto justify-start shadow-none border-none">
-            {CATEGORIES.map(cat => (
-               <TabsTrigger key={cat} value={cat} className="text-xs data-[state=active]:bg-white whitespace-nowrap px-4 tracking-tight shadow-none">
-                 {cat}
+            {categories.map(cat => (
+               <TabsTrigger key={cat.name} value={cat.name} className="text-xs data-[state=active]:bg-white whitespace-nowrap px-4 tracking-tight shadow-none">
+                 {cat.name}
                </TabsTrigger>
             ))}
           </TabsList>
