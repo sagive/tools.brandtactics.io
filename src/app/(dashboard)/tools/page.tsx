@@ -56,7 +56,7 @@ export default function ToolsDashboard() {
   async function fetchData() {
     setLoading(true);
     const [toolsRes, catsRes] = await Promise.all([
-      supabase.from("agency_tools").select("*").order("rank"),
+      supabase.from("agency_tools").select("*").order("rank", { ascending: false }),
       supabase.from("tool_categories").select("*").order("rank")
     ]);
     

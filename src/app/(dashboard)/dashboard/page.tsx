@@ -60,7 +60,7 @@ export default function DashboardPage() {
   }
 
   async function fetchTools() {
-    const { data } = await supabase.from("agency_tools").select("*").order("rank");
+    const { data } = await supabase.from("agency_tools").select("*").order("rank", { ascending: false });
     if (data) setTools(data);
   }
 
