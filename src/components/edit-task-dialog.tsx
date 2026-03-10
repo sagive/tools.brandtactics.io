@@ -1,17 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { BellIcon, Link2, List, Bold, Italic, Underline, Strikethrough, SmilePlus, X } from "lucide-react";
+import { BellIcon, Link2, List, Bold, Italic, Underline, Strikethrough, SmilePlus, X, Send } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function EditTaskDialog({ task }: { task?: any }) {
   const isEditing = !!task;
+  const [newComment, setNewComment] = useState("");
+  const [isEditingComment, setIsEditingComment] = useState(false);
 
   return (
     <DialogContent showCloseButton={false} className="max-w-[100%] sm:max-w-none sm:min-w-[850px] w-full sm:w-auto p-0 overflow-hidden bg-white">
@@ -62,12 +65,12 @@ export function EditTaskDialog({ task }: { task?: any }) {
           <div className="flex-1 p-6 space-y-6 md:border-r border-gray-100">
             
             <div className="space-y-2">
-              <Label className="text-gray-600 font-semibold">Task title <span className="text-red-500">*</span></Label>
+              <Label className="text-gray-600 text-[13px] font-medium">Task title <span className="text-red-500">*</span></Label>
               <Input defaultValue={task?.title || ""} placeholder="Design new website homepage" className="font-medium text-base h-11" />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-gray-600 font-semibold">Description</Label>
+              <Label className="text-gray-600 text-[13px] font-medium">Description</Label>
               <div className="border rounded-md overflow-hidden bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500">
                  {/* Fake toolbar */}
                  <div className="flex items-center gap-1 border-b bg-gray-50/50 p-2 text-gray-500">
@@ -88,7 +91,8 @@ export function EditTaskDialog({ task }: { task?: any }) {
 
             <div className="space-y-4 pt-2">
               <Label className="text-gray-900 font-bold text-base">Comments</Label>
-              <div className="space-y-4">
+              <div className="space-y-6">
+                
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-xs shrink-0 pt-0.5">MJ</div>
                   <div>
@@ -103,14 +107,62 @@ export function EditTaskDialog({ task }: { task?: any }) {
                     </div>
                   </div>
                 </div>
+
+                <div className="flex items-start gap-3 group">
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-semibold text-xs shrink-0">ME</div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-0.5">
+                       <span className="font-semibold text-sm text-gray-900">You</span>
+                       <span className="text-xs text-gray-400">1 hr ago</span>
+                    </div>
+                    {isEditingComment ? (
+                      <div className="mt-1 flex flex-col items-end gap-2">
+                         <Textarea defaultValue="I have attached the updated guidelines below." className="text-sm min-h-[60px]" />
+                         <div className="flex gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => setIsEditingComment(false)}>Cancel</Button>
+                            <Button size="sm" onClick={() => setIsEditingComment(false)}>Save</Button>
+                         </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-sm text-gray-700">I have attached the updated guidelines below.</p>
+                        <div className="flex items-center gap-3 mt-1 text-xs font-semibold text-gray-500">
+                          <button className="hover:text-blue-600">Reply</button>
+                          <button className="hover:text-blue-600">Like</button>
+                          <button onClick={() => setIsEditingComment(true)} className="hover:text-blue-600">Edit</button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
               </div>
 
               {/* Add Comment Input */}
-              <div className="flex gap-3 pt-4 border-t mt-4">
-                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-semibold text-xs shrink-0">ME</div>
-                <div className="relative flex-1">
-                  <Input placeholder="Write a comment..." className="pr-10 bg-gray-50/50" />
-                  <SmilePlus className="w-4 h-4 absolute right-3 top-2.5 text-gray-400 cursor-pointer hover:text-gray-600" />
+              <div className="flex gap-3 pt-4 border-t mt-4 relative">
+                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-semibold text-xs shrink-0 mt-1">ME</div>
+                <div className="relative flex-1 flex flex-col items-end">
+                  <Input 
+                    placeholder="Write a comment..." 
+                    className="pr-10 bg-gray-50/50" 
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newComment.trim()) {
+                         setNewComment("");
+                      }
+                    }}
+                  />
+                  {!newComment.trim() && <SmilePlus className="w-4 h-4 absolute right-3 top-3 text-gray-400 cursor-pointer hover:text-gray-600" />}
+                  {newComment.trim() && (
+                    <Button 
+                      size="sm" 
+                      className="mt-2 h-7 rounded bg-[#4640A0] hover:bg-[#342e81] text-xs font-semibold px-3"
+                      onClick={() => setNewComment("")}
+                    >
+                      Publish
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -118,13 +170,13 @@ export function EditTaskDialog({ task }: { task?: any }) {
           </div>
 
           {/* Right Column Component */}
-          <div className="w-full md:w-80 bg-gray-50/30 p-6 space-y-6">
+          <div className="w-full md:w-80 bg-gray-50/30 p-6 space-y-6 flex flex-col">
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-gray-600 font-semibold">Status</Label>
+                <Label className="text-gray-600 text-[13px] font-medium">Status</Label>
                 <Select defaultValue={task?.status || "Working on it"}>
-                  <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="bg-white w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Pending">Pending</SelectItem>
                     <SelectItem value="Working on it">
@@ -152,9 +204,9 @@ export function EditTaskDialog({ task }: { task?: any }) {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-gray-600 font-semibold">Priority</Label>
+                <Label className="text-gray-600 text-[13px] font-medium">Priority</Label>
                 <Select defaultValue={task?.priority || "High"}>
-                  <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="bg-white w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Low"><span className="text-gray-600 font-medium">Low</span></SelectItem>
                     <SelectItem value="Medium"><span className="text-yellow-600 font-medium">Medium</span></SelectItem>
@@ -166,9 +218,9 @@ export function EditTaskDialog({ task }: { task?: any }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-gray-600 font-semibold">Created by</Label>
+                <Label className="text-gray-600 text-[13px] font-medium">Created by</Label>
                 <Select defaultValue="mark">
-                  <SelectTrigger className="bg-white px-2">
+                  <SelectTrigger className="bg-white px-2 w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -183,9 +235,9 @@ export function EditTaskDialog({ task }: { task?: any }) {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-gray-600 font-semibold">Assignee</Label>
+                <Label className="text-gray-600 text-[13px] font-medium">Assigned to</Label>
                 <Select defaultValue="mark">
-                  <SelectTrigger className="bg-white px-2">
+                  <SelectTrigger className="bg-white px-2 w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -200,13 +252,10 @@ export function EditTaskDialog({ task }: { task?: any }) {
               </div>
             </div>
 
+            <hr className="border-gray-200 mt-6" />
+            <p className="text-center text-[12px] text-gray-400 font-medium mt-6">Created: Nov 20, 2023</p>
+
           </div>
-        </div>
-        
-        {/* Footer */}
-        <div className="flex items-center justify-end px-6 py-4 border-t bg-gray-50/50 gap-3">
-          <Button variant="ghost" className="text-gray-600 font-semibold">Cancel</Button>
-          <Button className="bg-[#4640A0] hover:bg-[#342e81] text-white font-semibold px-8 shadow-sm">Save</Button>
         </div>
 
       </div>
