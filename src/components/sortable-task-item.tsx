@@ -65,7 +65,7 @@ export function SortableTaskItem({ task, onDelete }: { task: any, onDelete?: () 
       {/* Right side actions and status */}
       <div className="flex items-center justify-between sm:justify-start gap-2 pl-7 sm:pl-0 shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
         
-        <div className="w-32 shrink-0">
+        <div className="w-[130px] shrink-0">
           <Select 
             value={status} 
             onValueChange={(val) => {
@@ -73,7 +73,7 @@ export function SortableTaskItem({ task, onDelete }: { task: any, onDelete?: () 
               toast.success(`Task status updated to ${val}`);
             }}
           >
-            <SelectTrigger className={`h-6 text-[10px] sm:text-xs font-medium px-2 py-0 border-0 focus:ring-0 shadow-none rounded-full ${
+            <SelectTrigger className={`h-6 text-[10px] sm:text-xs font-medium px-3 py-0 border-0 focus:ring-0 shadow-none rounded-full w-full ${
                 status === 'Stuck' ? 'bg-red-50 text-red-700 hover:bg-red-100' :
                 status === 'Working on it' ? 'bg-blue-50 text-blue-700 hover:bg-blue-100' :
                 status === 'Review' ? 'bg-purple-50 text-purple-700 hover:bg-purple-100' :
