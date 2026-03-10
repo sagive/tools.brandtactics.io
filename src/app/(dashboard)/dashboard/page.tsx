@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Send, Blocks, ChartNoAxesCombined, MousePointerClick, TrendingUp, Search, Plus, ExternalLink, Settings2, Trash2, LayoutGrid } from "lucide-react";
+import { Send, Blocks, ChartNoAxesCombined, MousePointerClick, TrendingUp, Search, Plus, ExternalLink, Settings2, Trash2, LayoutGrid, SlidersHorizontal } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
@@ -253,7 +253,7 @@ export default function DashboardPage() {
             ))}
           </TabsList>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredTools.length === 0 ? (
               <div className="col-span-full py-12 text-center border-2 border-dashed rounded-xl bg-gray-50/50">
                  <LayoutGrid className="w-8 h-8 text-gray-300 mx-auto mb-2" />
@@ -263,43 +263,57 @@ export default function DashboardPage() {
               filteredTools.map((tool) => {
                 const styles = CATEGORY_STYLES[tool.category] || CATEGORY_STYLES.Other;
                 return (
-                  <Card key={tool.id} className="group relative overflow-hidden hover:shadow-lg transition-all border-gray-200">
-                    <div className="p-4 flex flex-col items-center text-center space-y-3">
-                      <div className={`p-3.5 rounded-2xl ${styles.bg} ${styles.color} transition-transform group-hover:scale-105 group-hover:rotate-3`}>
-                        <IconRenderer name={tool.icon_name} className="w-7 h-7" />
+                  <Card key={tool.id} className="group relative overflow-hidden hover:shadow-md transition-all border-gray-200 bg-white hover:border-blue-200">
+                    {/* The whole card link */}
+                    <a href={tool.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0" aria-label={`Open ${tool.name}`}>
+                      <span className="sr-only">Open {tool.name}</span>
+                    </a>
+
+                    <div className="p-3 flex items-center gap-3">
+                      {/* Left Icon */}
+                      <div className={`p-2.5 rounded-xl ${styles.bg} ${styles.color} shrink-0 transition-transform group-hover:scale-105`}>
+                        <IconRenderer name={tool.icon_name} className="w-5 h-5" />
                       </div>
-                      <div className="min-w-0">
-                        <h3 className="font-bold text-gray-900 text-sm truncate">{tool.name}</h3>
-                        <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 mt-0.5">{tool.category}</p>
+                      
+                      {/* Center Text */}
+                      <div className="min-w-0 flex-1 relative z-10 pointer-events-none">
+                        <h3 className="font-bold text-gray-900 text-sm truncate group-hover:text-blue-600 transition-colors">{tool.name}</h3>
+                        <div className="text-[11px] text-blue-500 truncate w-full">
+                          {tool.url.replace(/^https?:\/\//, '')}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="outline" size="sm" className="h-7 px-3 text-[11px] rounded-lg shadow-sm">
-                          <a href={tool.url} target="_blank" rel="noopener noreferrer">Open</a>
-                        </Button>
-                        
-                        <DropdownMenu>
-                          <DropdownMenuTrigger>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400">
-                              <Settings2 className="w-3.5 h-3.5" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <Dialog>
-                              <DialogTrigger>
-                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs gap-2">
-                                   Edit Tool
-                                </DropdownMenuItem>
-                              </DialogTrigger>
-                              <EditToolDialog tool={tool} onToolSaved={fetchTools} />
-                            </Dialog>
-                            <DropdownMenuItem 
-                              className="text-xs text-red-600 gap-2" 
-                              onClick={() => handleDeleteTool(tool.id)}
-                            >
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+
+                      {/* Right elements (Settings & Rank) */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="relative z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-gray-600 bg-gray-50/50 hover:bg-gray-100">
+                                <SlidersHorizontal className="w-3.5 h-3.5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <Dialog>
+                                <DialogTrigger>
+                                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs gap-2">
+                                     Edit Tool
+                                  </DropdownMenuItem>
+                                </DialogTrigger>
+                                <EditToolDialog tool={tool} onToolSaved={fetchTools} />
+                              </Dialog>
+                              <DropdownMenuItem 
+                                className="text-xs text-red-600 gap-2" 
+                                onClick={(e) => { e.stopPropagation(); handleDeleteTool(tool.id); }}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        <div className="bg-gray-50 text-[11px] font-bold px-2 py-1 rounded border border-gray-200 text-gray-500 shadow-sm shrink-0 relative z-10 pointer-events-none">
+                           #{tool.rank || 0}
+                        </div>
                       </div>
                     </div>
                   </Card>

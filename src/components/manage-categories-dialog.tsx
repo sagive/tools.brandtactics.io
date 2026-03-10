@@ -28,7 +28,8 @@ export function ManageCategoriesDialog({ onCategoriesChanged }: { onCategoriesCh
     const maxRank = categories.reduce((max, c) => Math.max(max, c.rank), 0);
     const { error } = await supabase.from('tool_categories').insert([{ name: newName, rank: maxRank + 1 }]);
     if (error) {
-      toast.error("Failed to add category");
+      console.error("Insert error:", error);
+      toast.error(error.message || "Failed to add category");
     } else {
       toast.success("Category added");
       setNewName("");
@@ -41,7 +42,8 @@ export function ManageCategoriesDialog({ onCategoriesChanged }: { onCategoriesCh
     if (!confirm("Are you sure? This might affect tools using this category.")) return;
     const { error } = await supabase.from('tool_categories').delete().eq('id', id);
     if (error) {
-      toast.error("Failed to delete category");
+      console.error("Delete error:", error);
+      toast.error(error.message || "Failed to delete category");
     } else {
       toast.success("Category deleted");
       fetchCategories();
@@ -52,7 +54,8 @@ export function ManageCategoriesDialog({ onCategoriesChanged }: { onCategoriesCh
   const handleUpdateRank = async (id: string, newRank: number) => {
     const { error } = await supabase.from('tool_categories').update({ rank: newRank }).eq('id', id);
     if (error) {
-      toast.error("Failed to update rank");
+      console.error("Update rank error:", error);
+      toast.error(error.message || "Failed to update rank");
     } else {
       fetchCategories();
       onCategoriesChanged?.();
@@ -62,7 +65,8 @@ export function ManageCategoriesDialog({ onCategoriesChanged }: { onCategoriesCh
   const handleUpdateName = async (id: string, name: string) => {
      const { error } = await supabase.from('tool_categories').update({ name }).eq('id', id);
      if (error) {
-       toast.error("Failed to update name");
+       console.error("Update name error:", error);
+       toast.error(error.message || "Failed to update name");
      } else {
        toast.success("Category updated");
        fetchCategories();

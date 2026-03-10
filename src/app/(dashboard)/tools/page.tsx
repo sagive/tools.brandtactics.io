@@ -18,7 +18,8 @@ import {
   Search, 
   LayoutGrid, 
   ArrowLeft,
-  GripVertical
+  GripVertical,
+  SlidersHorizontal
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import Link from "next/link";
@@ -157,67 +158,64 @@ export default function ToolsDashboard() {
                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {categoryTools.length === 0 ? (
                     <div className="col-span-full py-8 text-center border border-dashed rounded-xl bg-gray-50/30">
                        <p className="text-sm text-gray-400">No tools found in this category.</p>
                     </div>
                   ) : (
                     categoryTools.map((tool) => (
-                      <Card key={tool.id} className="group relative overflow-hidden hover:shadow-lg transition-all border-gray-200 bg-white">
-                        <div className="p-4 flex flex-col items-center text-center space-y-3">
-                          <div className={`p-3.5 rounded-2xl ${styles.bg} ${styles.color} transition-transform group-hover:scale-105 group-hover:rotate-3`}>
-                            <IconRenderer name={tool.icon_name} className="w-6 h-6" />
+                      <Card key={tool.id} className="group relative overflow-hidden hover:shadow-md transition-all border-gray-200 bg-white hover:border-blue-200">
+                        {/* The whole card link */}
+                        <a href={tool.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0" aria-label={`Open ${tool.name}`}>
+                          <span className="sr-only">Open {tool.name}</span>
+                        </a>
+
+                        <div className="p-3 flex items-center gap-3">
+                          {/* Left Icon */}
+                          <div className={`p-2.5 rounded-xl ${styles.bg} ${styles.color} shrink-0 transition-transform group-hover:scale-105`}>
+                            <IconRenderer name={tool.icon_name} className="w-5 h-5" />
                           </div>
                           
-                          <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
-                             <div className="bg-gray-100 text-[10px] font-bold px-1.5 py-0.5 rounded border border-gray-200 text-gray-500 shadow-sm">
-                               #{tool.rank || 0}
-                             </div>
-                          </div>
-
-                          <div className="min-w-0">
-                            <h3 className="font-bold text-gray-900 text-sm truncate">{tool.name}</h3>
-                            <a 
-                              href={tool.url} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="text-[10px] text-blue-500 hover:underline truncate block max-w-[150px]"
-                            >
+                          {/* Center Text */}
+                          <div className="min-w-0 flex-1 relative z-10 pointer-events-none">
+                            <h3 className="font-bold text-gray-900 text-sm truncate group-hover:text-blue-600 transition-colors">{tool.name}</h3>
+                            <div className="text-[11px] text-blue-500 truncate w-full">
                               {tool.url.replace(/^https?:\/\//, '')}
-                            </a>
+                            </div>
                           </div>
 
-                          <div className="flex items-center gap-2 pt-1 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-                            <Button variant="outline" size="sm" className="h-7 px-3 text-[11px] rounded-lg shadow-sm">
-                              <a href={tool.url} target="_blank" rel="noopener noreferrer" className="flex items-center">
-                                <ExternalLink className="w-3 h-3 mr-1" /> Open
-                              </a>
-                            </Button>
-                            
-                            <DropdownMenu>
-                              <DropdownMenuTrigger>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400">
-                                  <Settings2 className="w-3.5 h-3.5" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <Dialog>
-                                  <DialogTrigger>
-                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs gap-2">
-                                       Edit Tool
-                                    </DropdownMenuItem>
-                                  </DialogTrigger>
-                                  <EditToolDialog tool={tool} onToolSaved={fetchData} />
-                                </Dialog>
-                                <DropdownMenuItem 
-                                  className="text-xs text-red-600 gap-2" 
-                                  onClick={() => handleDeleteTool(tool.id)}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" /> Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                          {/* Right elements (Settings & Rank) */}
+                          <div className="flex items-center gap-2 shrink-0">
+                            <div className="relative z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-gray-600 bg-gray-50/50 hover:bg-gray-100">
+                                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <Dialog>
+                                    <DialogTrigger>
+                                      <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs gap-2">
+                                         Edit Tool
+                                      </DropdownMenuItem>
+                                    </DialogTrigger>
+                                    <EditToolDialog tool={tool} onToolSaved={fetchData} />
+                                  </Dialog>
+                                  <DropdownMenuItem 
+                                    className="text-xs text-red-600 gap-2" 
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteTool(tool.id); }}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+
+                            <div className="bg-gray-50 text-[11px] font-bold px-2 py-1 rounded border border-gray-200 text-gray-500 shadow-sm shrink-0 relative z-10 pointer-events-none">
+                               #{tool.rank || 0}
+                            </div>
                           </div>
                         </div>
                       </Card>
