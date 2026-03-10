@@ -10,10 +10,35 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EditTaskDialog } from "@/components/edit-task-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 export function SortableTaskItem({ task, onDelete }: { task: any, onDelete?: () => void }) {
   const [status, setStatus] = useState(task.status);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
+
+  const handleStatusChange = async (val: string) => {
+    setStatus(val);
+    try {
+      const { error } = await supabase.from('tasks').update({ status: val }).eq('id', task.id);
+      if (error) throw error;
+      toast.success(`Task status updated to ${val}`);
+    } catch (error: any) {
+      toast.error("Failed to update status");
+      setStatus(task.status); // revert
+    }
+  };
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const { error } = await supabase.from('tasks').delete().eq('id', task.id);
+      if (error) throw error;
+      onDelete?.();
+      toast.success("Task deleted");
+    } catch (error: any) {
+      toast.error("Failed to delete task");
+    }
+  };
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -68,10 +93,7 @@ export function SortableTaskItem({ task, onDelete }: { task: any, onDelete?: () 
         <div className="w-[130px] shrink-0">
           <Select 
             value={status} 
-            onValueChange={(val) => {
-              setStatus(val);
-              toast.success(`Task status updated to ${val}`);
-            }}
+            onValueChange={handleStatusChange}
           >
             <SelectTrigger className={`h-6 text-[10px] sm:text-xs font-medium px-3 py-0 border-0 focus:ring-0 shadow-none rounded-full w-full ${
                 status === 'Stuck' ? 'bg-red-50 text-red-700 hover:bg-red-100' :
@@ -100,7 +122,7 @@ export function SortableTaskItem({ task, onDelete }: { task: any, onDelete?: () 
         </Dialog>
         
         <button 
-          onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
+          onClick={handleDelete}
           className="text-gray-300 hover:text-red-600 p-1 sm:opacity-0 group-hover:opacity-100 transition-opacity w-8 flex justify-center shrink-0"
         >
           <Trash2 className="w-4 h-4" />

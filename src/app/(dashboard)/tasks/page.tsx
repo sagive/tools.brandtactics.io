@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,21 +10,49 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 import { SortableTaskList } from "@/components/sortable-task-list";
-
-const MOCK_ALL_TASKS = [
-  ...Array.from({ length: 3 }).map((_, i) => ({ id: `p${i}`, client: "Acme Corp", title: `Review Analytics ${i}`, status: "Pending", due: "2023-11-20", priority: "Medium", assignee: "imri" })),
-  ...Array.from({ length: 2 }).map((_, i) => ({ id: `s${i}`, client: "Globex", title: `Content Strategy ${i}`, status: "Stuck", due: "2023-11-15", priority: "High", assignee: "sarah" })),
-  ...Array.from({ length: 2 }).map((_, i) => ({ id: `i${i}`, client: "Initech", title: `On-Page SEO ${i}`, status: "Working on it", due: "2023-11-25", priority: "Medium", assignee: "mark" })),
-  ...Array.from({ length: 2 }).map((_, i) => ({ id: `r${i}`, client: "Initech", title: `Content Edits ${i}`, status: "Review", due: "2023-11-28", priority: "Medium", assignee: "mark" })),
-];
 
 export default function GlobalTasksPage() {
   const [search, setSearch] = useState("");
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredTasks = MOCK_ALL_TASKS.filter(t => 
-    t.title.toLowerCase().includes(search.toLowerCase()) || 
-    t.client.toLowerCase().includes(search.toLowerCase())
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const fetchTasks = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select(`
+          *,
+          clients (
+            name
+          )
+        `)
+        .order("created_at", { ascending: false });
+        
+      if (error) throw error;
+      
+      const formatted = data.map((t: any) => ({
+        ...t,
+        client: t.clients?.name || "Unknown Client",
+        due: t.end_date ? new Date(t.end_date).toISOString().split('T')[0] : "No date"
+      }));
+      setTasks(formatted);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to load tasks");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredTasks = tasks.filter(t => 
+    t.title?.toLowerCase().includes(search.toLowerCase()) || 
+    t.client?.toLowerCase().includes(search.toLowerCase())
   );
 
   const pending = filteredTasks.filter(t => t.status === "Pending");
@@ -96,15 +124,21 @@ export default function GlobalTasksPage() {
       </div>
 
       <div className="space-y-6">
-        <SortableTaskList title="Pending" initialTasks={pending} />
-        <SortableTaskList title="Working on it / Review" initialTasks={active} />
-        <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} />
-        <SortableTaskList title="Completed" initialTasks={completed} />
-        
-        {filteredTasks.length === 0 && (
-           <div className="text-center py-10 text-gray-500 bg-white border rounded-lg border-dashed">
-             No tasks found matching your search.
-           </div>
+        {isLoading ? (
+          <div className="py-12 text-center text-gray-500">Loading tasks...</div>
+        ) : (
+          <>
+            <SortableTaskList title="Pending" initialTasks={pending} />
+            <SortableTaskList title="Working on it / Review" initialTasks={active} />
+            <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} />
+            <SortableTaskList title="Completed" initialTasks={completed} />
+            
+            {filteredTasks.length === 0 && (
+               <div className="text-center py-10 text-gray-500 bg-white border rounded-lg border-dashed">
+                 No tasks found matching your search.
+               </div>
+            )}
+          </>
         )}
       </div>
     </div>

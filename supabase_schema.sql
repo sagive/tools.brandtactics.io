@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS public.tasks (
   client_id UUID REFERENCES public.clients(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
-  status TEXT NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'In Progress', 'Stuck', 'Completed')),
+  status TEXT NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Working on it', 'Review', 'Stuck', 'Completed')),
   assignee TEXT,
   start_date DATE,
   end_date DATE,

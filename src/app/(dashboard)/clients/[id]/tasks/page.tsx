@@ -1,8 +1,6 @@
 "use client";
 
-import React from "react";
-
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,20 +11,43 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SortableTaskList } from "@/components/sortable-task-list";
-
-const MOCK_TASKS = [
-  ...Array.from({ length: 4 }).map((_, i) => ({ id: `p${i}`, title: `Pending Task ${i}`, status: "Pending", due: "2023-11-20", priority: "Medium", assignee: "mark" })),
-  ...Array.from({ length: 3 }).map((_, i) => ({ id: `s${i}`, title: `Stuck Task ${i}`, status: "Stuck", due: "2023-11-15", priority: "High", assignee: "sarah" })),
-  ...Array.from({ length: 2 }).map((_, i) => ({ id: `w${i}`, title: `Working Task ${i}`, status: "Working on it", due: "2023-11-25", priority: "Medium", assignee: "imri" })),
-  ...Array.from({ length: 2 }).map((_, i) => ({ id: `r${i}`, title: `Review Task ${i}`, status: "Review", due: "2023-11-28", priority: "Medium", assignee: "mark" })),
-  ...Array.from({ length: 6 }).map((_, i) => ({ id: `c${i}`, title: `Completed Task ${i}`, status: "Completed", due: "2023-11-01", priority: "Low", assignee: "imri" })),
-];
+import { supabase } from "@/lib/supabase";
 
 export default function ClientTasks({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = React.use(params); // Added for side-effects if needed, or just type correction
+  const { id } = React.use(params);
   const [search, setSearch] = useState("");
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredTasks = MOCK_TASKS.filter(t => t.title.toLowerCase().includes(search.toLowerCase()));
+  useEffect(() => {
+    if (id) fetchTasks();
+  }, [id]);
+
+  const fetchTasks = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select(`*, clients(name)`)
+        .eq("client_id", id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      const formatted = data.map((t: any) => ({
+        ...t,
+        client: t.clients?.name || "Unknown Client",
+        due: t.end_date ? new Date(t.end_date).toISOString().split('T')[0] : "No date"
+      }));
+      setTasks(formatted);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to load tasks");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredTasks = tasks.filter(t => t.title?.toLowerCase().includes(search.toLowerCase()));
 
   const pending = filteredTasks.filter(t => t.status === "Pending");
   const active = filteredTasks.filter(t => t.status === "Working on it" || t.status === "Review");
@@ -79,10 +100,21 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
       </div>
 
       <div className="space-y-6">
-        <SortableTaskList title="Pending" initialTasks={pending} />
-        <SortableTaskList title="Working on it / Review" initialTasks={active} />
-        <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} />
-        <SortableTaskList title="Completed" initialTasks={completed} />
+        {isLoading ? (
+          <div className="py-12 text-center text-gray-500">Loading tasks...</div>
+        ) : (
+          <>
+            <SortableTaskList title="Pending" initialTasks={pending} />
+            <SortableTaskList title="Working on it / Review" initialTasks={active} />
+            <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} />
+            <SortableTaskList title="Completed" initialTasks={completed} />
+            {filteredTasks.length === 0 && (
+               <div className="text-center py-10 text-gray-500 bg-white border rounded-lg border-dashed">
+                 No tasks found for this client.
+               </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

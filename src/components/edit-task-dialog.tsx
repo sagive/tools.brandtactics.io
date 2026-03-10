@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,11 +10,63 @@ import { BellIcon, Link2, List, Bold, Italic, Underline, Strikethrough, SmilePlu
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export function EditTaskDialog({ task }: { task?: any }) {
   const isEditing = !!task;
   const [newComment, setNewComment] = useState("");
   const [isEditingComment, setIsEditingComment] = useState(false);
+  
+  const [title, setTitle] = useState(task?.title || "");
+  const [description, setDescription] = useState(task?.description || "");
+  const [status, setStatus] = useState(task?.status || "Pending");
+  const [priority, setPriority] = useState(task?.priority || "Medium");
+  const [assignee, setAssignee] = useState(task?.assignee || "mark");
+  const [comments, setComments] = useState<any[]>(task?.comments || []);
+
+  const createdDate = task?.created_at 
+    ? new Date(task.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+    : "Unknown date";
+
+  // Debounced auto-save for text fields
+  useEffect(() => {
+    if (!isEditing) return;
+    const timeoutId = setTimeout(() => {
+      if (title !== task.title || description !== task.description) {
+        supabase.from('tasks').update({ title, description }).eq('id', task.id)
+          .then(({error}) => { 
+             if (error) toast.error("Failed to auto-save task"); 
+          });
+      }
+    }, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [title, description, isEditing, task?.id, task?.title, task?.description]);
+
+  const updateField = async (field: string, value: any) => {
+    if (!isEditing) return;
+    try {
+      const { error } = await supabase.from('tasks').update({ [field]: value }).eq('id', task.id);
+      if (error) throw error;
+      toast.success(`${field} saved`);
+    } catch (err: any) {
+      toast.error(`Failed to save ${field}`);
+    }
+  };
+
+  const handlePublishComment = async () => {
+    if (!newComment.trim() || !isEditing) return;
+    const comment = { 
+      id: Date.now().toString(), 
+      user: 'ME', 
+      text: newComment.trim(), 
+      timestamp: new Date().toISOString() 
+    };
+    const updatedComments = [...comments, comment];
+    setComments(updatedComments);
+    setNewComment("");
+    await updateField("comments", updatedComments);
+  };
 
   return (
     <DialogContent showCloseButton={false} className="max-w-[100%] sm:max-w-none sm:min-w-[850px] w-full sm:w-auto p-0 overflow-hidden bg-white">
@@ -66,7 +118,12 @@ export function EditTaskDialog({ task }: { task?: any }) {
             
             <div className="space-y-2">
               <Label className="text-gray-600 text-[13px] font-medium">Task title <span className="text-red-500">*</span></Label>
-              <Input defaultValue={task?.title || ""} placeholder="Design new website homepage" className="font-medium text-base h-11" />
+              <Input 
+                value={title} 
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Design new website homepage" 
+                className="font-medium text-base h-11" 
+              />
             </div>
 
             <div className="space-y-2">
@@ -83,8 +140,10 @@ export function EditTaskDialog({ task }: { task?: any }) {
                    <Button variant="ghost" size="icon" className="h-7 w-7"><Link2 className="w-4 h-4" /></Button>
                  </div>
                  <Textarea 
-                   defaultValue="Create a new homepage design for the client with updated branding and a modern layout."
+                   value={description}
+                   onChange={(e) => setDescription(e.target.value)}
                    className="min-h-[120px] resize-none border-0 focus-visible:ring-0 rounded-none shadow-none" 
+                   placeholder="Describe this task..."
                  />
               </div>
             </div>
@@ -93,48 +152,34 @@ export function EditTaskDialog({ task }: { task?: any }) {
               <Label className="text-gray-900 font-bold text-base">Comments</Label>
               <div className="space-y-6">
                 
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-xs shrink-0 pt-0.5">MJ</div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-0.5">
-                       <span className="font-semibold text-sm text-gray-900">Mark Johnson</span>
-                       <span className="text-xs text-gray-400">2 hrs ago</span>
+                {/* Dynamically Render Comments */}
+                {comments.length === 0 && <p className="text-sm text-gray-500 italic">No comments yet.</p>}
+                
+                {comments.map((comment: any) => (
+                  <div key={comment.id || comment.timestamp} className="flex items-start gap-3 group">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-semibold text-xs shrink-0 pt-0.5">
+                      {comment.user === 'ME' ? 'ME' : 'MJ'}
                     </div>
-                    <p className="text-sm text-gray-700">Can you share the brand guidelines and assets for this project?</p>
-                    <div className="flex items-center gap-3 mt-1 text-xs font-semibold text-gray-500">
-                      <button className="hover:text-blue-600">Reply</button>
-                      <button className="hover:text-blue-600">Like</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 group">
-                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-semibold text-xs shrink-0">ME</div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-0.5">
-                       <span className="font-semibold text-sm text-gray-900">You</span>
-                       <span className="text-xs text-gray-400">1 hr ago</span>
-                    </div>
-                    {isEditingComment ? (
-                      <div className="mt-1 flex flex-col items-end gap-2">
-                         <Textarea defaultValue="I have attached the updated guidelines below." className="text-sm min-h-[60px]" />
-                         <div className="flex gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => setIsEditingComment(false)}>Cancel</Button>
-                            <Button size="sm" onClick={() => setIsEditingComment(false)}>Save</Button>
-                         </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-0.5">
+                         <span className="font-semibold text-sm text-gray-900">{comment.user === 'ME' ? 'You' : 'Collaborator'}</span>
+                         <span className="text-xs text-gray-400">
+                           {new Date(comment.timestamp || Date.now()).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'})}
+                         </span>
                       </div>
-                    ) : (
-                      <>
-                        <p className="text-sm text-gray-700">I have attached the updated guidelines below.</p>
-                        <div className="flex items-center gap-3 mt-1 text-xs font-semibold text-gray-500">
-                          <button className="hover:text-blue-600">Reply</button>
-                          <button className="hover:text-blue-600">Like</button>
+                      <p className="text-sm text-gray-700">{comment.text}</p>
+                      
+                      {/* Interaction Actions */}
+                      <div className="flex items-center gap-3 mt-1 text-xs font-semibold text-gray-500">
+                        <button className="hover:text-blue-600">Reply</button>
+                        <button className="hover:text-blue-600">Like</button>
+                        {comment.user === 'ME' && (
                           <button onClick={() => setIsEditingComment(true)} className="hover:text-blue-600">Edit</button>
-                        </div>
-                      </>
-                    )}
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
 
               </div>
 
@@ -149,7 +194,8 @@ export function EditTaskDialog({ task }: { task?: any }) {
                     onChange={(e) => setNewComment(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && newComment.trim()) {
-                         setNewComment("");
+                         e.preventDefault();
+                         handlePublishComment();
                       }
                     }}
                   />
@@ -158,7 +204,7 @@ export function EditTaskDialog({ task }: { task?: any }) {
                     <Button 
                       size="sm" 
                       className="mt-2 h-7 rounded bg-[#4640A0] hover:bg-[#342e81] text-xs font-semibold px-3"
-                      onClick={() => setNewComment("")}
+                      onClick={handlePublishComment}
                     >
                       Publish
                     </Button>
@@ -175,7 +221,13 @@ export function EditTaskDialog({ task }: { task?: any }) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-gray-600 text-[13px] font-medium">Status</Label>
-                <Select defaultValue={task?.status || "Working on it"}>
+                <Select 
+                  value={status} 
+                  onValueChange={(val) => { 
+                    setStatus(val); 
+                    updateField("status", val); 
+                  }}
+                >
                   <SelectTrigger className="bg-white w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Pending">Pending</SelectItem>
@@ -205,7 +257,13 @@ export function EditTaskDialog({ task }: { task?: any }) {
 
               <div className="space-y-2">
                 <Label className="text-gray-600 text-[13px] font-medium">Priority</Label>
-                <Select defaultValue={task?.priority || "High"}>
+                <Select 
+                  value={priority}
+                  onValueChange={(val) => { 
+                    setPriority(val); 
+                    updateField("priority", val); 
+                  }}
+                >
                   <SelectTrigger className="bg-white w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Low"><span className="text-gray-600 font-medium">Low</span></SelectItem>
@@ -236,7 +294,13 @@ export function EditTaskDialog({ task }: { task?: any }) {
 
               <div className="space-y-2">
                 <Label className="text-gray-600 text-[13px] font-medium">Assigned to</Label>
-                <Select defaultValue="mark">
+                <Select 
+                  value={assignee}
+                  onValueChange={(val) => { 
+                    setAssignee(val); 
+                    updateField("assignee", val); 
+                  }}
+                >
                   <SelectTrigger className="bg-white px-2 w-full">
                     <SelectValue />
                   </SelectTrigger>
@@ -253,7 +317,7 @@ export function EditTaskDialog({ task }: { task?: any }) {
             </div>
 
             <hr className="border-gray-200 mt-6" />
-            <p className="text-center text-[12px] text-gray-400 font-medium mt-6">Created: Nov 20, 2023</p>
+            <p className="text-center text-[12px] text-gray-400 font-medium mt-6">Created: {createdDate}</p>
 
           </div>
         </div>
