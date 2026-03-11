@@ -148,7 +148,7 @@ export default function SettingsPage() {
                   <Textarea 
                     value={template}
                     onChange={(e) => setTemplate(e.target.value)}
-                    className="flex-1 font-mono text-sm resize-none border-0 focus-visible:ring-0 bg-gray-900 text-green-400 p-6 shadow-none rounded-none"
+                    className="flex-1 font-mono text-sm resize-none border-0 focus-visible:ring-0 bg-gray-900 text-green-400 p-6 shadow-none rounded-none overflow-y-auto"
                     placeholder="<div>[content]</div>"
                   />
                 </div>
