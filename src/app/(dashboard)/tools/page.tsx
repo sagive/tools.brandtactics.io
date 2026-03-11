@@ -19,7 +19,9 @@ import {
   LayoutGrid, 
   ArrowLeft,
   GripVertical,
-  SlidersHorizontal
+  SlidersHorizontal,
+  User,
+  Lock
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import Link from "next/link";
@@ -110,20 +112,20 @@ export default function ToolsDashboard() {
           </div>
           
           <Dialog>
-             <DialogTrigger>
+             <DialogTrigger render={
                <Button variant="outline" className="gap-2 border-dashed">
                  <Settings2 className="w-4 h-4" /> Categories
                </Button>
-             </DialogTrigger>
+             }/>
              <ManageCategoriesDialog onCategoriesChanged={fetchData} />
           </Dialog>
 
           <Dialog>
-             <DialogTrigger>
+             <DialogTrigger render={
                <Button className="gap-2 bg-[#4640A0] hover:bg-[#342e81]">
                  <Plus className="w-4 h-4" /> Add Tool
                </Button>
-             </DialogTrigger>
+             }/>
              <EditToolDialog onToolSaved={fetchData} />
           </Dialog>
         </div>
@@ -137,100 +139,149 @@ export default function ToolsDashboard() {
         </div>
       ) : (
         <div className="space-y-12">
-          {categories.map((category) => {
-            const categoryTools = filteredTools
-              .filter(t => t.category === category.name)
-              .slice(0, 20); // Show top 20
-            
-            if (categoryTools.length === 0 && searchTerm) return null;
+          {(() => {
+            const categorizedToolIds = new Set();
+            const categorySections = categories.map((category) => {
+              const categoryTools = filteredTools
+                .filter(t => t.category === category.name)
+                .slice(0, 20);
+              
+              categoryTools.forEach(t => categorizedToolIds.add(t.id));
+              
+              if (categoryTools.length === 0) return null;
 
-            const styles = CATEGORY_STYLES[category.name] || CATEGORY_STYLES.Other;
+              const styles = CATEGORY_STYLES[category.name] || CATEGORY_STYLES.Other;
 
-            return (
-              <section key={category.id} className="space-y-6">
-                <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                   <div className="flex items-center gap-3">
-                     <div className={`w-2 h-8 rounded-full ${styles.bg.replace('bg-', 'bg-') || 'bg-gray-200'}`} style={{ backgroundColor: styles.color.split('-')[1] }} />
-                     <div>
-                       <h2 className="text-xl font-bold text-gray-900">{category.name}</h2>
-                       <p className="text-xs text-gray-500">{categoryTools.length} tools ranked in this category</p>
+              return (
+                <section key={category.id} className="space-y-6">
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                     <div className="flex items-center gap-3">
+                       <div className={`w-2 h-8 rounded-full ${styles.bg}`} style={{ backgroundColor: styles.color.split('-')[1] }} />
+                       <div>
+                         <h2 className="text-xl font-bold text-gray-900">{category.name}</h2>
+                         <p className="text-xs text-gray-500">{categoryTools.length} tools ranked in this category</p>
+                       </div>
                      </div>
-                   </div>
-                </div>
+                  </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {categoryTools.length === 0 ? (
-                    <div className="col-span-full py-8 text-center border border-dashed rounded-xl bg-gray-50/30">
-                       <p className="text-sm text-gray-400">No tools found in this category.</p>
-                    </div>
-                  ) : (
-                    categoryTools.map((tool) => (
-                      <Card key={tool.id} className="group relative overflow-hidden hover:shadow-md transition-all border-gray-200 bg-white hover:border-blue-200">
-                        {/* The whole card link */}
-                        <a href={tool.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0" aria-label={`Open ${tool.name}`}>
-                          <span className="sr-only">Open {tool.name}</span>
-                        </a>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {categoryTools.map((tool) => (
+                      <ToolCard key={tool.id} tool={tool} styles={styles} onDelete={handleDeleteTool} onRefresh={fetchData} />
+                    ))}
+                  </div>
+                </section>
+              );
+            }).filter(Boolean);
 
-                        <div className="p-3 flex items-center gap-3">
-                          {/* Left Icon */}
-                          <div className={`p-2.5 rounded-xl ${styles.bg} ${styles.color} shrink-0 transition-transform group-hover:scale-105`}>
-                            <IconRenderer name={tool.icon_name} className="w-5 h-5" />
-                          </div>
-                          
-                          {/* Center Text */}
-                          <div className="min-w-0 flex-1 relative z-10 pointer-events-none">
-                            <h3 className="font-bold text-gray-900 text-sm truncate group-hover:text-blue-600 transition-colors">{tool.name}</h3>
-                            <div className="text-[11px] text-blue-500 truncate w-full">
-                              {tool.url.replace(/^https?:\/\//, '')}
-                            </div>
-                          </div>
+            // Handle "Other" / Uncategorized tools
+            const uncategorizedTools = filteredTools.filter(t => !categorizedToolIds.has(t.id));
+            if (uncategorizedTools.length > 0) {
+              const styles = CATEGORY_STYLES.Other;
+              categorySections.push(
+                <section key="uncategorized" className="space-y-6">
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                     <div className="flex items-center gap-3">
+                       <div className="w-2 h-8 rounded-full bg-gray-200" />
+                       <div>
+                         <h2 className="text-xl font-bold text-gray-900">Other / Uncategorized</h2>
+                         <p className="text-xs text-gray-500">{uncategorizedTools.length} tools in this section</p>
+                       </div>
+                     </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {uncategorizedTools.map((tool) => (
+                      <ToolCard key={tool.id} tool={tool} styles={styles} onDelete={handleDeleteTool} onRefresh={fetchData} />
+                    ))}
+                  </div>
+                </section>
+              );
+            }
 
-                          {/* Right elements (Settings & Rank) */}
-                          <div className="flex items-center gap-2 shrink-0">
-                            <div className="relative z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Dialog>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger 
-                                    render={
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-gray-600 bg-gray-50/50 hover:bg-gray-100">
-                                        <SlidersHorizontal className="w-3.5 h-3.5" />
-                                      </Button>
-                                    }
-                                  />
-                                  <DropdownMenuContent align="end">
-                                    <DialogTrigger 
-                                      render={
-                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs gap-2">
-                                          <Settings2 className="w-3.5 h-3.5" /> Edit Tool
-                                        </DropdownMenuItem>
-                                      }
-                                    />
-                                    <DropdownMenuItem 
-                                      className="text-xs text-red-600 gap-2" 
-                                      onClick={(e) => { e.stopPropagation(); handleDeleteTool(tool.id); }}
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" /> Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                                <EditToolDialog tool={tool} onToolSaved={fetchData} />
-                              </Dialog>
-                            </div>
-
-                            <div className="bg-gray-50 text-[11px] font-bold px-2 py-1 rounded border border-gray-200 text-gray-500 shadow-sm shrink-0 relative z-10 pointer-events-none">
-                               #{tool.rank || 0}
-                            </div>
-                          </div>
-                        </div>
-                      </Card>
-                    ))
-                  )}
-                </div>
-              </section>
-            );
-          })}
+            return categorySections;
+          })()}
         </div>
       )}
     </div>
+  );
+}
+
+function ToolCard({ tool, styles, onDelete, onRefresh }: { tool: any, styles: any, onDelete: (id: string) => void, onRefresh: () => void }) {
+  const copyToClipboard = (text: string, type: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${type} copied to clipboard`);
+  };
+
+  return (
+    <Card className="group relative overflow-hidden hover:shadow-md transition-all border-gray-200 bg-white hover:border-blue-200 flex flex-col">
+      <div className="p-3 flex items-center gap-3 relative min-h-[64px]">
+        <a href={tool.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0" aria-label={`Open ${tool.name}`}>
+          <span className="sr-only">Open {tool.name}</span>
+        </a>
+
+        <div className={`p-2.5 rounded-xl ${styles.bg} ${styles.color} shrink-0 transition-transform group-hover:scale-105 relative z-10 pointer-events-none`}>
+          <IconRenderer name={tool.icon_name} className="w-5 h-5" />
+        </div>
+        
+        <div className="min-w-0 flex-1 relative z-10 pointer-events-none">
+          <h3 className="font-bold text-gray-900 text-sm truncate group-hover:text-blue-600 transition-colors">{tool.name}</h3>
+          <div className="text-[11px] text-blue-500 truncate w-full">
+            {tool.url.replace(/^https?:\/\//, '')}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0 relative z-10">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+            <Dialog>
+              <DropdownMenu>
+                <DropdownMenuTrigger render={
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-gray-600 bg-gray-50/50 hover:bg-gray-100">
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                  </Button>
+                }/>
+                <DropdownMenuContent align="end">
+                  <DialogTrigger render={
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs gap-2">
+                      <Settings2 className="w-3.5 h-3.5" /> Edit Tool
+                    </DropdownMenuItem>
+                  }/>
+                  <DropdownMenuItem className="text-xs text-red-600 gap-2" onClick={(e) => { e.stopPropagation(); onDelete(tool.id); }}>
+                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <EditToolDialog tool={tool} onToolSaved={onRefresh} />
+            </Dialog>
+          </div>
+          <div className="bg-gray-50 text-[11px] font-bold px-2 py-1 rounded border border-gray-200 text-gray-500 shadow-sm shrink-0 pointer-events-none">
+             #{tool.rank || 0}
+          </div>
+        </div>
+      </div>
+
+      {(tool.username || tool.password) && (
+        <div className="px-3 pb-3 pt-1 flex items-center gap-2 relative z-20 overflow-hidden">
+          {tool.username && (
+            <button 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); copyToClipboard(tool.username, "Username"); }}
+              className="flex items-center gap-1.5 px-2 py-1 rounded bg-gray-50 hover:bg-gray-100 border border-gray-200 text-[10px] text-gray-600 transition-colors max-w-[140px]"
+              title="Click to copy username"
+            >
+              <User className="w-3 h-3 text-gray-400" />
+              <span className="truncate">{tool.username}</span>
+            </button>
+          )}
+          {tool.password && (
+            <button 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); copyToClipboard(tool.password, "Password"); }}
+              className="flex items-center gap-1.5 px-2 py-1 rounded bg-gray-50 hover:bg-gray-100 border border-gray-200 text-[10px] text-gray-600 transition-colors"
+              title="Click to copy password"
+            >
+              <Lock className="w-3 h-3 text-gray-400" />
+              <span>********</span>
+            </button>
+          )}
+        </div>
+      )}
+    </Card>
   );
 }

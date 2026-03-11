@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Send, Blocks, ChartNoAxesCombined, MousePointerClick, TrendingUp, Search, Plus, ExternalLink, Settings2, Trash2, LayoutGrid, SlidersHorizontal } from "lucide-react";
+import { Send, Blocks, ChartNoAxesCombined, MousePointerClick, TrendingUp, Search, Plus, ExternalLink, Settings2, Trash2, LayoutGrid, SlidersHorizontal, User, Lock } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
@@ -80,7 +80,16 @@ export default function DashboardPage() {
     }
   };
 
-  const filteredTools = filter === "All" ? tools : tools.filter(t => t.category === filter);
+  // Improved filtering to handle "Other" tools
+  const filteredTools = (() => {
+    if (filter === "All") return tools;
+    if (filter === "Other") {
+      // Return tools whose category is either explicitly "Other" or NOT in the categories list
+      const knownCategoryNames = categories.map(c => c.name);
+      return tools.filter(t => t.category === "Other" || !knownCategoryNames.includes(t.category));
+    }
+    return tools.filter(t => t.category === filter);
+  })();
   
   const filteredWidgetClients = clients
     .filter(c => (c.name || "").toLowerCase().includes(clientSearch.toLowerCase()))
@@ -94,7 +103,6 @@ export default function DashboardPage() {
     }
     setSending(true);
     
-    // Call the theoretical send email API Route
     try {
       const res = await fetch("/api/send-email", {
         method: "POST",
@@ -117,8 +125,6 @@ export default function DashboardPage() {
     <div className="space-y-8">
       {/* Top Row: Email Form and Clients List */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        
-        {/* Left: Email Form */}
         <div className="md:col-span-4 space-y-6">
           <Card className="shadow-sm border-gray-200">
             <CardHeader className="pb-4 border-b mb-4">
@@ -143,26 +149,14 @@ export default function DashboardPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Subject</Label>
-                  <Input 
-                    value={subject} 
-                    onChange={e => setSubject(e.target.value)}
-                    className="bg-white"
-                  />
+                  <Input value={subject} onChange={e => setSubject(e.target.value)} className="bg-white" />
                 </div>
-
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Message</Label>
-                  <Textarea 
-                    value={body}
-                    onChange={e => setBody(e.target.value)}
-                    placeholder="Brief update details..." 
-                    className="min-h-[120px] resize-none bg-white"
-                  />
+                  <Textarea value={body} onChange={e => setBody(e.target.value)} placeholder="Brief update details..." className="min-h-[120px] resize-none bg-white" />
                 </div>
-
                 <Button type="submit" disabled={sending} className="w-full bg-[#4640A0] hover:bg-[#342e81]">
                   <Send className="w-4 h-4 mr-2" />
                   {sending ? "Sending..." : "Send Update"}
@@ -172,7 +166,6 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Right: Clients List (Stretched) */}
         <div className="md:col-span-8 space-y-6">
           <Card className="shadow-sm border-gray-200 h-full">
             <CardHeader className="pb-3 border-b flex flex-row items-center justify-between">
@@ -185,12 +178,7 @@ export default function DashboardPage() {
             <div className="px-4 py-3 bg-gray-50/50 border-b">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search clients..."
-                  className="pl-9 h-9 text-sm bg-white border-gray-200"
-                  value={clientSearch}
-                  onChange={(e) => setClientSearch(e.target.value)}
-                />
+                <Input placeholder="Search clients..." className="pl-9 h-9 text-sm bg-white border-gray-200" value={clientSearch} onChange={(e) => setClientSearch(e.target.value)} />
               </div>
             </div>
             <CardContent className="p-0">
@@ -223,11 +211,11 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Agency Tools Row (Below) */}
+      {/* Agency Tools Row */}
       <div className="space-y-4">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <h2 className="text-xl font-bold tracking-tight text-gray-900">Agency Tools</h2>
+            <h2 className="text-xl font-bold tracking-tight text-gray-900 font-outfit">Agency Tools</h2>
             <div className="flex items-center gap-2">
               <p className="text-xs text-gray-500">Quick access to your workspace</p>
               <span className="text-gray-300">•</span>
@@ -235,11 +223,11 @@ export default function DashboardPage() {
             </div>
           </div>
           <Dialog>
-            <DialogTrigger>
+            <DialogTrigger render={
               <Button size="sm" variant="outline" className="h-8 gap-1.5 border-dashed border-gray-300 hover:border-blue-500">
                 <Plus className="w-3.5 h-3.5" /> Add Tool
               </Button>
-            </DialogTrigger>
+            }/>
             <EditToolDialog onToolSaved={fetchTools} />
           </Dialog>
         </div>
@@ -260,73 +248,96 @@ export default function DashboardPage() {
                  <p className="text-sm text-gray-500">No tools found for this category.</p>
               </div>
             ) : (
-              filteredTools.map((tool) => {
-                const styles = CATEGORY_STYLES[tool.category] || CATEGORY_STYLES.Other;
-                return (
-                  <Card key={tool.id} className="group relative overflow-hidden hover:shadow-md transition-all border-gray-200 bg-white hover:border-blue-200">
-                    {/* The whole card link */}
-                    <a href={tool.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0" aria-label={`Open ${tool.name}`}>
-                      <span className="sr-only">Open {tool.name}</span>
-                    </a>
-
-                    <div className="p-3 flex items-center gap-3">
-                      {/* Left Icon */}
-                      <div className={`p-2.5 rounded-xl ${styles.bg} ${styles.color} shrink-0 transition-transform group-hover:scale-105`}>
-                        <IconRenderer name={tool.icon_name} className="w-5 h-5" />
-                      </div>
-                      
-                      {/* Center Text */}
-                      <div className="min-w-0 flex-1 relative z-10 pointer-events-none">
-                        <h3 className="font-bold text-gray-900 text-sm truncate group-hover:text-blue-600 transition-colors">{tool.name}</h3>
-                        <div className="text-[11px] text-blue-500 truncate w-full">
-                          {tool.url.replace(/^https?:\/\//, '')}
-                        </div>
-                      </div>
-
-                      {/* Right elements (Settings & Rank) */}
-                      <div className="flex items-center gap-2 shrink-0">
-                        <div className="relative z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Dialog>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger 
-                                render={
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-gray-600 bg-gray-50/50 hover:bg-gray-100">
-                                    <SlidersHorizontal className="w-3.5 h-3.5" />
-                                  </Button>
-                                }
-                              />
-                              <DropdownMenuContent align="end">
-                                <DialogTrigger 
-                                  render={
-                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs gap-2">
-                                       <Settings2 className="w-3.5 h-3.5" /> Edit Tool
-                                    </DropdownMenuItem>
-                                  }
-                                />
-                                <DropdownMenuItem 
-                                  className="text-xs text-red-600 gap-2" 
-                                  onClick={(e) => { e.stopPropagation(); handleDeleteTool(tool.id); }}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" /> Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                            <EditToolDialog tool={tool} onToolSaved={fetchTools} />
-                          </Dialog>
-                        </div>
-
-                        <div className="bg-gray-50 text-[11px] font-bold px-2 py-1 rounded border border-gray-200 text-gray-500 shadow-sm shrink-0 relative z-10 pointer-events-none">
-                           #{tool.rank || 0}
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })
+              filteredTools.map((tool) => (
+                <DashboardToolCard key={tool.id} tool={tool} onDelete={handleDeleteTool} onRefresh={fetchTools} />
+              ))
             )}
           </div>
         </Tabs>
       </div>
     </div>
+  );
+}
+
+function DashboardToolCard({ tool, onDelete, onRefresh }: { tool: any, onDelete: (id: string) => void, onRefresh: () => void }) {
+  const styles = CATEGORY_STYLES[tool.category] || CATEGORY_STYLES.Other;
+  
+  const copyToClipboard = (text: string, type: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${type} copied to clipboard`);
+  };
+
+  return (
+    <Card className="group relative overflow-hidden hover:shadow-md transition-all border-gray-200 bg-white hover:border-blue-200 flex flex-col">
+      <div className="p-3 flex items-center gap-3 relative min-h-[64px]">
+        <a href={tool.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0" aria-label={`Open ${tool.name}`}>
+          <span className="sr-only">Open {tool.name}</span>
+        </a>
+
+        <div className={`p-2.5 rounded-xl ${styles.bg} ${styles.color} shrink-0 transition-transform group-hover:scale-105 relative z-10 pointer-events-none`}>
+          <IconRenderer name={tool.icon_name} className="w-5 h-5" />
+        </div>
+        
+        <div className="min-w-0 flex-1 relative z-10 pointer-events-none">
+          <h3 className="font-bold text-gray-900 text-sm truncate group-hover:text-blue-600 transition-colors">{tool.name}</h3>
+          <div className="text-[11px] text-blue-500 truncate w-full">
+            {tool.url.replace(/^https?:\/\//, '')}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0 relative z-10">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+            <Dialog>
+              <DropdownMenu>
+                <DropdownMenuTrigger render={
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-gray-600 bg-gray-50/50 hover:bg-gray-100">
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                  </Button>
+                }/>
+                <DropdownMenuContent align="end">
+                  <DialogTrigger render={
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs gap-2">
+                       <Settings2 className="w-3.5 h-3.5" /> Edit Tool
+                    </DropdownMenuItem>
+                  }/>
+                  <DropdownMenuItem className="text-xs text-red-600 gap-2" onClick={(e) => { e.stopPropagation(); onDelete(tool.id); }}>
+                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <EditToolDialog tool={tool} onToolSaved={onRefresh} />
+            </Dialog>
+          </div>
+          <div className="bg-gray-50 text-[11px] font-bold px-2 py-1 rounded border border-gray-200 text-gray-500 shadow-sm shrink-0 pointer-events-none">
+             #{tool.rank || 0}
+          </div>
+        </div>
+      </div>
+
+      {(tool.username || tool.password) && (
+        <div className="px-3 pb-3 pt-1 flex items-center gap-2 relative z-20 overflow-hidden">
+          {tool.username && (
+            <button 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); copyToClipboard(tool.username, "Username"); }}
+              className="flex items-center gap-1.5 px-2 py-1 rounded bg-gray-50 hover:bg-gray-100 border border-gray-200 text-[10px] text-gray-600 transition-colors max-w-[140px]"
+              title="Click to copy username"
+            >
+              <User className="w-3 h-3 text-gray-400" />
+              <span className="truncate">{tool.username}</span>
+            </button>
+          )}
+          {tool.password && (
+            <button 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); copyToClipboard(tool.password, "Password"); }}
+              className="flex items-center gap-1.5 px-2 py-1 rounded bg-gray-50 hover:bg-gray-100 border border-gray-200 text-[10px] text-gray-600 transition-colors"
+              title="Click to copy password"
+            >
+              <Lock className="w-3 h-3 text-gray-400" />
+              <span>********</span>
+            </button>
+          )}
+        </div>
+      )}
+    </Card>
   );
 }

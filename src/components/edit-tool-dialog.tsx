@@ -17,6 +17,8 @@ export function EditToolDialog({ tool, onToolSaved }: { tool?: any, onToolSaved?
   const [category, setCategory] = useState(tool?.category || "");
   const [iconName, setIconName] = useState(tool?.icon_name || "Blocks");
   const [rank, setRank] = useState(tool?.rank || 0);
+  const [username, setUsername] = useState(tool?.username || "");
+  const [password, setPassword] = useState(tool?.password || "");
   const [isSaving, setIsSaving] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
 
@@ -39,7 +41,15 @@ export function EditToolDialog({ tool, onToolSaved }: { tool?: any, onToolSaved?
 
     setIsSaving(true);
     try {
-      const payload = { name, url, category, icon_name: iconName, rank: parseInt(rank.toString()) || 0 };
+      const payload = { 
+        name, 
+        url, 
+        category, 
+        icon_name: iconName, 
+        rank: parseInt(rank.toString()) || 0,
+        username,
+        password
+      };
       
       let error;
       if (isEditing) {
@@ -110,6 +120,23 @@ export function EditToolDialog({ tool, onToolSaved }: { tool?: any, onToolSaved?
         <div className="space-y-2">
           <Label>Icon Name (Lucide)</Label>
           <Input value={iconName} onChange={(e) => setIconName(e.target.value)} placeholder="Blocks" />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label className="flex justify-between">
+              Username 
+              <span className="text-[10px] text-gray-400 font-normal">Optional</span>
+            </Label>
+            <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="isagive@" />
+          </div>
+          <div className="space-y-2">
+            <Label className="flex justify-between">
+              Password
+              <span className="text-[10px] text-gray-400 font-normal">Optional</span>
+            </Label>
+            <Input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="*******" />
+          </div>
         </div>
       </div>
       <div className="flex justify-end gap-3 pt-4">
