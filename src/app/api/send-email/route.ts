@@ -9,12 +9,19 @@ const resend = resendApiKey ? new Resend(resendApiKey) : null;
 // Use Service Role Key for server-side operations to bypass RLS
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+// We MUST have the service key to bypass RLS in this route
 const supabaseAdmin = (supabaseUrl && supabaseServiceKey) 
   ? createClient(supabaseUrl, supabaseServiceKey) 
-  : supabase;
+  : null;
 
 export async function POST(req: Request) {
   try {
+    if (!supabaseAdmin) {
+      console.error("FATAL ERROR: SUPABASE_SERVICE_ROLE_KEY is missing in environment variables. Cannot bypass RLS.");
+      return NextResponse.json({ error: 'Server configuration error: Missing service role key' }, { status: 500 });
+    }
+
     const { clientId, subject, body } = await req.json();
 
     if (!clientId || !subject || !body) {
