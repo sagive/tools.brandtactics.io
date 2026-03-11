@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Save, UserPlus, Mail } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/lib/supabase";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -27,9 +28,27 @@ export default function SettingsPage() {
   );
 
   const [inviteEmail, setInviteEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleSaveTemplate = () => {
-    toast.success("Email template saved successfully.");
+  // Fetch initial template
+  useEffect(() => {
+    supabase.from('app_settings').select('email_template').eq('id', 'global').single()
+      .then(({data, error}: {data: any, error: any}) => {
+        if (data?.email_template) {
+          setTemplate(data.email_template);
+        }
+        setIsLoading(false);
+      });
+  }, []);
+
+  const handleSaveTemplate = async () => {
+    try {
+      const { error } = await supabase.from('app_settings').update({ email_template: template }).eq('id', 'global');
+      if (error) throw error;
+      toast.success("Email template saved successfully.");
+    } catch (err: any) {
+      toast.error("Failed to save template");
+    }
   };
 
   const handleInviteUser = (e: React.FormEvent) => {
@@ -49,6 +68,14 @@ export default function SettingsPage() {
     </ul>
     <p>You can use standard HTML formatting here.</p>
   `);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -141,16 +168,19 @@ export default function SettingsPage() {
             <CardContent className="p-0">
               <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-200 h-[600px]">
                 {/* Editor Side */}
-                <div className="flex flex-col h-full bg-gray-50/30">
-                  <div className="px-4 py-2 border-b bg-white flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">HTML Source</span>
+                <div className="flex flex-col h-full bg-gray-900 border-r border-gray-800">
+                  <div className="px-4 py-2 border-b border-gray-800 bg-gray-950 flex items-center justify-between shrink-0">
+                    <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">HTML Source</span>
                   </div>
-                  <Textarea 
-                    value={template}
-                    onChange={(e) => setTemplate(e.target.value)}
-                    className="flex-1 font-mono text-sm resize-none border-0 focus-visible:ring-0 bg-gray-900 text-green-400 p-6 shadow-none rounded-none overflow-y-auto"
-                    placeholder="<div>[content]</div>"
-                  />
+                  <div className="flex-1 min-h-0">
+                    <Textarea 
+                      value={template}
+                      onChange={(e) => setTemplate(e.target.value)}
+                      className="w-full h-full font-mono text-sm resize-none border-0 focus-visible:ring-0 bg-transparent text-green-400 p-6 shadow-none rounded-none overflow-y-auto"
+                      placeholder="<div>[content]</div>"
+                      style={{ fieldSizing: 'fixed' } as any}
+                    />
+                  </div>
                 </div>
 
                 {/* Preview Side */}

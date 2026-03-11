@@ -91,6 +91,30 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- App Settings table (for global configs like email templates)
+CREATE TABLE IF NOT EXISTS public.app_settings (
+  id TEXT PRIMARY KEY DEFAULT 'global',
+  email_template TEXT,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- RLS for app_settings
+ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all authenticated users access to app_settings" ON public.app_settings FOR ALL USING (auth.role() = 'authenticated');
+
+-- Insert default row if not exists
+INSERT INTO public.app_settings (id, email_template) 
+VALUES ('global', '<div style="font-family: sans-serif; max-w: 600px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: white;">
+  <h2 style="color: #2563eb; margin-top: 0;">BrandTactics Update</h2>
+  <div style="background: #f8fafc; padding: 24px; border-radius: 8px; border: 1px solid #f1f5f9; color: #334155; line-height: 1.6;">
+    [content]
+  </div>
+  <p style="color: #64748b; font-size: 12px; margin-top: 24px; text-align: center; border-top: 1px solid #f1f5f9; pt: 16px;">
+    Sent via BrandTactics Client Portal
+  </p>
+</div>')
+ON CONFLICT (id) DO NOTHING;
+
 -- Trigger to execute the function on auth.users insert
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
