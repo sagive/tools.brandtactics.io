@@ -37,8 +37,14 @@ export async function POST(req: Request) {
       .single();
 
     if (clientError || !client || !client.contact_email) {
-      console.error("Client Fetch Error:", clientError || "Client not found or missing email");
-      return NextResponse.json({ error: 'Client not found or has no contact email' }, { status: 400 });
+      console.error("Client Fetch Error Details:", clientError);
+      console.error("Auth header used:", authHeader ? "Present" : "Missing");
+      return NextResponse.json({ 
+        error: 'Client not found or has no contact email',
+        details: clientError,
+        clientData: client,
+        hasAuthHeader: !!authHeader
+      }, { status: 400 });
     }
 
     // 2. Fetch Global Email Template
