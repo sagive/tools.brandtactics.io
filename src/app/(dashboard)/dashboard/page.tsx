@@ -110,9 +110,15 @@ export default function DashboardPage() {
         body: JSON.stringify({ clientId, subject, body }),
       });
       
-      if (!res.ok) throw new Error("Failed to send email");
+      const data = await res.json();
       
-      toast.success("Update sent successfully!");
+      if (!res.ok) throw new Error(data.error || "Failed to send email");
+      
+      if (data.simulated) {
+        toast.success(`[Simulated] Update saved for ${data.clientName || 'client'}. Add RESEND_API_KEY to actually send.`);
+      } else {
+        toast.success(`Update sent to ${data.clientName || 'client'} successfully!`);
+      }
       setBody("");
     } catch (err: any) {
       toast.error(err.message || "An error occurred");

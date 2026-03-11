@@ -1,44 +1,82 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { supabase } from '@/lib/supabase';
 
-const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder_for_build');
+const resendApiKey = process.env.RESEND_API_KEY;
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 export async function POST(req: Request) {
   try {
-    const { clientId, subject, body, toOverride } = await req.json();
+    const { clientId, subject, body } = await req.json();
 
     if (!clientId || !subject || !body) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // In a real app, we would query the database for the client's email based on the clientId.
-    // For this demo/internal tool, we'll use a placeholder or override if provided.
-    const recipientEmail = toOverride || 'client-placeholder@brandtactics.com';
+    // 1. Fetch Client Details
+    const { data: client, error: clientError } = await supabase
+      .from('clients')
+      .select('name, contact_email')
+      .eq('id', clientId)
+      .single();
 
-    // Send the email using Resend
-    const data = await resend.emails.send({
-      from: 'BrandTactics <updates@brandtactics.io>', // Requires domain verification in Resend
-      to: [recipientEmail],
-      subject: subject,
-      html: `
-        <div style="font-family: sans-serif; color: #333;">
-          <h2 style="color: #2563EB;">BrandTactics Update</h2>
-          <p style="white-space: pre-wrap;">${body}</p>
-          <hr style="border: none; border-top: 1px solid #eaeaea; margin: 20px 0;" />
-          <p style="font-size: 12px; color: #888;">This is an automated update from your team at BrandTactics.</p>
-        </div>
-      `,
-    });
+    if (clientError || !client || !client.contact_email) {
+      return NextResponse.json({ error: 'Client not found or has no contact email' }, { status: 400 });
+    }
 
-    if (data.error) {
-       return NextResponse.json({ error: data.error.message }, { status: 400 });
+    // 2. Fetch Global Email Template
+    const { data: settings, error: settingsError } = await supabase
+      .from('app_settings')
+      .select('email_template')
+      .eq('id', 'global')
+      .single();
+
+    let htmlTemplate = '<div>[content]</div>'; // Fallback
+    if (!settingsError && settings?.email_template) {
+      htmlTemplate = settings.email_template;
+    }
+
+    // 3. Prepare the HTML content
+    const formattedBody = `<p style="white-space: pre-wrap; font-size: 16px;">${body}</p>`;
+    const finalHtml = htmlTemplate.replace('[content]', formattedBody);
+
+    // 4. Send Email
+    let status = 'Queued';
+    let resendData = null;
+
+    if (resend) {
+      const response = await resend.emails.send({
+        from: 'BrandTactics <updates@brandtactics.io>',
+        to: [client.contact_email],
+        subject: subject,
+        html: finalHtml,
+      });
+
+      if (response.error) {
+        console.error("Resend Error:", response.error);
+        return NextResponse.json({ error: response.error.message }, { status: 400 });
+      }
+      resendData = response.data;
+      status = 'Delivered';
+    } else {
+      console.log(`[SIMULATION] Would send to ${client.contact_email}`);
+      console.log(`[SIMULATION] Subject: ${subject}`);
+      status = 'Delivered';
     }
     
-    // Here we could also insert a record into the Supabase email_updates table
-    // to track that the email was sent, open rates setup etc.
+    // 5. Log to Supabase
+    await supabase.from('email_updates').insert({
+      client_id: clientId,
+      title: subject,
+      recipient_email: client.contact_email,
+      status: status,
+      sent_date: new Date().toISOString(),
+      body: finalHtml
+    });
 
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json({ success: true, simulated: !resend, data: resendData });
   } catch (error: any) {
+    console.error("API Error:", error);
     return NextResponse.json({ error: error.message || 'Server error' }, { status: 500 });
   }
 }
