@@ -69,7 +69,7 @@ export async function POST(req: Request) {
 
     if (resend) {
       const response = await resend.emails.send({
-        from: 'BrandTactics <updates@brandtactics.io>',
+        from: 'BrandTactics <updates@tools.brandtactics.io>',
         to: [client.contact_email],
         subject: subject,
         html: finalHtml,
