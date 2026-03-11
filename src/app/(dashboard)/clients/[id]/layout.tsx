@@ -53,7 +53,7 @@ export default function ClientLayout({
         setFormData({
           name: data.name || "",
           website: data.website || "",
-          contactName: "", // Add these columns to schema if needed, or map them if existing
+          contactName: data.contact_name || "",
           contactEmail: data.contact_email || "",
           contactPhone: data.contact_phone || "",
           type: data.type || "",
@@ -78,6 +78,7 @@ export default function ClientLayout({
       .update({
         name: formData.name,
         website: formData.website,
+        contact_name: formData.contactName,
         contact_email: formData.contactEmail,
         contact_phone: formData.contactPhone,
         type: formData.type,
