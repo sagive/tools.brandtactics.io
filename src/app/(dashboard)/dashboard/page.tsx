@@ -113,9 +113,16 @@ export default function DashboardPage() {
     setSending(true);
     
     try {
+      // Get the current user's session token to authenticate the API request
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token || '';
+
       const res = await fetch("/api/send-email", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
         body: JSON.stringify({ clientId, subject, body }),
       });
       

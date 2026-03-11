@@ -6,22 +6,22 @@ import { supabase } from '@/lib/supabase';
 const resendApiKey = process.env.RESEND_API_KEY;
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
-// Use Service Role Key for server-side operations to bypass RLS
+// Use standard URL and Anon key
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-// Check both standard name and Vercel prefix convention
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.btools_SUPABASE_SERVICE_ROLE_KEY || '';
-
-// We MUST have the service key to bypass RLS in this route
-const supabaseAdmin = (supabaseUrl && supabaseServiceKey) 
-  ? createClient(supabaseUrl, supabaseServiceKey) 
-  : null;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export async function POST(req: Request) {
   try {
-    if (!supabaseAdmin) {
-      console.error("FATAL ERROR: SUPABASE_SERVICE_ROLE_KEY (or btools_SUPABASE_SERVICE_ROLE_KEY) is missing in environment variables. Cannot bypass RLS.");
-      return NextResponse.json({ error: 'Server configuration error: Missing service role key' }, { status: 500 });
-    }
+    const authHeader = req.headers.get('Authorization');
+    
+    // Create an authenticated Supabase client for this request using the user's session token
+    const authenticatedSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: authHeader || ''
+        }
+      }
+    });
 
     const { clientId, subject, body } = await req.json();
 
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     }
 
     // 1. Fetch Client Details
-    const { data: client, error: clientError } = await supabaseAdmin
+    const { data: client, error: clientError } = await authenticatedSupabase
       .from('clients')
       .select('name, contact_email')
       .eq('id', clientId)
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Fetch Global Email Template
-    const { data: settings, error: settingsError } = await supabaseAdmin
+    const { data: settings, error: settingsError } = await authenticatedSupabase
       .from('app_settings')
       .select('email_template')
       .eq('id', 'global')
@@ -82,7 +82,7 @@ export async function POST(req: Request) {
     }
     
     // 5. Log to Supabase
-    const { error: logError } = await supabaseAdmin.from('email_updates').insert({
+    const { error: logError } = await authenticatedSupabase.from('email_updates').insert({
       client_id: clientId,
       title: subject,
       recipient_email: client.contact_email,
