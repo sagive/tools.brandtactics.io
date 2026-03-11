@@ -31,11 +31,13 @@ export default function SettingsPage() {
 
   const [inviteEmail, setInviteEmail] = useState("");
   const [staff, setStaff] = useState<any[]>([]);
-  const { user } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const [activeTab, setActiveTab] = useState("users");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -55,6 +57,11 @@ export default function SettingsPage() {
         if (data) setStaff(data);
         setIsLoading(false);
       });
+
+    // Initialize full name from profile if available
+    if (profile?.full_name) {
+      setFullName(profile.full_name);
+    }
 
     // 3. Listen for password recovery event
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -105,6 +112,31 @@ export default function SettingsPage() {
       toast.error(err.message || "Failed to update password.");
     } finally {
       setIsUpdatingPassword(false);
+    }
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.email) return;
+
+    setIsUpdatingProfile(true);
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ full_name: fullName })
+        .eq('email', user.email);
+
+      if (error) throw error;
+      toast.success("Profile updated successfully!");
+      
+      // Refresh global profile state and local staff list
+      await refreshProfile();
+      const { data } = await supabase.from('users').select('*').order('created_at', { ascending: true });
+      if (data) setStaff(data);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update profile.");
+    } finally {
+      setIsUpdatingProfile(false);
     }
   };
 
@@ -266,18 +298,40 @@ export default function SettingsPage() {
                   <User className="w-5 h-5 mr-2 text-gray-600" />
                   Account Info
                 </CardTitle>
+                <CardDescription>
+                  Update your public profile details.
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Email Address</p>
-                  <p className="text-sm font-medium text-gray-900">{user?.email || "Loading..."}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Account Role</p>
-                  <Badge className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-50 uppercase text-[10px]">
-                    {staff.find(s => s.email === user?.email)?.role || "Staff"}
-                  </Badge>
-                </div>
+              <CardContent>
+                <form onSubmit={handleUpdateProfile} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Full Name</Label>
+                    <Input 
+                      type="text" 
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Your Name" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="opacity-50">Email Address</Label>
+                    <Input 
+                      type="email" 
+                      value={user?.email || ""} 
+                      disabled 
+                      className="bg-gray-50 opacity-70"
+                    />
+                  </div>
+                  <div className="space-y-1 pt-1">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Account Role</p>
+                    <Badge className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-50 uppercase text-[10px] px-2 py-0.5">
+                      {staff.find(s => s.email === user?.email)?.role || "Staff"}
+                    </Badge>
+                  </div>
+                  <Button type="submit" variant="outline" className="w-full" disabled={isUpdatingProfile}>
+                    {isUpdatingProfile ? "Saving..." : "Save Profile Details"}
+                  </Button>
+                </form>
               </CardContent>
             </Card>
           </div>

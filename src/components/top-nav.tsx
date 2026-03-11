@@ -17,13 +17,15 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export function TopNav() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push("/login");
   };
+
+  const displayName = profile?.full_name || user?.email?.split("@")[0] || "Staff Member";
 
   return (
     <header className="h-16 border-b bg-white flex items-center justify-between px-6 z-10 sticky top-0">
@@ -51,11 +53,11 @@ export function TopNav() {
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2 outline-none">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={`https://avatar.vercel.sh/${user?.email}.png`} alt={user?.email || "User"} />
-                <AvatarFallback>{user?.email?.charAt(0).toUpperCase() || "B"}</AvatarFallback>
+                <AvatarImage src={`https://avatar.vercel.sh/${user?.email}.png`} alt={displayName} />
+                <AvatarFallback>{displayName.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="text-sm font-medium text-gray-700 hidden sm:block">
-                {user?.email?.split("@")[0] || "Staff Member"}
+                {displayName}
               </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
