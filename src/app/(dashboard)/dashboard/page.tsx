@@ -23,6 +23,10 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
@@ -42,6 +46,7 @@ const CATEGORY_STYLES: Record<string, { color: string, bg: string }> = {
 
 export default function DashboardPage() {
   const [clientId, setClientId] = useState("");
+  const [openClientDropdown, setOpenClientDropdown] = useState(false);
   const [subject, setSubject] = useState("SEO Update from BrandTactics");
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
@@ -148,18 +153,65 @@ export default function DashboardPage() {
               <form onSubmit={handleSendUpdate} className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Client</Label>
-                  <Select value={clientId} onValueChange={(val) => setClientId(val || "")}>
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Select client">
-                        {clientId ? clients.find(c => c.id === clientId)?.name : "Select client"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {clients.map(client => (
-                        <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={openClientDropdown} onOpenChange={setOpenClientDropdown}>
+                    <PopoverTrigger render={
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openClientDropdown}
+                        className={cn(
+                          "w-full justify-between bg-white font-normal",
+                          !clientId && "text-muted-foreground"
+                        )}
+                      >
+                        {clientId
+                          ? clients.find((c) => c.id === clientId)?.name
+                          : "Search and select a client..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    }/>
+                    <PopoverContent className="w-[300px] sm:w-[350px] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search client..." />
+                        <CommandList>
+                          <CommandEmpty>No client found.</CommandEmpty>
+                          <CommandGroup>
+                            {clients.map((client) => {
+                              const hasEmail = !!client.contact_email;
+                              return (
+                                <CommandItem
+                                  key={client.id}
+                                  value={client.name}
+                                  onSelect={() => {
+                                    setClientId(client.id);
+                                    setOpenClientDropdown(false);
+                                  }}
+                                  className={cn("flex flex-col items-start px-3 py-2", !hasEmail && "opacity-60")}
+                                >
+                                  <div className="flex items-center w-full">
+                                    <div className="flex-1 font-medium">{client.name}</div>
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        clientId === client.id ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                  </div>
+                                  <div className="text-xs text-gray-500 mt-0.5">
+                                    {hasEmail ? client.contact_email : "⚠️ No contact email"}
+                                  </div>
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  
+                  {clientId && !clients.find(c => c.id === clientId)?.contact_email && (
+                    <p className="text-xs text-red-500 mt-1 font-medium">This client lacks a contact email address.</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Subject</Label>
@@ -177,7 +229,11 @@ export default function DashboardPage() {
                     />
                   </div>
                 </div>
-                <Button type="submit" disabled={sending} className="w-full bg-[#4640A0] hover:bg-[#342e81]">
+                <Button 
+                  type="submit" 
+                  disabled={sending || !!(clientId && !clients.find(c => c.id === clientId)?.contact_email)} 
+                  className="w-full bg-[#4640A0] hover:bg-[#342e81]"
+                >
                   <Send className="w-4 h-4 mr-2" />
                   {sending ? "Sending..." : "Send Update"}
                 </Button>

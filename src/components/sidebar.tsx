@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/clients", label: "Clients", icon: Briefcase },
   { href: "/tasks", label: "All Tasks", icon: FileText },
+  { href: "/email-updates", label: "Email Updates", icon: Mail },
   { href: "/tools", label: "All Tools", icon: LayoutGrid },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

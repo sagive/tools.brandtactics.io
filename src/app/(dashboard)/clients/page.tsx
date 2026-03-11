@@ -58,17 +58,7 @@ export default function ClientsPage() {
     }
   };
 
-  const handleDeleteClient = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete ${name}?`)) return;
-    
-    const { error } = await supabase.from("clients").delete().eq("id", id);
-    if (error) {
-      toast.error("Failed to delete: " + error.message);
-    } else {
-      toast.success(`Client ${name} has been deleted.`);
-      fetchClients();
-    }
-  };
+
 
   return (
     <div className="space-y-6">
@@ -120,9 +110,6 @@ export default function ClientsPage() {
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem className="cursor-pointer font-medium" onClick={() => router.push(`/clients/${client.id}`)}>
                       View Dashboard
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer" onClick={() => handleDeleteClient(client.id, client.name)}>
-                      <Trash2 className="w-4 h-4 mr-2" /> Delete Client
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

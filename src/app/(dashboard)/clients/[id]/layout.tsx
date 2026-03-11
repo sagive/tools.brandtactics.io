@@ -199,14 +199,8 @@ export default function ClientLayout({
 
                 <div className="h-px bg-gray-100" />
                 
-                <div className="text-xs text-gray-400 text-center">
+                <div className="text-xs text-gray-400 text-center pb-4">
                   Joined Oct 12, 2023
-                </div>
-                
-                <div className="pt-4 mt-4 border-t border-gray-100">
-                  <Button variant="outline" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200" onClick={() => toast.success("Client deleted.")}>
-                    <Trash2 className="w-4 h-4 mr-2" /> Delete Client
-                  </Button>
                 </div>
               </div>
             </CardContent>
