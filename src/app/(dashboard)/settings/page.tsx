@@ -58,10 +58,7 @@ export default function SettingsPage() {
         setIsLoading(false);
       });
 
-    // Initialize full name from profile if available
-    if (profile?.full_name) {
-      setFullName(profile.full_name);
-    }
+
 
     // 3. Listen for password recovery event
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -74,6 +71,13 @@ export default function SettingsPage() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Initialize full name when profile loads
+  useEffect(() => {
+    if (profile?.full_name && !fullName) {
+      setFullName(profile.full_name);
+    }
+  }, [profile, fullName]);
 
   const handleSaveTemplate = async () => {
     try {

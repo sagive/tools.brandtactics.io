@@ -36,12 +36,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(data || null);
     }
 
-    const refreshProfile = async () => {
-      if (user) {
-        await getProfile(user);
-      }
-    };
-
     // Check active sessions and sets the user
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -63,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     return () => subscription.unsubscribe();
-  }, [user]);
+  }, []);
 
   const refreshProfile = async () => {
     if (user) {
