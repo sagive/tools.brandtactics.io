@@ -16,12 +16,16 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { EditToolDialog } from "@/components/edit-tool-dialog";
 import { Dialog, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import "react-quill-new/dist/quill.snow.css";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import dynamic from "next/dynamic";
+
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
 const IconRenderer = ({ name, className }: { name: string, className?: string }) => {
   const Icon = (LucideIcons as any)[name] || Blocks;
@@ -136,7 +140,7 @@ export default function DashboardPage() {
             <CardHeader className="pb-4 border-b mb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Send className="w-4 h-4 text-blue-600" />
-                Send Status
+                Send SEO Update
               </CardTitle>
               <CardDescription>Rapidly send updates to clients.</CardDescription>
             </CardHeader>
@@ -146,7 +150,9 @@ export default function DashboardPage() {
                   <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Client</Label>
                   <Select value={clientId} onValueChange={(val) => setClientId(val || "")}>
                     <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Select client" />
+                      <SelectValue placeholder="Select client">
+                        {clientId ? clients.find(c => c.id === clientId)?.name : "Select client"}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {clients.map(client => (
@@ -161,7 +167,15 @@ export default function DashboardPage() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Message</Label>
-                  <Textarea value={body} onChange={e => setBody(e.target.value)} placeholder="Brief update details..." className="min-h-[120px] resize-none bg-white" />
+                  <div className="bg-white rounded-md border border-input shadow-sm overflow-hidden pb-10">
+                    <ReactQuill 
+                      theme="snow" 
+                      value={body} 
+                      onChange={setBody} 
+                      className="[&_.ql-editor]:min-h-[200px] [&_.ql-editor]:text-sm [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" 
+                      placeholder="Brief update details..." 
+                    />
+                  </div>
                 </div>
                 <Button type="submit" disabled={sending} className="w-full bg-[#4640A0] hover:bg-[#342e81]">
                   <Send className="w-4 h-4 mr-2" />
