@@ -33,6 +33,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
   const [clientId, setClientId] = useState(task?.client_id || defaultClientId || "");
   const [dueDate, setDueDate] = useState<string>(task?.end_date ? new Date(task.end_date).toISOString().split('T')[0] : "");
   const [clients, setClients] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -50,11 +51,17 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
   };
 
   useEffect(() => {
+    // Fetch clients
     if (!isEditing && !defaultClientId) {
       supabase.from('clients').select('id, name').order('name').then(({data}) => {
          if (data) setClients(data);
       });
     }
+    
+    // Fetch users
+    supabase.from('users').select('*').order('full_name').then(({data}) => {
+      if (data) setUsers(data);
+    });
   }, [isEditing, defaultClientId]);
 
   const createdDate = task?.created_at 
@@ -396,15 +403,24 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-gray-600 text-[13px] font-medium">Requester</Label>
-                <Input 
+                <Select 
                    value={requester} 
-                   onChange={(e) => { 
-                     setRequester(e.target.value); 
-                     updateField("requester", e.target.value); 
+                   onValueChange={(val) => { 
+                     setRequester(val); 
+                     updateField("requester", val); 
                    }}
-                   placeholder="e.g. Sagive"
-                   className="bg-white h-9"
-                 />
+                >
+                  <SelectTrigger className="bg-white w-full h-9">
+                    <SelectValue placeholder="Select requester" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map(u => (
+                      <SelectItem key={u.id} value={u.full_name || u.email}>
+                        <span className="truncate">{u.full_name || u.email}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -420,12 +436,11 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="mark">
-                      <div className="flex items-center gap-2 truncate">
-                        <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold shrink-0">MJ</div>
-                        <span className="truncate">Mark J.</span>
-                      </div>
-                    </SelectItem>
+                    {users.map(u => (
+                      <SelectItem key={u.id} value={u.full_name || u.email}>
+                        <span className="truncate">{u.full_name || u.email}</span>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
