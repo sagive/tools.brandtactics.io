@@ -15,8 +15,22 @@ import { useAuth } from "@/components/auth-provider";
 import { cn } from "@/lib/utils";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function SettingsPage() {
+function SettingsContent() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabParam || "users");
+
+  useEffect(() => {
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
+
+
   const [template, setTemplate] = useState(
 `<div style="font-family: sans-serif; max-w: 600px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: white;">
   <h2 style="color: #2563eb; margin-top: 0;">BrandTactics Update</h2>
@@ -32,7 +46,6 @@ export default function SettingsPage() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [staff, setStaff] = useState<any[]>([]);
   const { user, profile, refreshProfile } = useAuth();
-  const [activeTab, setActiveTab] = useState("users");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
@@ -360,7 +373,7 @@ export default function SettingsPage() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-200 h-[600px]">
+              <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
                 {/* Editor Side */}
                 <div className="flex flex-col h-full bg-gray-900 border-r border-gray-800">
                   <div className="px-4 py-2 border-b border-gray-800 bg-gray-950 flex items-center justify-between shrink-0">
@@ -394,5 +407,17 @@ export default function SettingsPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <SettingsContent />
+    </Suspense>
   );
 }

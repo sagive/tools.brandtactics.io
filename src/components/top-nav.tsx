@@ -63,7 +63,7 @@ export function TopNav() {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push("/settings")}>
+            <DropdownMenuItem onClick={() => router.push("/settings?tab=profile")}>
               Profile Settings
             </DropdownMenuItem>
             <DropdownMenuItem>Agency Preferences</DropdownMenuItem>
