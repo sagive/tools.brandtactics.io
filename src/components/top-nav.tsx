@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export function TopNav() {
   const { user } = useAuth();
@@ -60,7 +61,9 @@ export function TopNav() {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile Settings</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/settings")}>
+              Profile Settings
+            </DropdownMenuItem>
             <DropdownMenuItem>Agency Preferences</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">

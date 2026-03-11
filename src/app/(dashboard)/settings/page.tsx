@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, UserPlus, Mail } from "lucide-react";
+import { Save, UserPlus, Mail, Lock, User } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/components/auth-provider";
+import { cn } from "@/lib/utils";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -28,17 +30,42 @@ export default function SettingsPage() {
   );
 
   const [inviteEmail, setInviteEmail] = useState("");
+  const [staff, setStaff] = useState<any[]>([]);
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState("users");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch initial template
+  // Fetch initial template, handle password recovery, and fetch staff
   useEffect(() => {
+    // 1. Fetch Template
     supabase.from('app_settings').select('email_template').eq('id', 'global').single()
       .then(({data, error}: {data: any, error: any}) => {
         if (data?.email_template) {
           setTemplate(data.email_template);
         }
+      });
+
+    // 2. Fetch Staff
+    supabase.from('users').select('*').order('created_at', { ascending: true })
+      .then(({data, error}: {data: any, error: any}) => {
+        if (data) setStaff(data);
         setIsLoading(false);
       });
+
+    // 3. Listen for password recovery event
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsRecoveryMode(true);
+        setActiveTab("profile");
+        toast.info("Recovery link accepted. Please set your new password below.");
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleSaveTemplate = async () => {
@@ -48,6 +75,36 @@ export default function SettingsPage() {
       toast.success("Email template saved successfully.");
     } catch (err: any) {
       toast.error("Failed to save template");
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPassword || !confirmPassword) {
+      toast.error("Please fill in all password fields.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success("Password updated successfully!");
+      setNewPassword("");
+      setConfirmPassword("");
+      setIsRecoveryMode(false);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update password.");
+    } finally {
+      setIsUpdatingPassword(false);
     }
   };
 
@@ -84,9 +141,10 @@ export default function SettingsPage() {
         <p className="text-gray-500 mt-1 uppercase text-[11px] font-bold tracking-widest">Manage global app settings, team members, and templates.</p>
       </div>
 
-      <Tabs defaultValue="users" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-gray-100/50 border border-gray-200 p-1 rounded-lg">
           <TabsTrigger value="users" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Users & Team</TabsTrigger>
+          <TabsTrigger value="profile" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">My Profile</TabsTrigger>
           <TabsTrigger value="email" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Email Template</TabsTrigger>
         </TabsList>
 
@@ -134,14 +192,92 @@ export default function SettingsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <TableRow>
-                      <TableCell className="pl-6">
-                        <div className="font-medium text-gray-900 text-sm">imrisagive@gmail.com</div>
-                      </TableCell>
-                      <TableCell><Badge className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-50">Admin</Badge></TableCell>
-                    </TableRow>
+                    {staff.map((member) => (
+                      <TableRow key={member.id} className="hover:bg-gray-50/50">
+                        <TableCell className="pl-6">
+                          <div className="font-medium text-gray-900 text-sm">{member.email}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={cn(
+                            "capitalize",
+                            member.role === 'admin' ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-gray-100 text-gray-700 border-gray-200"
+                          )}>
+                            {member.role || 'Staff'}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {staff.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={2} className="text-center py-4 text-gray-500 text-sm">
+                          No staff members found.
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="profile" className="space-y-6 mt-0 outline-none ring-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="shadow-sm border-gray-200">
+              <CardHeader>
+                <CardTitle className="flex items-center text-lg">
+                  <Lock className="w-5 h-5 mr-2 text-blue-600" />
+                  Security & Password
+                </CardTitle>
+                <CardDescription>
+                  Update your account password.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleUpdatePassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>New Password</Label>
+                    <Input 
+                      type="password" 
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="••••••••" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Confirm New Password</Label>
+                    <Input 
+                      type="password" 
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••" 
+                    />
+                  </div>
+                  <Button type="submit" variant="default" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isUpdatingPassword}>
+                    {isUpdatingPassword ? "Updating..." : (isRecoveryMode ? "Set New Password" : "Change Password")}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm border-gray-200">
+              <CardHeader>
+                <CardTitle className="flex items-center text-lg">
+                  <User className="w-5 h-5 mr-2 text-gray-600" />
+                  Account Info
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Email Address</p>
+                  <p className="text-sm font-medium text-gray-900">{user?.email || "Loading..."}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Account Role</p>
+                  <Badge className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-50 uppercase text-[10px]">
+                    {staff.find(s => s.email === user?.email)?.role || "Staff"}
+                  </Badge>
+                </div>
               </CardContent>
             </Card>
           </div>
