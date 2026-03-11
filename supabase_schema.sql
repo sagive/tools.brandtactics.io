@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS public.tasks (
   start_date DATE,
   end_date DATE,
   estimate_hours INTEGER DEFAULT 0,
+  requester TEXT,
   priority TEXT NOT NULL DEFAULT 'Medium' CHECK (priority IN ('Low', 'Medium', 'High')),
   comments JSONB DEFAULT '[]'::jsonb, -- [{user: string, text: string, timestamp: date}]
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL

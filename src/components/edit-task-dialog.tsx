@@ -28,7 +28,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
   const [status, setStatus] = useState(task?.status || "Pending");
   const [priority, setPriority] = useState(task?.priority || "Medium");
   const [assignee, setAssignee] = useState(task?.assignee || "mark");
-  const [estimateHours, setEstimateHours] = useState<number>(task?.estimate_hours || 0);
+  const [requester, setRequester] = useState(task?.requester || "");
   const [comments, setComments] = useState<any[]>(task?.comments || []);
   const [clientId, setClientId] = useState(task?.client_id || defaultClientId || "");
   const [dueDate, setDueDate] = useState<string>(task?.end_date ? new Date(task.end_date).toISOString().split('T')[0] : "");
@@ -43,7 +43,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
     status: "Status",
     priority: "Priority",
     assignee: "Assignee",
-    estimate_hours: "Estimate",
+    requester: "Requester",
     end_date: "Due Date",
     comments: "Comments",
     client_id: "Client"
@@ -98,7 +98,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
         status,
         priority,
         assignee,
-        estimate_hours: estimateHours,
+        requester,
         end_date: dueDate || null,
         comments
       }).eq('id', task.id);
@@ -146,7 +146,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
         status,
         priority,
         assignee,
-        estimate_hours: estimateHours,
+        requester,
         end_date: dueDate || null,
         client_id: clientId,
         comments
@@ -176,8 +176,8 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
           <div className="flex items-center gap-6 text-sm text-gray-500">
              
              {/* Date Picker Auto-save wrapper */}
-             <div className="relative flex items-center gap-2 group cursor-pointer hover:text-gray-900">
-               <span className="font-medium">Due: {dueDate ? new Date(dueDate).toLocaleDateString('en-US', { timeZone: 'UTC' }) : "Set Date"}</span>
+             <div className="relative flex items-center gap-2 group cursor-pointer hover:text-gray-900 border border-transparent hover:border-gray-200 rounded-md px-2 py-1 -mx-2 transition-colors">
+               <span className="font-medium whitespace-nowrap">Due: {dueDate ? new Date(dueDate).toLocaleDateString('en-US', { timeZone: 'UTC' }) : "Set Date"}</span>
                <Input 
                  type="date" 
                  value={dueDate}
@@ -395,18 +395,16 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-gray-600 text-[13px] font-medium">Estimate (Hours)</Label>
+                <Label className="text-gray-600 text-[13px] font-medium">Requester</Label>
                 <Input 
-                  type="number" 
-                  min="0"
-                  value={estimateHours} 
-                  onChange={(e) => { 
-                    const val = Number(e.target.value);
-                    setEstimateHours(val); 
-                    updateField("estimate_hours", val); 
-                  }}
-                  className="bg-white h-9"
-                />
+                   value={requester} 
+                   onChange={(e) => { 
+                     setRequester(e.target.value); 
+                     updateField("requester", e.target.value); 
+                   }}
+                   placeholder="e.g. Sagive"
+                   className="bg-white h-9"
+                 />
               </div>
 
               <div className="space-y-2">
