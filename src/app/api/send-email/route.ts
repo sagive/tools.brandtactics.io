@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { createClient } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
+
+// Use Service Role Key for server-side operations to bypass RLS
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseAdmin = (supabaseUrl && supabaseServiceKey) 
+  ? createClient(supabaseUrl, supabaseServiceKey) 
+  : supabase;
 
 export async function POST(req: Request) {
   try {
@@ -14,18 +22,19 @@ export async function POST(req: Request) {
     }
 
     // 1. Fetch Client Details
-    const { data: client, error: clientError } = await supabase
+    const { data: client, error: clientError } = await supabaseAdmin
       .from('clients')
       .select('name, contact_email')
       .eq('id', clientId)
       .single();
 
     if (clientError || !client || !client.contact_email) {
+      console.error("Client Fetch Error:", clientError || "Client not found or missing email");
       return NextResponse.json({ error: 'Client not found or has no contact email' }, { status: 400 });
     }
 
     // 2. Fetch Global Email Template
-    const { data: settings, error: settingsError } = await supabase
+    const { data: settings, error: settingsError } = await supabaseAdmin
       .from('app_settings')
       .select('email_template')
       .eq('id', 'global')
@@ -65,7 +74,7 @@ export async function POST(req: Request) {
     }
     
     // 5. Log to Supabase
-    await supabase.from('email_updates').insert({
+    const { error: logError } = await supabaseAdmin.from('email_updates').insert({
       client_id: clientId,
       title: subject,
       recipient_email: client.contact_email,
@@ -73,6 +82,11 @@ export async function POST(req: Request) {
       sent_date: new Date().toISOString(),
       body: finalHtml
     });
+
+    if (logError) {
+      console.error("Log Error:", logError);
+      // We don't return error here if email was actually sent, but it's good to know
+    }
 
     return NextResponse.json({ success: true, simulated: !resend, data: resendData });
   } catch (error: any) {

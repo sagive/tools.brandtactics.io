@@ -154,26 +154,29 @@ export default function DashboardPage() {
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Client</Label>
                   <Popover open={openClientDropdown} onOpenChange={setOpenClientDropdown}>
-                    <PopoverTrigger render={
+                    <PopoverTrigger className="w-full" render={
                       <Button
                         variant="outline"
                         role="combobox"
                         aria-expanded={openClientDropdown}
                         className={cn(
-                          "w-full justify-between bg-white font-normal",
+                          "w-full justify-between bg-white font-normal h-10 px-3",
                           !clientId && "text-muted-foreground"
                         )}
                       >
-                        {clientId
-                          ? clients.find((c) => c.id === clientId)?.name
-                          : "Search and select a client..."}
+                        <div className="flex items-center gap-2 truncate">
+                          <User className="w-4 h-4 text-gray-400 shrink-0" />
+                          {clientId
+                            ? clients.find((c) => c.id === clientId)?.name
+                            : "Select a client..."}
+                        </div>
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     }/>
-                    <PopoverContent className="w-[300px] sm:w-[350px] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Search client..." />
-                        <CommandList>
+                    <PopoverContent className="w-[var(--base-ui-popover-trigger-width)] min-w-[300px] p-0" align="start">
+                      <Command className="w-full">
+                        <CommandInput placeholder="Search client..." className="h-10" />
+                        <CommandList className="max-h-[300px]">
                           <CommandEmpty>No client found.</CommandEmpty>
                           <CommandGroup>
                             {clients.map((client) => {
@@ -186,19 +189,19 @@ export default function DashboardPage() {
                                     setClientId(client.id);
                                     setOpenClientDropdown(false);
                                   }}
-                                  className={cn("flex flex-col items-start px-3 py-2", !hasEmail && "opacity-60")}
+                                  className={cn("flex flex-col items-start px-3 py-2 cursor-pointer transition-colors hover:bg-gray-50", !hasEmail && "opacity-60")}
                                 >
                                   <div className="flex items-center w-full">
-                                    <div className="flex-1 font-medium">{client.name}</div>
+                                    <div className="flex-1 font-bold text-gray-900">{client.name}</div>
                                     <Check
                                       className={cn(
-                                        "mr-2 h-4 w-4",
+                                        "ml-auto h-4 w-4 text-blue-600",
                                         clientId === client.id ? "opacity-100" : "opacity-0"
                                       )}
                                     />
                                   </div>
-                                  <div className="text-xs text-gray-500 mt-0.5">
-                                    {hasEmail ? client.contact_email : "⚠️ No contact email"}
+                                  <div className="text-[10px] uppercase tracking-wider font-semibold text-gray-500 mt-0.5">
+                                    {hasEmail ? client.contact_email : "⚠️ Missing Email"}
                                   </div>
                                 </CommandItem>
                               );
@@ -210,7 +213,12 @@ export default function DashboardPage() {
                   </Popover>
                   
                   {clientId && !clients.find(c => c.id === clientId)?.contact_email && (
-                    <p className="text-xs text-red-500 mt-1 font-medium">This client lacks a contact email address.</p>
+                    <div className="p-3 bg-red-50 border border-red-100 rounded-lg">
+                      <p className="text-xs text-red-600 font-bold flex items-center gap-1.5">
+                        <LucideIcons.AlertCircle className="w-3.5 h-3.5" />
+                        Missing contact email. Cannot send update.
+                      </p>
+                    </div>
                   )}
                 </div>
                 <div className="space-y-2">
