@@ -6,7 +6,6 @@ const resendApiKey = process.env.RESEND_API_KEY;
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export async function POST(req: Request) {
@@ -17,6 +16,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing email' }, { status: 400 });
     }
 
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
     if (!supabaseServiceKey) {
       return NextResponse.json({ error: 'Missing SUPABASE_SERVICE_ROLE_KEY configured on server' }, { status: 500 });
     }
@@ -109,6 +109,7 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'Missing user ID or email' }, { status: 400 });
     }
 
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
     if (!supabaseServiceKey) {
       return NextResponse.json({ error: 'Missing SUPABASE_SERVICE_ROLE_KEY' }, { status: 500 });
     }
