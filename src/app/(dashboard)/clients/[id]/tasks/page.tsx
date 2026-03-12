@@ -22,6 +22,10 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
 
   useEffect(() => {
     if (id) fetchTasks();
+    
+    const handleRefresh = () => { if (id) fetchTasks(); };
+    window.addEventListener("taskCreated", handleRefresh);
+    return () => window.removeEventListener("taskCreated", handleRefresh);
   }, [id]);
 
   const fetchTasks = async () => {
@@ -68,12 +72,7 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
           />
         </div>
         
-        <Dialog>
-          <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-9 px-4 py-2 w-full sm:w-auto bg-blue-600 text-white hover:bg-blue-700">
-            <Plus className="w-4 h-4 mr-2" /> New Task
-          </DialogTrigger>
-          <EditTaskDialog defaultClientId={id} onTaskCreated={fetchTasks} />
-        </Dialog>
+
       </div>
 
       <div className="space-y-6">

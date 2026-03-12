@@ -5,11 +5,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, CheckCircle2, Trash2, Save } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Trash2, Save, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
+import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
+import { EditTaskDialog } from "@/components/edit-task-dialog";
 
 export default function ClientLayout({
   children,
@@ -40,6 +42,20 @@ export default function ClientLayout({
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNewTaskOpen, setIsNewTaskOpen] = useState(false);
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // alt + shift + 3
+      if (e.altKey && e.shiftKey && e.key === "3") {
+        e.preventDefault();
+        setIsNewTaskOpen(true);
+      }
+    };
+    
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   React.useEffect(() => {
     async function getClient() {
@@ -210,28 +226,40 @@ export default function ClientLayout({
 
         {/* Main Content Area */}
         <div className="flex-1 min-w-0 flex flex-col">
-          {/* Client Navigation Tabs */}
-          <div className="bg-white border rounded-lg shadow-sm p-1.5 mb-6 flex space-x-1 overflow-x-auto w-fit">
-            {NAV_LINKS.map((link) => {
-              const isActive = link.href === `/clients/${clientId}`
-                ? pathname === link.href
-                : pathname.startsWith(link.href);
-                
-              return (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className={cn(
-                    "px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap transition-colors",
-                    isActive
-                      ? "bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-600/10"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                  )}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
+          {/* Client Navigation Tabs and Actions */}
+          <div className="flex justify-between items-center mb-6">
+            <div className="bg-white border rounded-lg shadow-sm p-1.5 flex space-x-1 overflow-x-auto w-fit">
+              {NAV_LINKS.map((link) => {
+                const isActive = link.href === `/clients/${clientId}`
+                  ? pathname === link.href
+                  : pathname.startsWith(link.href);
+                  
+                return (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    className={cn(
+                      "px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap transition-colors",
+                      isActive
+                        ? "bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-600/10"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </div>
+            
+            <Dialog open={isNewTaskOpen} onOpenChange={setIsNewTaskOpen}>
+              <DialogTrigger className="bg-blue-600 text-white hover:bg-blue-700 px-4 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-9">
+                <Plus className="w-4 h-4 mr-2" /> New Task
+              </DialogTrigger>
+              <EditTaskDialog defaultClientId={clientId} onTaskCreated={() => {
+                window.dispatchEvent(new Event("taskCreated"));
+                setIsNewTaskOpen(false);
+              }} />
+            </Dialog>
           </div>
 
           <div className="flex-1">
