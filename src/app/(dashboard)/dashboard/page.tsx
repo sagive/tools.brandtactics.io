@@ -57,6 +57,8 @@ export default function DashboardPage() {
   const [tools, setTools] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
+  const [openTemplateDropdown, setOpenTemplateDropdown] = useState(false);
+  const [templateId, setTemplateId] = useState("");
 
   useEffect(() => {
     fetchClients();
@@ -240,29 +242,67 @@ export default function DashboardPage() {
                   
                   <div className="space-y-2 flex flex-col justify-start">
                     <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Templates</Label>
-                    <Select onValueChange={(val) => {
-                      const template = templates.find(t => t.id === val);
-                      if (template) {
-                        setBody(prev => {
-                          const separator = prev && !prev.endsWith('<p><br></p>') && !prev.endsWith('</p>') ? '<br/><br/>' : '';
-                          return prev + separator + template.content;
-                        });
-                        toast.success("Template text injected");
-                      }
-                    }}>
-                      <SelectTrigger className="bg-white h-10 px-3 font-normal text-muted-foreground border-gray-200">
-                        <SelectValue placeholder="Select template..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {templates.length === 0 ? (
-                           <div className="px-2 py-3 text-center text-xs text-gray-400">No templates found.<br/>Add them in Settings.</div>
-                        ) : (
-                          templates.map(t => (
-                            <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
+                    <Popover open={openTemplateDropdown} onOpenChange={setOpenTemplateDropdown}>
+                      <PopoverTrigger className="w-full" render={
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openTemplateDropdown}
+                          className={cn(
+                            "w-full justify-between bg-white font-normal h-10 px-3",
+                            !templateId && "text-muted-foreground"
+                          )}
+                        >
+                          <div className="flex items-center gap-2 truncate">
+                            <LucideIcons.FileText className="w-4 h-4 text-gray-400 shrink-0" />
+                            {templateId
+                              ? templates.find((t) => t.id === templateId)?.name
+                              : "Select a template..."}
+                          </div>
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      }/>
+                      <PopoverContent className="w-[var(--base-ui-popover-trigger-width)] min-w-[300px] p-0" align="start">
+                        <Command className="w-full">
+                          <CommandInput placeholder="Search templates..." className="h-10" />
+                          <CommandList className="max-h-[300px]">
+                            {templates.length === 0 ? (
+                              <CommandEmpty className="py-6 text-center text-sm text-gray-500">
+                                No templates found.<br/>Add them in Settings.
+                              </CommandEmpty>
+                            ) : (
+                              <CommandEmpty>No template found.</CommandEmpty>
+                            )}
+                            <CommandGroup>
+                              {templates.map((template) => (
+                                <CommandItem
+                                  key={template.id}
+                                  value={template.name}
+                                  onSelect={() => {
+                                    setTemplateId(template.id);
+                                    setOpenTemplateDropdown(false);
+                                    
+                                    setBody(prev => {
+                                      const separator = prev && !prev.endsWith('<p><br></p>') && !prev.endsWith('</p>') ? '<br/><br/>' : '';
+                                      return prev + separator + template.content;
+                                    });
+                                    toast.success("Template text injected");
+                                  }}
+                                  className="flex flex-col items-start px-3 py-2 cursor-pointer transition-colors hover:bg-gray-50"
+                                >
+                                  <div className="flex items-center w-full">
+                                    <div className="flex-1 font-bold text-gray-900">{template.name}</div>
+                                    {templateId === template.id && (
+                                      <Check className="ml-auto h-4 w-4 text-blue-600 shrink-0" />
+                                    )}
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
                 <div className="space-y-2">
