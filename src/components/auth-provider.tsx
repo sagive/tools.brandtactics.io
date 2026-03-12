@@ -33,6 +33,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       const { data } = await supabase.from('users').select('*').eq('email', u.email).single();
+      
+      // If the user was invited, mark them as active upon first successful login/session
+      if (data && data.status === 'invited') {
+        await supabase.from('users').update({ status: 'active' }).eq('email', u.email);
+        data.status = 'active'; // reflect locally
+      }
+
       setProfile(data || null);
     }
 

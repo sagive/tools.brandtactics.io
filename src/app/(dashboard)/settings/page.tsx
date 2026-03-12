@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, UserPlus, Mail, Lock, User, Trash2, Plus, FileText } from "lucide-react";
+import { Save, UserPlus, Mail, Lock, User, Trash2, Plus, FileText, RotateCw, Clock } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
@@ -87,6 +87,7 @@ function SettingsContent() {
 
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("viewer");
+  const [isInviting, setIsInviting] = useState(false);
   const [staff, setStaff] = useState<any[]>([]);
   const { user, profile, refreshProfile } = useAuth();
   const [newPassword, setNewPassword] = useState("");
@@ -254,12 +255,72 @@ function SettingsContent() {
     }
   };
 
-  const handleInviteUser = (e: React.FormEvent) => {
+  const handleInviteUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteEmail) return;
-    toast.success(`Invite sent to ${inviteEmail} as ${inviteRole}.`);
-    setInviteEmail("");
-    setInviteRole("viewer");
+    
+    setIsInviting(true);
+    try {
+      const res = await fetch('/api/invites', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email: inviteEmail, role: inviteRole })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error || "Failed to send invite");
+      
+      toast.success(`Invite sent successfully to ${inviteEmail}.`);
+      setInviteEmail("");
+      setInviteRole("viewer");
+      
+      // Refresh staff to show the new pending invite
+      const { data: updatedStaff } = await supabase.from('users').select('*').order('created_at', { ascending: true });
+      if (updatedStaff) setStaff(updatedStaff);
+      
+    } catch (err: any) {
+      toast.error(err.message || "Failed to invite user");
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
+  const handleResendInvite = async (email: string, role: string) => {
+    toast.info("Resending invite...");
+    try {
+      const res = await fetch('/api/invites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, role })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      toast.success("Invite resent successfully.");
+      
+      const { data: updatedStaff } = await supabase.from('users').select('*').order('created_at', { ascending: true });
+      if (updatedStaff) setStaff(updatedStaff);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to resend invite");
+    }
+  };
+
+  const handleDeleteInvite = async (id: string, email: string) => {
+    if (!confirm("Are you sure you want to revoke this invitation?")) return;
+    
+    try {
+      const res = await fetch(`/api/invites?id=${id}&email=${email}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      toast.success("Invitation revoked");
+      setStaff(prev => prev.filter(member => member.id !== id));
+    } catch (err: any) {
+      toast.error(err.message || "Failed to revoke invitation");
+    }
   };
 
   const handleUpdateRole = async (userId: string, newRole: string) => {
@@ -349,8 +410,8 @@ function SettingsContent() {
                       </Select>
                     </div>
                   </div>
-                  <Button type="submit" variant="default" className="w-full bg-purple-600 hover:bg-purple-700">
-                    Send Invite
+                  <Button type="submit" variant="default" className="w-full bg-purple-600 hover:bg-purple-700" disabled={isInviting}>
+                    {isInviting ? "Sending Invite..." : "Send Invite"}
                   </Button>
                 </form>
               </CardContent>
@@ -367,6 +428,7 @@ function SettingsContent() {
                     <TableRow className="hover:bg-transparent">
                       <TableHead className="pl-6">User</TableHead>
                       <TableHead>Role</TableHead>
+                      <TableHead className="text-right pr-6">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -374,6 +436,12 @@ function SettingsContent() {
                       <TableRow key={member.id} className="hover:bg-gray-50/50">
                         <TableCell className="pl-6">
                           <div className="font-medium text-gray-900 text-sm">{member.email}</div>
+                          {member.status === 'invited' && (
+                            <div className="text-[10px] text-gray-400 mt-0.5 flex items-center">
+                              <Clock className="w-3 h-3 justify-center mr-1 inline" />
+                              Invited {member.invited_at ? new Date(member.invited_at).toLocaleDateString() : 'recently'}
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell>
                           {profile?.role === 'admin' ? (
@@ -400,11 +468,46 @@ function SettingsContent() {
                             </Badge>
                           )}
                         </TableCell>
+                        <TableCell className="text-right pr-6 min-w-[120px]">
+                          {member.status === 'invited' ? (
+                            <div className="flex items-center justify-end gap-2">
+                              {profile?.role === 'admin' && (
+                                <>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                                    onClick={() => handleResendInvite(member.email, member.role)}
+                                    title="Resend Invite"
+                                  >
+                                    <RotateCw className="w-4 h-4" />
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    onClick={() => handleDeleteInvite(member.id, member.email)}
+                                    title="Revoke Invitation"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </>
+                              )}
+                              <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200">
+                                Pending
+                              </Badge>
+                            </div>
+                          ) : (
+                            <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 shadow-none">
+                              Active
+                            </Badge>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                     {staff.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={2} className="text-center py-4 text-gray-500 text-sm">
+                        <TableCell colSpan={3} className="text-center py-4 text-gray-500 text-sm">
                           No staff members found.
                         </TableCell>
                       </TableRow>
