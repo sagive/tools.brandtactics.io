@@ -574,16 +574,16 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
             <hr className="border-gray-200 mt-6" />
             
             {isEditing ? (
-              <div className="space-y-4 mt-6">
+              <div className="flex flex-col flex-1 mt-2">
                 <Button 
                   onClick={handleUpdateTask} 
                   disabled={isUpdating || !title.trim() || isDeleting}
-                  className="w-full bg-[#4640A0] hover:bg-[#342e81] text-white shadow-sm font-semibold"
+                  className="w-full bg-[#4640A0] hover:bg-[#342e81] text-white shadow-sm font-semibold mb-6"
                 >
                   {isUpdating ? "Saving..." : "Save Changes"}
                 </Button>
-                <div className="flex items-center justify-between px-1">
-                  <p className="text-[12px] text-gray-400 font-medium">Created: {createdDate}</p>
+                <div className="mt-auto px-1 flex items-center justify-between">
+                  <p className="text-[12px] text-gray-400 font-medium translate-y-[1px]">Created: {createdDate}</p>
                   <Button 
                     variant="ghost" 
                     size="sm" 
