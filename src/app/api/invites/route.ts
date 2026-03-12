@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing email' }, { status: 400 });
     }
 
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.btools_SUPABASE_SERVICE_ROLE_KEY || '';
     if (!supabaseServiceKey) {
       return NextResponse.json({ error: 'Missing SUPABASE_SERVICE_ROLE_KEY configured on server' }, { status: 500 });
     }
@@ -109,7 +109,7 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'Missing user ID or email' }, { status: 400 });
     }
 
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.btools_SUPABASE_SERVICE_ROLE_KEY || '';
     if (!supabaseServiceKey) {
       return NextResponse.json({ error: 'Missing SUPABASE_SERVICE_ROLE_KEY' }, { status: 500 });
     }
