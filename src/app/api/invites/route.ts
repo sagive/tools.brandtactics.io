@@ -9,9 +9,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Create Admin Client with Service Role Key (bypasses RLS, can create auth users)
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
 export async function POST(req: Request) {
   try {
     const { email, role } = await req.json();
@@ -23,6 +20,9 @@ export async function POST(req: Request) {
     if (!supabaseServiceKey) {
       return NextResponse.json({ error: 'Missing SUPABASE_SERVICE_ROLE_KEY configured on server' }, { status: 500 });
     }
+
+    // Create Admin Client with Service Role Key (bypasses RLS, can create auth users)
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // 1. Generate Invite Link from Supabase Auth Admin
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
@@ -112,6 +112,9 @@ export async function DELETE(req: Request) {
     if (!supabaseServiceKey) {
       return NextResponse.json({ error: 'Missing SUPABASE_SERVICE_ROLE_KEY' }, { status: 500 });
     }
+
+    // Create Admin Client with Service Role Key (bypasses RLS, can create auth users)
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // 1. Delete from auth.users (will cascade to public.users if configured, else manual)
     const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers();
