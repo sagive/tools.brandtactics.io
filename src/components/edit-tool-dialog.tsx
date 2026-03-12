@@ -85,14 +85,31 @@ export function EditToolDialog({ tool, onToolSaved }: { tool?: any, onToolSaved?
         </div>
         <div className="space-y-2">
           <Label>Website URL</Label>
-          <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
+          <Input 
+            value={url} 
+            onChange={(e) => {
+              const newUrl = e.target.value;
+              setUrl(newUrl);
+              // Auto-populate name if empty and URL looks like it has a domain
+              if (!isEditing && !name && newUrl.includes('.')) {
+                try {
+                  const hostname = newUrl.startsWith('http') ? new URL(newUrl).hostname : new URL(`https://${newUrl}`).hostname;
+                  const part = hostname.replace(/^www\./, '').split('.')[0];
+                  if (part) setName(part.charAt(0).toUpperCase() + part.slice(1));
+                } catch (err) {
+                  // Ignore invalid URL parsing attempts
+                }
+              }
+            }} 
+            placeholder="https://..." 
+          />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label>Category</Label>
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger>
-                <SelectValue placeholder="Select category" />
+                <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
                 {categories.map((cat) => (
@@ -105,7 +122,7 @@ export function EditToolDialog({ tool, onToolSaved }: { tool?: any, onToolSaved?
             <Label>Rank</Label>
             <Select value={rank.toString()} onValueChange={(val) => setRank(parseInt(val))}>
               <SelectTrigger>
-                <SelectValue placeholder="Select rank" />
+                <SelectValue placeholder="Rank" />
               </SelectTrigger>
               <SelectContent>
                 {[...Array(10)].map((_, i) => (
@@ -116,10 +133,10 @@ export function EditToolDialog({ tool, onToolSaved }: { tool?: any, onToolSaved?
               </SelectContent>
             </Select>
           </div>
-        </div>
-        <div className="space-y-2">
-          <Label>Icon Name (Lucide)</Label>
-          <Input value={iconName} onChange={(e) => setIconName(e.target.value)} placeholder="Blocks" />
+          <div className="space-y-2">
+            <Label>Icon Name</Label>
+            <Input value={iconName} onChange={(e) => setIconName(e.target.value)} placeholder="Blocks" />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
