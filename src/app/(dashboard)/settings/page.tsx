@@ -15,6 +15,7 @@ import { useAuth } from "@/components/auth-provider";
 import { cn } from "@/lib/utils";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
@@ -85,6 +86,7 @@ function SettingsContent() {
   );
 
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("viewer");
   const [staff, setStaff] = useState<any[]>([]);
   const { user, profile, refreshProfile } = useAuth();
   const [newPassword, setNewPassword] = useState("");
@@ -255,8 +257,25 @@ function SettingsContent() {
   const handleInviteUser = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteEmail) return;
-    toast.success(`Invite sent to ${inviteEmail}.`);
+    toast.success(`Invite sent to ${inviteEmail} as ${inviteRole}.`);
     setInviteEmail("");
+    setInviteRole("viewer");
+  };
+
+  const handleUpdateRole = async (userId: string, newRole: string) => {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ role: newRole })
+        .eq('id', userId);
+
+      if (error) throw error;
+      
+      toast.success("Role updated successfully");
+      setStaff(prev => prev.map(member => member.id === userId ? { ...member, role: newRole } : member));
+    } catch (err: any) {
+      toast.error("Failed to update role");
+    }
   };
 
   // Preview content wrapper
@@ -306,14 +325,29 @@ function SettingsContent() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleInviteUser} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Email Address</Label>
-                    <Input 
-                      type="email" 
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                      placeholder="teammate@brandtactics.com" 
-                    />
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Email Address</Label>
+                      <Input 
+                        type="email" 
+                        value={inviteEmail}
+                        onChange={(e) => setInviteEmail(e.target.value)}
+                        placeholder="teammate@brandtactics.com" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Role</Label>
+                      <Select value={inviteRole} onValueChange={(val) => setInviteRole(val || "viewer")}>
+                        <SelectTrigger className="w-full bg-white">
+                          <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="author">Author</SelectItem>
+                          <SelectItem value="viewer">Viewer</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   <Button type="submit" variant="default" className="w-full bg-purple-600 hover:bg-purple-700">
                     Send Invite
@@ -342,12 +376,29 @@ function SettingsContent() {
                           <div className="font-medium text-gray-900 text-sm">{member.email}</div>
                         </TableCell>
                         <TableCell>
-                          <Badge className={cn(
-                            "capitalize",
-                            member.role === 'admin' ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-gray-100 text-gray-700 border-gray-200"
-                          )}>
-                            {member.role || 'Staff'}
-                          </Badge>
+                          {profile?.role === 'admin' ? (
+                            <Select 
+                              value={member.role || 'viewer'} 
+                              onValueChange={(val) => handleUpdateRole(member.id, val)}
+                            >
+                              <SelectTrigger className="w-full sm:w-[130px] h-8 text-xs bg-white">
+                                <SelectValue placeholder="Select role" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="author">Author</SelectItem>
+                                <SelectItem value="viewer">Viewer</SelectItem>
+                                <SelectItem value="staff">Staff</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Badge className={cn(
+                              "capitalize",
+                              member.role === 'admin' ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-gray-100 text-gray-700 border-gray-200"
+                            )}>
+                              {member.role || 'Staff'}
+                            </Badge>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
