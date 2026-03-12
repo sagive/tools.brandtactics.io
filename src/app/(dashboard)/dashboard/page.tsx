@@ -160,7 +160,7 @@ export default function DashboardPage() {
     <div className="space-y-8">
       {/* Top Row: Email Form and Clients List */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        <div className="md:col-span-4 space-y-6">
+        <div className="md:col-span-5 space-y-6">
           <Card className="shadow-sm border-gray-200">
             <CardHeader className="pb-4 border-b mb-4">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -334,7 +334,7 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <div className="md:col-span-8 space-y-6">
+        <div className="md:col-span-7 space-y-6">
           <Card className="shadow-sm border-gray-200 h-full">
             <CardHeader className="pb-3 border-b flex flex-row items-center justify-between">
               <div>
