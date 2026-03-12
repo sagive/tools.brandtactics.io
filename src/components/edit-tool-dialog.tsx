@@ -108,7 +108,7 @@ export function EditToolDialog({ tool, onToolSaved }: { tool?: any, onToolSaved?
           <div className="space-y-2">
             <Label>Category</Label>
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
@@ -121,7 +121,7 @@ export function EditToolDialog({ tool, onToolSaved }: { tool?: any, onToolSaved?
           <div className="space-y-2">
             <Label>Rank</Label>
             <Select value={rank.toString()} onValueChange={(val) => setRank(parseInt(val))}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Rank" />
               </SelectTrigger>
               <SelectContent>
@@ -135,7 +135,7 @@ export function EditToolDialog({ tool, onToolSaved }: { tool?: any, onToolSaved?
           </div>
           <div className="space-y-2">
             <Label>Icon Name</Label>
-            <Input value={iconName} onChange={(e) => setIconName(e.target.value)} placeholder="Blocks" />
+            <Input value={iconName} onChange={(e) => setIconName(e.target.value)} className="w-full" placeholder="Blocks" />
           </div>
         </div>
 
