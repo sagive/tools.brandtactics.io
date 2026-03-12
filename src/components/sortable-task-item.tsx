@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
-export function SortableTaskItem({ task, onDelete, onUpdate }: { task: any, onDelete?: () => void, onUpdate?: () => void }) {
+export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: { task: any, onDelete?: () => void, onUpdate?: () => void, autoOpenTaskId?: string | null }) {
   const [status, setStatus] = useState(task.status);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
 
@@ -57,7 +57,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate }: { task: any, onDe
           <GripVertical className="w-5 h-5" />
         </button>
         
-        <Dialog>
+        <Dialog defaultOpen={autoOpenTaskId === task.id}>
           <DialogTrigger className="flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 cursor-pointer min-w-0 bg-transparent border-0 text-left p-0 mx-0 outline-none w-full">
             <span className="font-medium text-sm text-gray-900 truncate pr-4 block">{task.title}</span>
             

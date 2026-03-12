@@ -20,8 +20,15 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
   const [tasks, setTasks] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [autoOpenTaskId, setAutoOpenTaskId] = useState<string | null>(null);
+
   useEffect(() => {
     if (id) fetchTasks();
+    
+    // Check URL for direct task link ?task=ID
+    const searchParams = new URLSearchParams(window.location.search);
+    const taskId = searchParams.get('task');
+    if (taskId) setAutoOpenTaskId(taskId);
     
     const handleRefresh = () => { if (id) fetchTasks(); };
     window.addEventListener("taskCreated", handleRefresh);
@@ -71,8 +78,6 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        
-
       </div>
 
       <div className="space-y-6">
@@ -80,10 +85,10 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
           <div className="py-12 text-center text-gray-500">Loading tasks...</div>
         ) : (
           <>
-            <SortableTaskList title="Pending" initialTasks={pending} onRefresh={fetchTasks} />
-            <SortableTaskList title="Working on it / Review" initialTasks={active} onRefresh={fetchTasks} />
-            <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} onRefresh={fetchTasks} />
-            <SortableTaskList title="Completed" initialTasks={completed} onRefresh={fetchTasks} />
+            <SortableTaskList title="Pending" initialTasks={pending} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
+            <SortableTaskList title="Working on it / Review" initialTasks={active} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
+            <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
+            <SortableTaskList title="Completed" initialTasks={completed} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
             {filteredTasks.length === 0 && (
                <div className="text-center py-10 text-gray-500 bg-white border rounded-lg border-dashed">
                  No tasks found for this client.

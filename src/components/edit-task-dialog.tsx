@@ -129,6 +129,21 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
       toast.success("Task updated successfully");
       onTaskCreated?.(); // Refresh parent list
       
+      // If assignment changed, send email
+      if (assignee && assignee !== task.assignee) {
+        const targetUser = users.find(u => u.full_name === assignee || u.email === assignee);
+        if (targetUser && targetUser.email) {
+          const assignerName = profile?.full_name || profile?.email || "Someone";
+          const taskUrl = `${window.location.origin}/clients/${clientId}/tasks?task=${task.id}`;
+          
+          fetch('/api/notify-assignment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: targetUser.email, assignerName, taskTitle: title, taskUrl })
+          }).catch(err => console.error("Failed to trigger assignment email", err));
+        }
+      }
+      
       // We need a way to close the dialog. Since we are inside DialogContent, 
       // the CSS class "DialogClose" or a click on it works. 
       // For programmatic close, we usually need the state from the parent or a hidden button.
@@ -267,9 +282,24 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
       toast.success("Task created successfully");
       onTaskCreated?.();
       
-      // Programmatic close
-      const closeButton = document.querySelector('[data-slot="dialog-close"]') as HTMLButtonElement;
-      if (closeButton) closeButton.click();
+      // Check if there is an assignee to notify
+      if (assignee) {
+        const targetUser = users.find(u => u.full_name === assignee || u.email === assignee);
+        if (targetUser && targetUser.email) {
+          const assignerName = profile?.full_name || profile?.email || "Someone";
+          const taskUrl = `${window.location.origin}/clients/${clientId}/tasks?task=${data.id}`;
+          
+          fetch('/api/notify-assignment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: targetUser.email, assignerName, taskTitle: title, taskUrl })
+          }).catch(err => console.error("Failed to trigger assignment email", err));
+        }
+      }
+      
+      // Keep dialog open but reset main content as requested
+      setTitle("");
+      setDescription("");
       
     } catch (err: any) {
       toast.error(err.message || "Failed to create task");
@@ -506,7 +536,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
                    }}
                 >
                   <SelectTrigger className="bg-white w-full h-9">
-                    <SelectValue placeholder="Select requester" />
+                    <SelectValue placeholder="Pick User" />
                   </SelectTrigger>
                   <SelectContent>
                     {users.map(u => (
@@ -528,7 +558,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
                   }}
                 >
                   <SelectTrigger className="bg-white px-2 w-full">
-                    <SelectValue />
+                    <SelectValue placeholder="Pick User" />
                   </SelectTrigger>
                   <SelectContent>
                     {users.map(u => (

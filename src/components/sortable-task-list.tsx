@@ -19,7 +19,7 @@ import {
 import { SortableTaskItem } from "./sortable-task-item";
 import { Card } from "@/components/ui/card";
 
-export function SortableTaskList({ title, initialTasks, onRefresh }: { title: string, initialTasks: any[], onRefresh?: () => void }) {
+export function SortableTaskList({ title, initialTasks, onRefresh, autoOpenTaskId }: { title: string, initialTasks: any[], onRefresh?: () => void, autoOpenTaskId?: string | null }) {
   const [tasks, setTasks] = useState(initialTasks);
 
   useEffect(() => {
@@ -66,6 +66,7 @@ export function SortableTaskList({ title, initialTasks, onRefresh }: { title: st
                 task={task} 
                 onDelete={() => setTasks(t => t.filter(x => x.id !== task.id))}
                 onUpdate={onRefresh}
+                autoOpenTaskId={autoOpenTaskId}
               />
             ))}
           </SortableContext>
