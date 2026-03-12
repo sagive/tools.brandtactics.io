@@ -13,6 +13,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
+import dynamic from "next/dynamic";
+import "react-quill-new/dist/quill.snow.css";
+
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
+
+const TASK_QUILL_MODULES = {
+  toolbar: [
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    ['link', 'image'],
+  ],
+};
 
 export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?: any, defaultClientId?: string, onTaskCreated?: () => void }) {
   const isEditing = !!task;
@@ -330,22 +342,13 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
 
             <div className="space-y-2">
               <Label className="text-gray-600 text-[13px] font-medium">Description</Label>
-              <div className="border rounded-md overflow-hidden bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500">
-                 {/* Fake toolbar */}
-                 <div className="flex items-center gap-1 border-b bg-gray-50/50 p-2 text-gray-500">
-                   <Button variant="ghost" size="icon" className="h-7 w-7"><Bold className="w-3.5 h-3.5" /></Button>
-                   <Button variant="ghost" size="icon" className="h-7 w-7"><Italic className="w-3.5 h-3.5" /></Button>
-                   <Button variant="ghost" size="icon" className="h-7 w-7"><Underline className="w-3.5 h-3.5" /></Button>
-                   <Button variant="ghost" size="icon" className="h-7 w-7"><Strikethrough className="w-3.5 h-3.5" /></Button>
-                   <div className="w-px h-4 bg-gray-300 mx-1" />
-                   <Button variant="ghost" size="icon" className="h-7 w-7"><List className="w-4 h-4" /></Button>
-                   <Button variant="ghost" size="icon" className="h-7 w-7"><Link2 className="w-4 h-4" /></Button>
-                 </div>
-                 <Textarea 
+              <div className="border rounded-md overflow-hidden bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[120px]">
+                 <ReactQuill 
+                   theme="snow"
                    value={description}
-                   onChange={(e) => setDescription(e.target.value)}
-                   className="min-h-[120px] resize-none border-0 focus-visible:ring-0 rounded-none shadow-none" 
-                   placeholder="Describe this task..."
+                   onChange={setDescription}
+                   modules={TASK_QUILL_MODULES}
+                   placeholder="Describe this task (you can paste screenshots)..."
                  />
               </div>
             </div>
