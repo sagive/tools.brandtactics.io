@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { BellIcon, Link2, List, Bold, Italic, Underline, Strikethrough, SmilePlus, X, Send } from "lucide-react";
+import { BellIcon, Link2, List, Bold, Italic, Underline, Strikethrough, SmilePlus, X, Send, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { useAuth } from "@/components/auth-provider";
 
 export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?: any, defaultClientId?: string, onTaskCreated?: () => void }) {
   const isEditing = !!task;
@@ -22,6 +23,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
   // Let's check how it's called.
   const [newComment, setNewComment] = useState("");
   const [isEditingComment, setIsEditingComment] = useState(false);
+  const { profile } = useAuth();
   
   const [title, setTitle] = useState(task?.title || "");
   const [description, setDescription] = useState(task?.description || "");
@@ -36,6 +38,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
   const [users, setUsers] = useState<any[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Field display names for toasts
   const FIELD_LABELS: Record<string, string> = {
@@ -127,18 +130,107 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
     }
   };
 
+  const handleDeleteTask = async () => {
+    if (!isEditing || !task.id) return;
+    if (!confirm("Are you sure you want to permanently delete this task?")) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase.from('tasks').delete().eq('id', task.id);
+      if (error) throw error;
+      
+      toast.success("Task deleted successfully");
+      onTaskCreated?.(); // Refresh parent list
+      
+      // Close dialog
+      const closeButton = document.querySelector('[data-slot="dialog-close"]') as HTMLButtonElement;
+      if (closeButton) closeButton.click();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete task");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handlePublishComment = async () => {
     if (!newComment.trim() || !isEditing) return;
+    
+    const currentUserEmail = profile?.email || 'ME';
+    const currentUserName = profile?.full_name || currentUserEmail;
+    
     const comment = { 
       id: Date.now().toString(), 
-      user: 'ME', 
+      user: currentUserName, 
       text: newComment.trim(), 
       timestamp: new Date().toISOString() 
     };
+    
     const updatedComments = [...comments, comment];
     setComments(updatedComments);
     setNewComment("");
     await updateField("comments", updatedComments);
+    
+    // NOTIFICATION LOGIC
+    // Figure out who should receive this notification (Assignee and/or Requester)
+    const targets = new Set<string>();
+    
+    // We only have names/emails in assignee/requester, not the strict UUID.
+    // If assignee or requester is an email, it's easy. If it's a full_name, we have to look it up or hope the trigger logic matches.
+    // Let's find the email of the assignee and requester 
+    const isAssigneeMe = (assignee === currentUserEmail || assignee === currentUserName);
+    const isRequesterMe = (requester === currentUserEmail || requester === currentUserName);
+    
+    const fetchTargetEmail = (identifier: string) => {
+       const user = users.find(u => u.email === identifier || u.full_name === identifier);
+       return user ? user.email : null;
+    };
+    
+    if (assignee && !isAssigneeMe) {
+       const email = fetchTargetEmail(assignee);
+       if (email) targets.add(email);
+    }
+    
+    if (requester && !isRequesterMe) {
+       const email = fetchTargetEmail(requester);
+       if (email) targets.add(email);
+    }
+    
+    // Send notifications
+    for (const targetEmail of targets) {
+       supabase.from('notifications').insert([{
+         user_email: targetEmail,
+         title: "New Task Comment",
+         message: `${currentUserName} commented on "${title}"`,
+         action_url: `/clients/${clientId}/tasks?task=${task.id}`,
+         type: 'comment'
+       }]).then(({error}) => {
+         if (error) console.error("Failed to insert notification:", error);
+       });
+    }
+  };
+
+  const handleSetReminder = async (hours: number, label: string) => {
+    if (!task?.id || !profile?.email) {
+      toast.error("Please save the task first before setting a reminder.");
+      return;
+    }
+    
+    const triggerTime = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+    
+    const { error } = await supabase.from('scheduled_reminders').insert([{
+      task_id: task.id,
+      user_email: profile.email,
+      task_title: title,
+      action_url: `/clients/${clientId}/tasks?task=${task.id}`,
+      trigger_time: triggerTime
+    }]);
+    
+    if (error) {
+      console.error(error);
+      toast.error("Failed to set reminder");
+    } else {
+      toast.success(`Reminder set for ${label}`);
+    }
   };
 
   const handleCreateTask = async () => {
@@ -203,12 +295,12 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
                </DropdownMenuTrigger>
                <DropdownMenuContent align="end" className="w-48">
                  <div className="px-2 py-1.5 text-xs font-semibold text-gray-500">Remind me in...</div>
-                 <DropdownMenuItem>1 hour</DropdownMenuItem>
-                 <DropdownMenuItem>4 hours</DropdownMenuItem>
-                 <DropdownMenuItem>1 day</DropdownMenuItem>
-                 <DropdownMenuItem>3 days</DropdownMenuItem>
-                 <DropdownMenuItem>1 week</DropdownMenuItem>
-                 <DropdownMenuItem>Next month</DropdownMenuItem>
+                 <DropdownMenuItem onClick={() => handleSetReminder(1, "1 hour")}>1 hour</DropdownMenuItem>
+                 <DropdownMenuItem onClick={() => handleSetReminder(4, "4 hours")}>4 hours</DropdownMenuItem>
+                 <DropdownMenuItem onClick={() => handleSetReminder(24, "1 day")}>1 day</DropdownMenuItem>
+                 <DropdownMenuItem onClick={() => handleSetReminder(72, "3 days")}>3 days</DropdownMenuItem>
+                 <DropdownMenuItem onClick={() => handleSetReminder(168, "1 week")}>1 week</DropdownMenuItem>
+                 <DropdownMenuItem onClick={() => handleSetReminder(720, "Next month")}>Next month</DropdownMenuItem>
                </DropdownMenuContent>
              </DropdownMenu>
 
@@ -452,12 +544,24 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
               <div className="space-y-4 mt-6">
                 <Button 
                   onClick={handleUpdateTask} 
-                  disabled={isUpdating || !title.trim()}
+                  disabled={isUpdating || !title.trim() || isDeleting}
                   className="w-full bg-[#4640A0] hover:bg-[#342e81] text-white shadow-sm font-semibold"
                 >
                   {isUpdating ? "Saving..." : "Save Changes"}
                 </Button>
-                <p className="text-center text-[12px] text-gray-400 font-medium">Created: {createdDate}</p>
+                <div className="flex items-center justify-between px-1">
+                  <p className="text-[12px] text-gray-400 font-medium">Created: {createdDate}</p>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2"
+                    onClick={handleDeleteTask}
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="w-3.5 h-3.5 mr-1" />
+                    {isDeleting ? "Deleting..." : "Delete Task"}
+                  </Button>
+                </div>
               </div>
             ) : (
               <Button 
