@@ -306,8 +306,9 @@ function SettingsContent() {
     }
   };
 
-  const handleDeleteInvite = async (id: string, email: string) => {
-    if (!confirm("Are you sure you want to revoke this invitation?")) return;
+  const handleDeleteUser = async (id: string, email: string, isInvite: boolean = false) => {
+    const msg = isInvite ? "Are you sure you want to revoke this invitation?" : "Are you sure you want to remove this user from the system?";
+    if (!confirm(msg)) return;
     
     try {
       const res = await fetch(`/api/invites?id=${id}&email=${email}`, {
@@ -316,10 +317,10 @@ function SettingsContent() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       
-      toast.success("Invitation revoked");
+      toast.success(isInvite ? "Invitation revoked" : "User removed");
       setStaff(prev => prev.filter(member => member.id !== id));
     } catch (err: any) {
-      toast.error(err.message || "Failed to revoke invitation");
+      toast.error(err.message || (isInvite ? "Failed to revoke invitation" : "Failed to remove user"));
     }
   };
 
@@ -486,7 +487,7 @@ function SettingsContent() {
                                     variant="ghost" 
                                     size="icon" 
                                     className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                    onClick={() => handleDeleteInvite(member.id, member.email)}
+                                    onClick={() => handleDeleteUser(member.id, member.email, true)}
                                     title="Revoke Invitation"
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -498,9 +499,22 @@ function SettingsContent() {
                               </Badge>
                             </div>
                           ) : (
-                            <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 shadow-none">
-                              Active
-                            </Badge>
+                            <div className="flex items-center justify-end gap-2">
+                              {profile?.role === 'admin' && member.email !== profile?.email && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  onClick={() => handleDeleteUser(member.id, member.email, false)}
+                                  title="Remove User"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              )}
+                              <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 shadow-none">
+                                Active
+                              </Badge>
+                            </div>
                           )}
                         </TableCell>
                       </TableRow>

@@ -25,10 +25,25 @@ export async function POST(req: Request) {
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // 1. Generate Invite Link from Supabase Auth Admin
-    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+    let linkData, linkError;
+
+    const res = await supabaseAdmin.auth.admin.generateLink({
       type: 'invite',
       email: email,
     });
+
+    if (res.error && res.error.message.includes('registered')) {
+      // User already exists, generate a magic link instead
+      const magicRes = await supabaseAdmin.auth.admin.generateLink({
+        type: 'magiclink',
+        email: email,
+      });
+      linkData = magicRes.data;
+      linkError = magicRes.error;
+    } else {
+      linkData = res.data;
+      linkError = res.error;
+    }
 
     if (linkError) {
       console.error("Invite Link Generation Error:", linkError);
@@ -75,7 +90,7 @@ export async function POST(req: Request) {
       `;
 
       const response = await resend.emails.send({
-        from: 'BrandTactics <invites@tools.brandtactics.io>',
+        from: 'BrandTactics <updates@tools.brandtactics.io>',
         to: [email],
         subject: "You're invited to BrandTactics",
         html: htmlContent,
