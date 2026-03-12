@@ -11,6 +11,7 @@ import { EditTaskDialog } from "@/components/edit-task-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
 
 export function SortableTaskItem({ task, onDelete, onUpdate }: { task: any, onDelete?: () => void, onUpdate?: () => void }) {
   const [status, setStatus] = useState(task.status);
@@ -58,29 +59,47 @@ export function SortableTaskItem({ task, onDelete, onUpdate }: { task: any, onDe
         
         <Dialog>
           <DialogTrigger className="flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 cursor-pointer min-w-0 bg-transparent border-0 text-left p-0 mx-0 outline-none w-full">
-            <span className="font-medium text-sm text-gray-900 truncate flex-1 pr-2 block">{task.title}</span>
-            {task.client && <Badge variant="outline" className="hidden lg:inline-flex text-[10px] text-gray-500 font-medium shrink-0 bg-transparent mr-2">{task.client}</Badge>}
+            <span className="font-medium text-sm text-gray-900 truncate pr-4 block">{task.title}</span>
             
-            {/* Due Date and Priority (Hidden on small screens) */}
-            <div className="hidden md:flex items-center text-[11px] sm:text-xs text-gray-500 shrink-0">
+            {/* Metadata Area (Visible on tablets and up) */}
+            <div className="hidden md:flex items-center text-[11px] sm:text-xs text-gray-500 shrink-0 ml-auto gap-6 pr-4">
                
-               {/* Assigned User */}
-               <div className="flex items-center gap-1.5 w-24 shrink-0">
-                 {task.assignee ? (
-                   <>
-                     <Avatar className="w-5 h-5 border shadow-sm">
-                       <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${task.assignee}`} />
-                       <AvatarFallback className="text-[9px]">{task.assignee.substring(0, 2).toUpperCase()}</AvatarFallback>
-                     </Avatar>
-                     <span className="font-medium text-gray-700 hidden xl:inline-block truncate">{task.assignee}</span>
-                   </>
-                 ) : (
-                   <span className="text-gray-400 italic">Unassigned</span>
-                 )}
+               {/* Unified Actor Flow (Requester -> Assignee) */}
+               <div className="flex items-center gap-2">
+                  <div className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded font-medium text-[10px] border border-gray-200/50" title={`Requested by: ${task.requester || 'Client'}`}>
+                    {task.requester || 'Client'}
+                  </div>
+                  
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 shrink-0"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  
+                  <div className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded font-medium text-[10px] border border-gray-200/50 flex items-center gap-1.5" title={`Assigned to: ${task.assignee || 'Unassigned'}`}>
+                    {task.assignee ? (
+                      <>
+                        <div className="w-3.5 h-3.5 rounded-full bg-blue-100 flex items-center justify-center text-[8px] font-bold text-blue-600 shrink-0">
+                          {task.assignee.charAt(0).toUpperCase()}
+                        </div>
+                        {task.assignee}
+                      </>
+                    ) : (
+                      <span className="italic opacity-60 text-gray-400 font-normal">Unassigned</span>
+                    )}
+                  </div>
                </div>
 
-               <span className="w-32 shrink-0">Due: {task.due}</span>
-               <span className="flex items-center gap-1 w-32 shrink-0">Priority: <span className={task.priority === 'High' ? 'text-red-500 font-medium' : task.priority === 'Medium' ? 'text-yellow-600 font-medium' : 'text-gray-500'}>{task.priority}</span></span>
+               <div className="flex items-center gap-1.5 min-w-[100px]">
+                  <span className="text-gray-400">Due:</span>
+                  <span className="font-medium text-gray-700">{task.due}</span>
+               </div>
+
+               <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400">Priority:</span>
+                  <span className={cn(
+                    "font-bold uppercase text-[9px] tracking-wider",
+                    task.priority === 'High' ? 'text-red-500' : task.priority === 'Medium' ? 'text-yellow-600' : 'text-gray-400'
+                  )}>
+                    {task.priority}
+                  </span>
+               </div>
             </div>
           </DialogTrigger>
           <EditTaskDialog task={task} onTaskCreated={onUpdate} />
