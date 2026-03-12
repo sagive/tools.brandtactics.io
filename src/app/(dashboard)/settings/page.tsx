@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, UserPlus, Mail, Lock, User } from "lucide-react";
+import { Save, UserPlus, Mail, Lock, User, Trash2, Plus, FileText } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
@@ -17,6 +17,47 @@ import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import dynamic from "next/dynamic";
+import "react-quill-new/dist/quill.snow.css";
+
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
+
+function PrewrittenTemplateRow({ template, onDelete, onUpdate }: { template: any, onDelete: (id: string) => void, onUpdate: (id: string, updates: any) => Promise<void> }) {
+  const [name, setName] = useState(template.name);
+  const [content, setContent] = useState(template.content || "");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    await onUpdate(template.id, { name, content });
+    setIsSaving(false);
+  };
+
+  return (
+    <div className="p-6 border rounded-xl bg-white shadow-sm space-y-4">
+      <div className="flex items-center gap-4">
+        <div className="flex-1 space-y-1">
+          <Label className="text-xs font-semibold text-gray-500 uppercase">Template Name</Label>
+          <Input value={name} onChange={(e) => setName(e.target.value)} className="font-bold text-gray-900 border-gray-200" placeholder="e.g., Monthly SEO Update" />
+        </div>
+        <div className="flex items-end gap-2 pt-5">
+          <Button variant="outline" onClick={handleSave} disabled={isSaving} className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 shrink-0">
+            {isSaving ? "Saving..." : <><Save className="w-4 h-4 mr-2" /> Save</>}
+          </Button>
+          <Button variant="ghost" className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0" onClick={() => onDelete(template.id)}>
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs font-semibold text-gray-500 uppercase">Message Content</Label>
+        <div className="border rounded-md overflow-hidden bg-white border-gray-200">
+          <ReactQuill theme="snow" value={content} onChange={setContent} className="[&_.ql-editor]:min-h-[150px] [&_.ql-editor]:text-sm [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function SettingsContent() {
   const searchParams = useSearchParams();
@@ -63,6 +104,9 @@ function SettingsContent() {
           setTemplate(data.email_template);
         }
       });
+      
+    // Fetch prewritten templates
+    fetchPrewrittenTemplates();
 
     // 2. Fetch Staff
     supabase.from('users').select('*').order('created_at', { ascending: true })
@@ -99,6 +143,54 @@ function SettingsContent() {
       toast.success("Email template saved successfully.");
     } catch (err: any) {
       toast.error("Failed to save template");
+    }
+  };
+
+  const [prewrittenTemplates, setPrewrittenTemplates] = useState<any[]>([]);
+
+  const fetchPrewrittenTemplates = async () => {
+    try {
+      const { data, error } = await supabase.from('email_templates').select('*').order('created_at', { ascending: true });
+      if (data) setPrewrittenTemplates(data);
+    } catch (err) {
+      // Table might not exist yet
+    }
+  };
+
+  const handleCreatePrewrittenTemplate = async () => {
+    const newTemp = { name: "New Template", content: "" };
+    try {
+      const { data, error } = await supabase.from('email_templates').insert(newTemp).select().single();
+      if (error) throw error;
+      if (data) {
+        setPrewrittenTemplates([...prewrittenTemplates, data]);
+        toast.success("New template added");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add template. Make sure you ran the SQL migration.");
+    }
+  };
+
+  const handleUpdatePrewrittenTemplate = async (id: string, updates: any) => {
+    try {
+      const { error } = await supabase.from('email_templates').update(updates).eq('id', id);
+      if (error) throw error;
+      setPrewrittenTemplates(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+      toast.success("Template saved successfully.");
+    } catch (err: any) {
+      toast.error("Failed to save template");
+    }
+  };
+
+  const handleDeletePrewrittenTemplate = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this template?")) return;
+    try {
+      const { error } = await supabase.from('email_templates').delete().eq('id', id);
+      if (error) throw error;
+      setPrewrittenTemplates(prev => prev.filter(t => t.id !== id));
+      toast.success("Template deleted");
+    } catch (err: any) {
+      toast.error("Failed to delete template");
     }
   };
 
@@ -407,6 +499,43 @@ function SettingsContent() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Prewritten Templates Section */}
+          <div className="pt-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                  <FileText className="w-5 h-5 mr-2 text-indigo-600" />
+                  Prewritten Templates
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  Create reusable message blocks that you can quickly inject into email updates from the dashboard.
+                </p>
+              </div>
+              <Button onClick={handleCreatePrewrittenTemplate} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm gap-2">
+                <Plus className="w-4 h-4" /> Add Template
+              </Button>
+            </div>
+
+            {prewrittenTemplates.length === 0 ? (
+              <div className="p-12 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+                <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                <h4 className="font-semibold text-gray-700">No templates yet</h4>
+                <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">Click the button above to create your first prewritten template.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {prewrittenTemplates.map(t => (
+                  <PrewrittenTemplateRow 
+                    key={t.id} 
+                    template={t} 
+                    onDelete={handleDeletePrewrittenTemplate} 
+                    onUpdate={handleUpdatePrewrittenTemplate} 
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

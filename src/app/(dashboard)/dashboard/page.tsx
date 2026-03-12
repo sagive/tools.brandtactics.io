@@ -56,12 +56,23 @@ export default function DashboardPage() {
   const [clientSearch, setClientSearch] = useState("");
   const [tools, setTools] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [templates, setTemplates] = useState<any[]>([]);
 
   useEffect(() => {
     fetchClients();
     fetchTools();
     fetchCategories();
+    fetchTemplates();
   }, []);
+
+  async function fetchTemplates() {
+    try {
+      const { data } = await supabase.from("email_templates").select("*").order("name");
+      if (data) setTemplates(data);
+    } catch (e) {
+      console.log("Templates table might not exist yet");
+    }
+  }
 
   async function fetchClients() {
     const { data } = await supabase.from("clients").select("id, name, contact_email").order("name");
@@ -158,8 +169,9 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSendUpdate} className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Client</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2 flex flex-col justify-start">
+                    <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Client</Label>
                   <Popover open={openClientDropdown} onOpenChange={setOpenClientDropdown}>
                     <PopoverTrigger className="w-full" render={
                       <Button
@@ -200,12 +212,9 @@ export default function DashboardPage() {
                                 >
                                   <div className="flex items-center w-full">
                                     <div className="flex-1 font-bold text-gray-900">{client.name}</div>
-                                    <Check
-                                      className={cn(
-                                        "ml-auto h-4 w-4 text-blue-600",
-                                        clientId === client.id ? "opacity-100" : "opacity-0"
-                                      )}
-                                    />
+                                    {clientId === client.id && (
+                                      <Check className="ml-auto h-4 w-4 text-blue-600 shrink-0" />
+                                    )}
                                   </div>
                                   <div className="text-[10px] uppercase tracking-wider font-semibold text-gray-500 mt-0.5">
                                     {hasEmail ? client.contact_email : "⚠️ Missing Email"}
@@ -227,6 +236,34 @@ export default function DashboardPage() {
                       </p>
                     </div>
                   )}
+                  </div>
+                  
+                  <div className="space-y-2 flex flex-col justify-start">
+                    <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Templates</Label>
+                    <Select onValueChange={(val) => {
+                      const template = templates.find(t => t.id === val);
+                      if (template) {
+                        setBody(prev => {
+                          const separator = prev && !prev.endsWith('<p><br></p>') && !prev.endsWith('</p>') ? '<br/><br/>' : '';
+                          return prev + separator + template.content;
+                        });
+                        toast.success("Template text injected");
+                      }
+                    }}>
+                      <SelectTrigger className="bg-white h-10 px-3 font-normal text-muted-foreground border-gray-200">
+                        <SelectValue placeholder="Select template..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {templates.length === 0 ? (
+                           <div className="px-2 py-3 text-center text-xs text-gray-400">No templates found.<br/>Add them in Settings.</div>
+                        ) : (
+                          templates.map(t => (
+                            <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Subject</Label>
