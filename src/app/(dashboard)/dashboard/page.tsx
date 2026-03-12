@@ -422,10 +422,6 @@ export default function DashboardPage() {
                               </div>
                             </div>
                           </div>
-
-                          <div className="hidden group-hover:block ml-2">
-                            <ExternalLink className="w-4 h-4 text-gray-300" />
-                          </div>
                         </Link>
                       </li>
                       );
