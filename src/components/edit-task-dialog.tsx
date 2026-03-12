@@ -59,7 +59,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
     }
     
     // Fetch users
-    supabase.from('users').select('*').order('full_name').then(({data}) => {
+    supabase.from('users').select('*').order('email').then(({data}) => {
       if (data) setUsers(data);
     });
   }, [isEditing, defaultClientId]);

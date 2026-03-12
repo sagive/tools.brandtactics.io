@@ -151,7 +151,10 @@ function SettingsContent() {
       const { data } = await supabase.from('users').select('*').order('created_at', { ascending: true });
       if (data) setStaff(data);
     } catch (err: any) {
-      toast.error(err.message || "Failed to update profile.");
+      const msg = err.message?.includes("column users.full_name does not exist")
+        ? "Database Error: The 'full_name' column is missing from your 'users' table. Please see the troubleshooting guide."
+        : (err.message || "Failed to update profile.");
+      toast.error(msg);
     } finally {
       setIsUpdatingProfile(false);
     }
