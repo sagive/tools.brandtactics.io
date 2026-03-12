@@ -31,6 +31,14 @@ import dynamic from "next/dynamic";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
+const TASK_QUILL_MODULES = {
+  toolbar: [
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    ['link', 'image'],
+  ],
+};
+
 const IconRenderer = ({ name, className }: { name: string, className?: string }) => {
   const Icon = (LucideIcons as any)[name] || Blocks;
   return <Icon className={className} />;
@@ -77,7 +85,16 @@ export default function DashboardPage() {
   }
 
   async function fetchClients() {
-    const { data } = await supabase.from("clients").select("id, name, contact_email").order("name");
+    // Fetch clients and their related tasks, articles, and emails for stats
+    const { data } = await supabase.from("clients").select(`
+      id, 
+      name, 
+      contact_email,
+      tasks (id, status),
+      articles (id, status),
+      email_updates (id, created_at, recipient_email)
+    `).order("name");
+    
     if (data) setClients(data);
   }
 
@@ -311,13 +328,13 @@ export default function DashboardPage() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Message</Label>
-                  <div className="bg-white rounded-md border border-input shadow-sm overflow-hidden pb-10">
+                  <div className="bg-white rounded-md border border-input shadow-sm overflow-hidden pb-10 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[200px]">
                     <ReactQuill 
                       theme="snow" 
                       value={body} 
-                      onChange={setBody} 
-                      className="[&_.ql-editor]:min-h-[200px] [&_.ql-editor]:text-sm [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" 
-                      placeholder="Brief update details..." 
+                      onChange={setBody}
+                      modules={TASK_QUILL_MODULES}
+                      placeholder="Brief update details (paste screenshots here)..." 
                     />
                   </div>
                 </div>
@@ -335,7 +352,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="md:col-span-7 space-y-6">
-          <Card className="shadow-sm border-gray-200 h-full">
+          <Card className="shadow-sm border-gray-200">
             <CardHeader className="pb-3 border-b flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-lg">Clients</CardTitle>
@@ -355,7 +372,23 @@ export default function DashboardPage() {
                   {filteredWidgetClients.length === 0 ? (
                     <div className="p-8 text-center text-sm text-gray-500">No clients found.</div>
                   ) : (
-                    filteredWidgetClients.map(client => (
+                    filteredWidgetClients.map(client => {
+                      const tasks = client.tasks || [];
+                      const pendingTasks = tasks.filter((t: any) => t.status === 'Pending').length;
+                      const completedTasks = tasks.filter((t: any) => t.status === 'Completed').length;
+                      const articlesCount = (client.articles || []).length;
+                      
+                      const emailUpdates = client.email_updates || [];
+                      const totalUpdates = emailUpdates.length;
+                      // Calculate updates sent this month
+                      const now = new Date();
+                      const thisMonthUpdates = emailUpdates.filter((u: any) => {
+                        if (!u.created_at) return false;
+                        const date = new Date(u.created_at);
+                        return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+                      }).length;
+                      
+                      return (
                       <li key={client.id} className="hover:bg-blue-50/30 transition-colors group">
                         <Link href={`/clients/${client.id}`} className="flex items-center gap-4 p-4">
                           <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0 shadow-sm border border-blue-200">
@@ -365,12 +398,38 @@ export default function DashboardPage() {
                             <div className="text-sm font-bold text-gray-900 truncate">{client.name}</div>
                             {client.contact_email && <div className="text-xs text-gray-500 truncate mt-0.5">{client.contact_email}</div>}
                           </div>
-                          <div className="hidden group-hover:block">
+                          
+                          {/* Stats Blocks */}
+                          <div className="hidden sm:flex items-center gap-3 pr-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                            <div className="text-center" title="Tasks: Pending / Completed">
+                              <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5 whitespace-nowrap">Tasks</div>
+                              <div className="text-xs font-medium text-gray-700 bg-gray-100/80 px-2 py-0.5 rounded whitespace-nowrap">
+                                <span className="text-orange-600">{pendingTasks}</span> / <span className="text-green-600">{completedTasks}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="text-center" title="Total Articles">
+                              <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5 whitespace-nowrap">Articles</div>
+                              <div className="text-xs font-medium text-gray-700 bg-gray-100/80 px-2 py-0.5 rounded whitespace-nowrap">
+                                {articlesCount}
+                              </div>
+                            </div>
+
+                            <div className="text-center" title="Updates: This Month / Total">
+                              <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5 whitespace-nowrap">Updates</div>
+                              <div className="text-xs font-medium text-gray-700 bg-gray-100/80 px-2 py-0.5 rounded whitespace-nowrap">
+                                <span className="text-blue-600">{thisMonthUpdates}</span> / {totalUpdates}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="hidden group-hover:block ml-2">
                             <ExternalLink className="w-4 h-4 text-gray-300" />
                           </div>
                         </Link>
                       </li>
-                    ))
+                      );
+                    })
                   )}
                 </ul>
               </div>
