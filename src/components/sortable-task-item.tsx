@@ -12,6 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
 
 export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: { task: any, onDelete?: () => void, onUpdate?: () => void, autoOpenTaskId?: string | null }) {
   const [status, setStatus] = useState(task.status);
@@ -59,47 +65,83 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
         
         <Dialog defaultOpen={autoOpenTaskId === task.id}>
           <DialogTrigger className="flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 cursor-pointer min-w-0 bg-transparent border-0 text-left p-0 mx-0 outline-none w-full">
-            <span className="font-medium text-sm text-gray-900 truncate pr-4 block">{task.title}</span>
+            <span className="font-medium text-sm text-gray-900 truncate pr-2 block">{task.title}</span>
             
             {/* Metadata Area (Visible on tablets and up) */}
-            <div className="hidden md:flex items-center text-[11px] sm:text-xs text-gray-500 shrink-0 ml-auto gap-6 pr-4">
+             <div className="hidden md:flex items-center text-[11px] sm:text-xs text-gray-500 shrink-0 ml-auto gap-4 pr-1">
                
                {/* Unified Actor Flow (Requester -> Assignee) */}
-               <div className="flex items-center gap-2">
-                  <div className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded font-medium text-[10px] border border-gray-200/50" title={`Requested by: ${task.requester || 'Client'}`}>
-                    {task.requester || 'Client'}
-                  </div>
-                  
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 shrink-0"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                  
-                  <div className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded font-medium text-[10px] border border-gray-200/50 flex items-center gap-1.5" title={`Assigned to: ${task.assignee || 'Unassigned'}`}>
-                    {task.assignee ? (
-                      <>
-                        <div className="w-3.5 h-3.5 rounded-full bg-blue-100 flex items-center justify-center text-[8px] font-bold text-blue-600 shrink-0">
-                          {task.assignee.charAt(0).toUpperCase()}
+               <div className="flex items-center gap-1.5">
+                  <TooltipProvider delay={300}>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <div className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded font-medium text-[10px] border border-gray-200/50 cursor-default">
+                          {task.requester || 'Client'}
                         </div>
-                        {task.assignee}
-                      </>
-                    ) : (
-                      <span className="italic opacity-60 text-gray-400 font-normal">Unassigned</span>
-                    )}
-                  </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p>Requested by: {task.requester || 'Client'}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 shrink-0"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  
+                  <TooltipProvider delay={300}>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <div className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded font-medium text-[10px] border border-gray-200/50 flex items-center gap-1.5 cursor-default">
+                          {task.assignee ? (
+                            <>
+                              <div className="w-3 h-3 rounded-full bg-blue-100 flex items-center justify-center text-[7px] font-bold text-blue-600 shrink-0">
+                                {task.assignee.charAt(0).toUpperCase()}
+                              </div>
+                              {task.assignee}
+                            </>
+                          ) : (
+                            <span className="italic opacity-60 text-gray-400 font-normal">Unassigned</span>
+                          )}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p>Assigned to: {task.assignee || 'Unassigned'}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                </div>
 
-               <div className="flex items-center gap-1.5 min-w-[100px]" title="Due Date">
-                  <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="font-medium text-gray-700">{task.due}</span>
-               </div>
+               <TooltipProvider delay={300}>
+                 <Tooltip>
+                   <TooltipTrigger>
+                     <div className="flex items-center gap-1 cursor-default px-0.5">
+                        <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                        <span className="font-medium text-gray-700">{task.due}</span>
+                     </div>
+                   </TooltipTrigger>
+                   <TooltipContent side="top">
+                     <p>Due Date</p>
+                   </TooltipContent>
+                 </Tooltip>
+               </TooltipProvider>
 
-               <div className="flex items-center gap-1.5" title="Priority">
-                  <Gauge className="w-3.5 h-3.5 text-gray-400" />
-                  <span className={cn(
-                    "font-bold uppercase text-[9px] tracking-wider",
-                    task.priority === 'High' ? 'text-red-500' : task.priority === 'Medium' ? 'text-yellow-600' : 'text-gray-400'
-                  )}>
-                    {task.priority === 'Medium' ? 'NORMAL' : task.priority}
-                  </span>
-               </div>
+               <TooltipProvider delay={300}>
+                 <Tooltip>
+                   <TooltipTrigger>
+                     <div className="flex items-center gap-1 cursor-default px-0.5">
+                        <Gauge className="w-3.5 h-3.5 text-gray-400" />
+                        <span className={cn(
+                          "font-bold uppercase text-[9px] tracking-wider",
+                          task.priority === 'High' ? 'text-red-500' : task.priority === 'Medium' ? 'text-yellow-600' : 'text-gray-400'
+                        )}>
+                          {task.priority === 'Medium' ? 'NORMAL' : task.priority}
+                        </span>
+                     </div>
+                   </TooltipTrigger>
+                   <TooltipContent side="top">
+                     <p>Priority</p>
+                   </TooltipContent>
+                 </Tooltip>
+               </TooltipProvider>
             </div>
           </DialogTrigger>
           <EditTaskDialog task={task} onTaskCreated={onUpdate} />
@@ -107,9 +149,9 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
       </div>
 
       {/* Right side actions and status */}
-      <div className="flex items-center justify-between sm:justify-start gap-2 pl-7 sm:pl-0 shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
+      <div className="flex items-center justify-between sm:justify-start gap-1 pl-7 sm:pl-0 shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
         
-        <div className="w-[130px] shrink-0">
+        <div className="w-[120px] shrink-0">
           <Select 
             value={status} 
             onValueChange={handleStatusChange}
@@ -133,12 +175,21 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
           </Select>
         </div>
 
-        <Dialog>
-          <DialogTrigger className="text-gray-400 hover:text-blue-600 cursor-pointer hidden sm:flex items-center justify-center bg-transparent border-0 p-0 outline-none w-8 h-8 rounded-full hover:bg-gray-100 shrink-0" title="Edit">
-             <Pencil className="w-4 h-4" />
-          </DialogTrigger>
-          <EditTaskDialog task={task} onTaskCreated={onUpdate} />
-        </Dialog>
+        <TooltipProvider delay={300}>
+          <Tooltip>
+            <TooltipTrigger>
+              <Dialog>
+                <DialogTrigger className="text-gray-400 hover:text-blue-600 cursor-pointer hidden sm:flex items-center justify-center bg-transparent border-0 p-0 outline-none w-7 h-7 rounded-full hover:bg-gray-100 shrink-0">
+                   <Pencil className="w-4 h-4" />
+                </DialogTrigger>
+                <EditTaskDialog task={task} onTaskCreated={onUpdate} />
+              </Dialog>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              <p>Edit</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         
         {/* Delete functionality removed per user request */}
       </div>
