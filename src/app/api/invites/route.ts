@@ -132,7 +132,10 @@ export async function DELETE(req: Request) {
     // Create Admin Client with Service Role Key (bypasses RLS, can create auth users)
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // 1. Delete from auth.users (will cascade to public.users if configured, else manual)
+    // 1. Delete from public.users FIRST (to avoid foreign key constraints since cascade isn't set up)
+    await supabaseAdmin.from('users').delete().eq('id', id);
+
+    // 2. Delete from auth.users
     const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers();
     
     if (listError) {
@@ -149,9 +152,6 @@ export async function DELETE(req: Request) {
         return NextResponse.json({ error: deleteAuthError.message }, { status: 400 });
       }
     }
-
-    // 2. Ensuring deletion from public.users (in case cascade isn't set up)
-    await supabaseAdmin.from('users').delete().eq('id', id);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
