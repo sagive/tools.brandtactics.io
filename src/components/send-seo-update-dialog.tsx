@@ -18,7 +18,7 @@ const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
 interface SendSeoUpdateDialogProps {
   defaultClientId?: string;
-  trigger?: React.ReactNode;
+  trigger?: React.ReactElement;
   onSuccess?: () => void;
 }
 
@@ -99,9 +99,9 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess }: Sen
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger render={(props: any) => 
+      <DialogTrigger render={
         trigger || (
-          <Button {...props} size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2 font-bold uppercase tracking-tight h-10 shadow-md">
+          <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2 font-bold uppercase tracking-tight h-10 shadow-md">
             <Send className="w-4 h-4" /> Send SEO Update
           </Button>
         )
