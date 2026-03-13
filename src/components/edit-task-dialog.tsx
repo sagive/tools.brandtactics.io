@@ -104,7 +104,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
       if (error) throw error;
       toast.success(`${FIELD_LABELS[field] || field} saved`);
     } catch (err: any) {
-      toast.error(`Failed to save ${FIELD_LABELS[field] || field}`);
+      toast.error(`Failed to save ${FIELD_LABELS[field] || field}: ${err.message}`);
     }
   };
 
@@ -309,7 +309,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
   };
 
   return (
-    <DialogContent showCloseButton={false} className="max-w-[100%] sm:max-w-none sm:min-w-[850px] w-full sm:w-auto p-0 overflow-hidden bg-white">
+    <DialogContent showCloseButton={false} className="max-w-[100%] sm:max-w-[95vw] md:max-w-[850px] lg:max-w-5xl xl:max-w-6xl w-full p-0 overflow-hidden bg-white">
       <div className="flex flex-col h-full max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
