@@ -34,7 +34,8 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
   // But wait, the standard way in Shadcn is to provide an onOpenChange.
   // Let's check how it's called.
   const [newComment, setNewComment] = useState("");
-  const [isEditingComment, setIsEditingComment] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState("");
   const { profile } = useAuth();
   
   const [title, setTitle] = useState(task?.title || "");
@@ -180,7 +181,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
   };
 
   const handlePublishComment = async () => {
-    if (!newComment.trim() || !isEditing) return;
+    if (!newComment.trim() || newComment === '<p><br></p>' || !isEditing) return;
     
     const currentUserEmail = profile?.email || 'ME';
     const currentUserName = profile?.full_name || currentUserEmail;
@@ -234,6 +235,15 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
          if (error) console.error("Failed to insert notification:", error);
        });
     }
+  };
+
+  const handleSaveEditComment = async (id: string, newText: string) => {
+    if (!newText.trim() || newText === '<p><br></p>') return;
+    const updatedComments = comments.map(c => c.id === id ? { ...c, text: newText } : c);
+    setComments(updatedComments);
+    setEditingCommentId(null);
+    setEditingCommentText("");
+    await updateField("comments", updatedComments);
   };
 
   const handleSetReminder = async (hours: number, label: string) => {
@@ -310,7 +320,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
 
   return (
     <DialogContent showCloseButton={false} className="max-w-[100%] sm:max-w-[95vw] md:max-w-[850px] lg:max-w-5xl xl:max-w-6xl w-full p-0 overflow-hidden bg-white">
-      <div className="flex flex-col h-full max-h-[90vh]">
+      <div className="flex flex-col h-[95vh] max-h-[95vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <DialogTitle className="text-xl font-bold">{isEditing ? "Edit Task" : "New Task"}</DialogTitle>
@@ -397,19 +407,35 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-0.5">
-                         <span className="font-semibold text-sm text-gray-900">{comment.user === 'ME' ? 'You' : 'Collaborator'}</span>
+                         <span className="font-semibold text-sm text-gray-900">{comment.user === 'ME' ? 'You' : (profile && profile.full_name === comment.user ? 'You' : comment.user)}</span>
                          <span className="text-xs text-gray-400">
                            {new Date(comment.timestamp || Date.now()).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'})}
                          </span>
                       </div>
-                      <p className="text-sm text-gray-700">{comment.text}</p>
+                      
+                      {editingCommentId === comment.id ? (
+                        <div className="mt-2 mb-1 w-full border rounded-md overflow-hidden bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[80px]">
+                           <ReactQuill 
+                             theme="snow"
+                             value={editingCommentText}
+                             onChange={setEditingCommentText}
+                             modules={TASK_QUILL_MODULES}
+                           />
+                           <div className="flex gap-2 p-2 bg-gray-50 justify-end border-t border-gray-100">
+                              <Button variant="ghost" size="sm" onClick={() => setEditingCommentId(null)}>Cancel</Button>
+                              <Button size="sm" className="bg-[#4640A0] hover:bg-[#342e81]" onClick={() => handleSaveEditComment(comment.id, editingCommentText)}>Save</Button>
+                           </div>
+                        </div>
+                      ) : (
+                        <div className="text-[13px] text-gray-700 [&>p]:mb-2 last:[&>p]:mb-0 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&_img]:max-w-[150px] [&_img]:rounded-md [&_a]:text-blue-600 [&_a]:underline" dangerouslySetInnerHTML={{ __html: comment.text }} />
+                      )}
                       
                       {/* Interaction Actions */}
-                      <div className="flex items-center gap-3 mt-1 text-xs font-semibold text-gray-500">
-                        <button className="hover:text-blue-600">Reply</button>
-                        <button className="hover:text-blue-600">Like</button>
-                        {comment.user === 'ME' && (
-                          <button onClick={() => setIsEditingComment(true)} className="hover:text-blue-600">Edit</button>
+                      <div className="flex items-center gap-3 mt-1.5 text-xs font-semibold text-gray-500">
+                        <button className="hover:text-blue-600 transition-colors">Reply</button>
+                        <button className="hover:text-blue-600 transition-colors">Like</button>
+                        {(comment.user === 'ME' || (profile && profile.full_name === comment.user)) && editingCommentId !== comment.id && (
+                          <button onClick={() => { setEditingCommentId(comment.id); setEditingCommentText(comment.text); }} className="hover:text-blue-600 transition-colors">Edit</button>
                         )}
                       </div>
                     </div>
@@ -419,29 +445,25 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
               </div>
 
               {/* Add Comment Input */}
-              <div className="flex gap-3 pt-4 border-t mt-4 relative">
-                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-semibold text-xs shrink-0 mt-1">ME</div>
+              <div className="flex gap-3 pt-6 border-t border-gray-100 mt-6 relative">
+                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0 mt-1">ME</div>
                 <div className="relative flex-1 flex flex-col items-end">
-                  <Input 
-                    placeholder="Write a comment..." 
-                    className="pr-10 bg-gray-50/50" 
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && newComment.trim()) {
-                         e.preventDefault();
-                         handlePublishComment();
-                      }
-                    }}
-                  />
-                  {!newComment.trim() && <SmilePlus className="w-4 h-4 absolute right-3 top-3 text-gray-400 cursor-pointer hover:text-gray-600" />}
-                  {newComment.trim() && (
+                  <div className="w-full border border-gray-200 rounded-md overflow-hidden bg-white focus-within:ring-1 focus-within:ring-[#4640A0] focus-within:border-[#4640A0] [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[80px]">
+                     <ReactQuill 
+                       theme="snow"
+                       value={newComment}
+                       onChange={setNewComment}
+                       modules={TASK_QUILL_MODULES}
+                       placeholder="Write a comment..."
+                     />
+                  </div>
+                  {(newComment && newComment !== '<p><br></p>') && (
                     <Button 
                       size="sm" 
-                      className="mt-2 h-7 rounded bg-[#4640A0] hover:bg-[#342e81] text-xs font-semibold px-3"
+                      className="mt-3 bg-[#4640A0] hover:bg-[#342e81] text-white shadow-sm font-semibold px-5"
                       onClick={handlePublishComment}
                     >
-                      Publish
+                      Publish Comment
                     </Button>
                   )}
                 </div>
