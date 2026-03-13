@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, UserPlus, Mail, Lock, User, Trash2, Plus, FileText, RotateCw, Clock } from "lucide-react";
+import { Save, UserPlus, Mail, Lock, User, Trash2, Plus, FileText, RotateCw, Clock, Camera, Upload } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
@@ -94,7 +94,10 @@ function SettingsContent() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [fullName, setFullName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -134,10 +137,12 @@ function SettingsContent() {
 
   // Initialize full name when profile loads
   useEffect(() => {
-    if (profile?.full_name && !fullName) {
-      setFullName(profile.full_name);
+    if (profile) {
+      if (profile.full_name) setFullName(profile.full_name);
+      if (profile.phone) setPhoneNumber(profile.phone);
+      if (profile.avatar_url) setAvatarUrl(profile.avatar_url);
     }
-  }, [profile, fullName]);
+  }, [profile]);
 
   const handleSaveTemplate = async () => {
     try {
@@ -227,6 +232,50 @@ function SettingsContent() {
     }
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please upload an image file.");
+      return;
+    }
+
+    // Validate size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image size must be under 2MB.");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      // 1. Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // 2. Get Public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // 3. Update profile state
+      setAvatarUrl(publicUrl);
+      toast.success("Image uploaded! Don't forget to save changes.");
+    } catch (err: any) {
+      toast.error("Upload failed: " + err.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.email) return;
@@ -235,7 +284,11 @@ function SettingsContent() {
     try {
       const { error } = await supabase
         .from('users')
-        .update({ full_name: fullName })
+        .update({ 
+          full_name: fullName,
+          phone: phoneNumber,
+          avatar_url: avatarUrl
+        })
         .eq('email', user.email);
 
       if (error) throw error;
@@ -535,6 +588,89 @@ function SettingsContent() {
 
         <TabsContent value="profile" className="space-y-6 mt-0 outline-none ring-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Account Info Card (Now on Left) */}
+            <Card className="shadow-sm border-gray-200">
+              <CardHeader>
+                <CardTitle className="flex items-center text-lg">
+                  <User className="w-5 h-5 mr-2 text-gray-600" />
+                  Account Info
+                </CardTitle>
+                <CardDescription>
+                  Update your public profile details and photo.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleUpdateProfile} className="space-y-6">
+                  {/* Avatar Section */}
+                  <div className="flex items-center gap-6 pb-2">
+                    <div className="relative group">
+                      <div className="w-20 h-20 rounded-full border-2 border-gray-100 overflow-hidden bg-gray-50 flex items-center justify-center">
+                        {avatarUrl ? (
+                          <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                          <User className="w-8 h-8 text-gray-300" />
+                        )}
+                        {isUploading && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <Clock className="w-6 h-6 text-white animate-spin" />
+                          </div>
+                        )}
+                      </div>
+                      <label className="absolute -bottom-1 -right-1 bg-white border border-gray-200 p-1.5 rounded-full shadow-sm cursor-pointer hover:bg-gray-50 transition-colors">
+                        <Camera className="w-3.5 h-3.5 text-gray-600" />
+                        <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={isUploading} />
+                      </label>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-bold text-gray-900">Profile Picture</p>
+                      <p className="text-[11px] text-gray-500">JPG, PNG or GIF. Max size 2MB.</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Full Name</Label>
+                      <Input 
+                        type="text" 
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="Your Name" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Mobile Phone</Label>
+                      <Input 
+                        type="tel" 
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        placeholder="+1 (555) 000-0000" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="opacity-50">Email Address</Label>
+                      <Input 
+                        type="email" 
+                        value={user?.email || ""} 
+                        disabled 
+                        className="bg-gray-50 opacity-70"
+                      />
+                    </div>
+                    <div className="space-y-1 pt-1">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Account Role</p>
+                      <Badge className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-50 uppercase text-[10px] px-2 py-0.5">
+                        {staff.find(s => s.email === user?.email)?.role || "Staff"}
+                      </Badge>
+                    </div>
+                  </div>
+                  <Button type="submit" variant="default" className="w-full bg-blue-600 hover:bg-blue-700 h-10" disabled={isUpdatingProfile || isUploading}>
+                    <Save className="w-4 h-4 mr-2" />
+                    {isUpdatingProfile ? "Saving..." : "Save Profile Details"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Security & Password Card (Now on Right) */}
             <Card className="shadow-sm border-gray-200">
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
@@ -565,52 +701,15 @@ function SettingsContent() {
                       placeholder="••••••••" 
                     />
                   </div>
-                  <Button type="submit" variant="default" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isUpdatingPassword}>
+                  <Button type="submit" variant="outline" className="w-full border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800 h-10" disabled={isUpdatingPassword}>
                     {isUpdatingPassword ? "Updating..." : (isRecoveryMode ? "Set New Password" : "Change Password")}
                   </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-sm border-gray-200">
-              <CardHeader>
-                <CardTitle className="flex items-center text-lg">
-                  <User className="w-5 h-5 mr-2 text-gray-600" />
-                  Account Info
-                </CardTitle>
-                <CardDescription>
-                  Update your public profile details.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleUpdateProfile} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Full Name</Label>
-                    <Input 
-                      type="text" 
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Your Name" 
-                    />
+                  <div className="mt-4 p-3 bg-blue-50/50 rounded-lg border border-blue-100 flex gap-3">
+                    <Lock className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-blue-700 leading-relaxed">
+                      Use at least 8 characters with a mix of letters, numbers, and symbols for a strong password.
+                    </p>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="opacity-50">Email Address</Label>
-                    <Input 
-                      type="email" 
-                      value={user?.email || ""} 
-                      disabled 
-                      className="bg-gray-50 opacity-70"
-                    />
-                  </div>
-                  <div className="space-y-1 pt-1">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Account Role</p>
-                    <Badge className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-50 uppercase text-[10px] px-2 py-0.5">
-                      {staff.find(s => s.email === user?.email)?.role || "Staff"}
-                    </Badge>
-                  </div>
-                  <Button type="submit" variant="outline" className="w-full" disabled={isUpdatingProfile}>
-                    {isUpdatingProfile ? "Saving..." : "Save Profile Details"}
-                  </Button>
                 </form>
               </CardContent>
             </Card>

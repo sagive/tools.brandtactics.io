@@ -184,7 +184,7 @@ export function TopNav() {
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2 outline-none">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={`https://avatar.vercel.sh/${user?.email}.png`} alt={displayName} />
+                <AvatarImage src={profile?.avatar_url || `https://avatar.vercel.sh/${user?.email}.png`} alt={displayName} />
                 <AvatarFallback>{displayName.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="text-sm font-medium text-gray-700 hidden sm:block">
