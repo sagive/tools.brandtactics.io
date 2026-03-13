@@ -445,7 +445,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
               </div>
 
               {/* Add Comment Input */}
-              <div className="flex gap-3 pt-6 border-t border-gray-100 mt-6 relative">
+              <div className="flex gap-3 pt-6 border-t border-gray-100 mt-6 relative pb-10">
                 <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0 mt-1">ME</div>
                 <div className="relative flex-1 flex flex-col items-end">
                   <div className="w-full border border-gray-200 rounded-md overflow-hidden bg-white focus-within:ring-1 focus-within:ring-[#4640A0] focus-within:border-[#4640A0] [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[80px]">
