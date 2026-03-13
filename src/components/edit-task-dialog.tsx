@@ -246,6 +246,13 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
     await updateField("comments", updatedComments);
   };
 
+  const handleDeleteComment = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this comment?")) return;
+    const updatedComments = comments.filter(c => c.id !== id);
+    setComments(updatedComments);
+    await updateField("comments", updatedComments);
+  };
+
   const handleSetReminder = async (hours: number, label: string) => {
     if (!task?.id || !profile?.email) {
       toast.error("Please save the task first before setting a reminder.");
@@ -382,7 +389,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
 
             <div className="space-y-2">
               <Label className="text-gray-600 text-[13px] font-medium">Description</Label>
-              <div className="border rounded-md overflow-hidden bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[120px]">
+              <div className="border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[120px]">
                  <ReactQuill 
                    theme="snow"
                    value={description}
@@ -414,7 +421,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
                       </div>
                       
                       {editingCommentId === comment.id ? (
-                        <div className="mt-2 mb-1 w-full border rounded-md overflow-hidden bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[80px]">
+                        <div className="mt-2 mb-1 w-full border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[80px]">
                            <ReactQuill 
                              theme="snow"
                              value={editingCommentText}
@@ -434,8 +441,13 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
                       <div className="flex items-center gap-3 mt-1.5 text-xs font-semibold text-gray-500">
                         <button className="hover:text-blue-600 transition-colors">Reply</button>
                         <button className="hover:text-blue-600 transition-colors">Like</button>
-                        {(comment.user === 'ME' || (profile && profile.full_name === comment.user)) && editingCommentId !== comment.id && (
-                          <button onClick={() => { setEditingCommentId(comment.id); setEditingCommentText(comment.text); }} className="hover:text-blue-600 transition-colors">Edit</button>
+                        {(comment.user === 'ME' || (profile && profile.full_name === comment.user)) && (
+                          <>
+                            {editingCommentId !== comment.id && (
+                              <button onClick={() => { setEditingCommentId(comment.id); setEditingCommentText(comment.text); }} className="hover:text-blue-600 transition-colors">Edit</button>
+                            )}
+                            <button onClick={() => handleDeleteComment(comment.id)} className="hover:text-red-600 transition-colors">Delete</button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -448,7 +460,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
               <div className="flex gap-3 pt-6 border-t border-gray-100 mt-6 relative pb-10">
                 <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0 mt-1">ME</div>
                 <div className="relative flex-1 flex flex-col items-end">
-                  <div className="w-full border border-gray-200 rounded-md overflow-hidden bg-white focus-within:ring-1 focus-within:ring-[#4640A0] focus-within:border-[#4640A0] [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[80px]">
+                  <div className="w-full border border-gray-200 rounded-md bg-white focus-within:ring-1 focus-within:ring-[#4640A0] focus-within:border-[#4640A0] [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[80px]">
                      <ReactQuill 
                        theme="snow"
                        value={newComment}
@@ -605,15 +617,15 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
                   {isUpdating ? "Saving..." : "Save Changes"}
                 </Button>
                 
-                <div className="px-1 mb-6 text-center">
+                <div className="px-1 text-center">
                   <p className="text-[10px] text-gray-400 font-medium">Created: {createdDate}</p>
                 </div>
                 
-                <div className="mt-auto px-1 flex items-center justify-end pb-6">
+                <div className="mt-[50px] flex items-center justify-center pb-6">
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-7 text-[10px] text-red-500 hover:text-red-700 hover:bg-red-50 px-2 uppercase tracking-wider font-bold"
+                    className="h-7 text-[10px] text-red-500 hover:text-red-700 hover:bg-red-50 px-2 uppercase tracking-widest font-normal"
                     onClick={handleDeleteTask}
                     disabled={isDeleting}
                   >

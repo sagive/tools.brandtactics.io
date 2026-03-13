@@ -275,7 +275,7 @@ export default function ClientLayout({
             
             <Dialog open={isNewTaskOpen} onOpenChange={setIsNewTaskOpen}>
               <DialogTrigger className="bg-blue-600 text-white hover:bg-blue-700 px-4 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-9">
-                <Plus className="w-4 h-4 mr-2" /> New Task
+                <Plus className="w-4 h-4 mr-2" /> Task
               </DialogTrigger>
               <EditTaskDialog defaultClientId={clientId} onTaskCreated={() => {
                 window.dispatchEvent(new Event("taskCreated"));
