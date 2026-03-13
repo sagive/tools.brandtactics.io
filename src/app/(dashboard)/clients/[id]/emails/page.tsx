@@ -57,21 +57,6 @@ export default function ClientEmailsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold tracking-tight text-gray-900 font-outfit uppercase">Email Updates</h2>
-        <div className="flex gap-2">
-          <SendSeoUpdateDialog 
-            defaultClientId={clientId as string} 
-            onSuccess={fetchEmails} 
-            trigger={
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase tracking-tight gap-2">
-                <Send className="w-4 h-4" />
-                + Seo Update
-              </Button>
-            }
-          />
-        </div>
-      </div>
 
       <Card className="shadow-sm border-gray-200 overflow-hidden">
         <CardHeader className="pb-3 border-b bg-gray-50/30">
