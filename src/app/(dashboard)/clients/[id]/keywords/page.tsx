@@ -4,15 +4,124 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Save, Loader2 } from "lucide-react";
+import { Plus, Trash2, Save, Loader2, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 interface KeywordEntry {
-  id?: string;
+  id: string; // Required for dnd-kit
   keyword: string;
   target_url: string;
   search_volume: number;
+  importance?: 'low' | 'normal' | 'high';
+  order_index?: number;
+}
+
+// Separate component for sortable row
+function SortableKeywordRow({ 
+  entry, 
+  index, 
+  onChange, 
+  onRemove 
+}: { 
+  entry: KeywordEntry; 
+  index: number; 
+  onChange: (index: number, field: keyof KeywordEntry, value: any) => void; 
+  onRemove: (index: number) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: entry.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    boxShadow: isDragging ? '0 5px 15px rgba(0,0,0,0.1)' : 'none',
+  };
+
+  const getImportanceBadge = (importance?: string) => {
+    switch(importance) {
+      case 'high': return <Badge className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200 shadow-none">High</Badge>;
+      case 'low': return <Badge className="bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-200 shadow-none">Low</Badge>;
+      case 'normal':
+      default: return <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 shadow-none">Normal</Badge>;
+    }
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className={`px-4 py-3 flex items-center gap-4 hover:bg-gray-50/50 transition-colors bg-white ${isDragging ? 'opacity-90 relative' : ''}`}>
+      <div 
+        {...attributes} 
+        {...listeners}
+        className="cursor-move text-gray-300 hover:text-gray-500 py-2 -ml-2"
+      >
+        <GripVertical className="w-4 h-4" />
+      </div>
+      <div className="w-[30%]">
+        <Input 
+          value={entry.keyword} 
+          onChange={(e) => onChange(index, "keyword", e.target.value)}
+          placeholder="e.g. best seo tools"
+          className="h-9 text-sm focus-visible:ring-1 focus-visible:border-blue-500"
+        />
+      </div>
+      <div className="w-[30%]">
+        <Input 
+          value={entry.target_url} 
+          onChange={(e) => onChange(index, "target_url", e.target.value)}
+          placeholder="https://example.com/page"
+          className="h-9 text-sm focus-visible:ring-1 focus-visible:border-blue-500"
+        />
+      </div>
+      <div className="w-[15%]">
+        <Input 
+          type="number"
+          value={entry.search_volume === 0 ? "" : entry.search_volume} 
+          onChange={(e) => onChange(index, "search_volume", parseInt(e.target.value) || 0)}
+          placeholder="0"
+          className="h-9 text-sm focus-visible:ring-1 focus-visible:border-blue-500"
+        />
+      </div>
+      <div className="w-[15%]">
+        <Select 
+          value={entry.importance || 'normal'} 
+          onValueChange={(val: any) => onChange(index, "importance", val)}
+        >
+          <SelectTrigger className="h-9 focus:ring-1 focus:ring-blue-500 bg-white shadow-none">
+            <div className="flex items-center gap-2">
+               {getImportanceBadge(entry.importance)}
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="low"><Badge className="bg-gray-100 text-gray-600 border-gray-200 shadow-none hover:bg-gray-100">Low</Badge></SelectItem>
+            <SelectItem value="normal"><Badge className="bg-blue-50 text-blue-700 border-blue-200 shadow-none hover:bg-blue-50">Normal</Badge></SelectItem>
+            <SelectItem value="high"><Badge className="bg-red-50 text-red-700 border-red-200 shadow-none hover:bg-red-50">High</Badge></SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="w-[10%] text-right flex justify-end">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => onRemove(index)}
+          className="text-gray-400 hover:text-red-600 hover:bg-red-50 h-9 w-9 p-0"
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 export default function KeywordsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,6 +130,11 @@ export default function KeywordsPage({ params }: { params: Promise<{ id: string 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   useEffect(() => {
     if (clientId) {
@@ -35,10 +149,17 @@ export default function KeywordsPage({ params }: { params: Promise<{ id: string 
         .from("client_keywords")
         .select("*")
         .eq("client_id", clientId)
+        .order("order_index", { ascending: true })
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      setKeywords(data || []);
+      
+      // Ensure all rows have an ID for dnd-kit
+      const mappedData = (data || []).map((k: any) => ({
+        ...k,
+        id: k.id || Math.random().toString(36).substr(2, 9)
+      }));
+      setKeywords(mappedData);
     } catch (error: any) {
       console.error("Error fetching keywords:", error.message);
       // If table doesn't exist yet, we'll just show an empty list
@@ -51,7 +172,13 @@ export default function KeywordsPage({ params }: { params: Promise<{ id: string 
   };
 
   const handleAddRow = () => {
-    setKeywords([...keywords, { keyword: "", target_url: "", search_volume: 0 }]);
+    setKeywords([...keywords, { 
+      id: Math.random().toString(36).substr(2, 9), 
+      keyword: "", 
+      target_url: "", 
+      search_volume: 0,
+      importance: 'normal'
+    }]);
     setIsDirty(true);
   };
 
@@ -62,11 +189,23 @@ export default function KeywordsPage({ params }: { params: Promise<{ id: string 
     setIsDirty(true);
   };
 
-  const handleChange = (index: number, field: keyof KeywordEntry, value: string | number) => {
+  const handleChange = (index: number, field: keyof KeywordEntry, value: any) => {
     const newKeywords = [...keywords];
     newKeywords[index] = { ...newKeywords[index], [field]: value };
     setKeywords(newKeywords);
     setIsDirty(true);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setKeywords((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        setIsDirty(true);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
   };
 
   const handleSave = async () => {
@@ -83,11 +222,13 @@ export default function KeywordsPage({ params }: { params: Promise<{ id: string 
 
       // 2. Insert new list
       if (keywords.length > 0) {
-        const toInsert = keywords.map(k => ({
+        const toInsert = keywords.map((k, idx) => ({
           client_id: clientId,
           keyword: k.keyword,
           target_url: k.target_url,
-          search_volume: k.search_volume || 0
+          search_volume: k.search_volume || 0,
+          importance: k.importance || 'normal',
+          order_index: idx
         }));
 
         const { error: insertError } = await supabase
@@ -135,59 +276,42 @@ export default function KeywordsPage({ params }: { params: Promise<{ id: string 
       <Card className="shadow-sm border-gray-200 overflow-hidden">
         <CardContent className="p-0">
           <div className="bg-gray-50/80 px-4 py-3 border-b border-gray-100 flex items-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-            <div className="w-[30%]">Keyword</div>
+            <div className="w-6 mr-4 flex-shrink-0"></div> {/* Drag handle space */}
+            <div className="w-[30%] text-left">Keyword</div>
             <div className="w-[30%]">Target URL</div>
-            <div className="w-[20%]">Search Volume</div>
-            <div className="w-[20%] text-right">Actions</div>
+            <div className="w-[15%]">Search Volume</div>
+            <div className="w-[15%]">Importance</div>
+            <div className="w-[10%] text-right">Actions</div>
           </div>
           
-          <div className="divide-y divide-gray-100">
-            {keywords.map((entry, index) => (
-              <div key={index} className="px-4 py-3 flex items-center gap-4 hover:bg-gray-50/50 transition-colors">
-                <div className="w-[30%]">
-                  <Input 
-                    value={entry.keyword} 
-                    onChange={(e) => handleChange(index, "keyword", e.target.value)}
-                    placeholder="e.g. best seo tools"
-                    className="h-9 text-sm"
+          <DndContext 
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="divide-y divide-gray-100 min-h-[50px]">
+              <SortableContext 
+                items={keywords.map(k => k.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {keywords.map((entry, index) => (
+                  <SortableKeywordRow 
+                    key={entry.id} 
+                    entry={entry} 
+                    index={index} 
+                    onChange={handleChange} 
+                    onRemove={handleRemoveRow} 
                   />
-                </div>
-                <div className="w-[30%]">
-                  <Input 
-                    value={entry.target_url} 
-                    onChange={(e) => handleChange(index, "target_url", e.target.value)}
-                    placeholder="https://example.com/page"
-                    className="h-9 text-sm"
-                  />
-                </div>
-                <div className="w-[20%]">
-                  <Input 
-                    type="number"
-                    value={entry.search_volume} 
-                    onChange={(e) => handleChange(index, "search_volume", parseInt(e.target.value) || 0)}
-                    placeholder="0"
-                    className="h-9 text-sm"
-                  />
-                </div>
-                <div className="w-[20%] text-right">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleRemoveRow(index)}
-                    className="text-gray-400 hover:text-red-600 hover:bg-red-50 h-9 w-9 p-0"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+                ))}
+              </SortableContext>
 
             {keywords.length === 0 && (
               <div className="py-12 text-center text-gray-500 text-sm italic">
                 No keywords added yet. Click the button below to add your first keyword.
               </div>
             )}
-          </div>
+            </div>
+          </DndContext>
           
           <div className="p-4 bg-gray-50/30 border-t border-gray-100">
             <Button 
