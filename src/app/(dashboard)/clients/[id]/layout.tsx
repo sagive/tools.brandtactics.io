@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, CheckCircle2, Trash2, Save, Plus, CircleDot } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Trash2, Save, Plus, CircleDot, Send } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 import { EditTaskDialog } from "@/components/edit-task-dialog";
+import { SendSeoUpdateDialog } from "@/components/send-seo-update-dialog";
 
 export default function ClientLayout({
   children,
@@ -273,15 +274,26 @@ export default function ClientLayout({
               })}
             </div>
             
-            <Dialog open={isNewTaskOpen} onOpenChange={setIsNewTaskOpen}>
-              <DialogTrigger className="bg-blue-600 text-white hover:bg-blue-700 px-4 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-9">
-                <Plus className="w-4 h-4 mr-2" /> Task
-              </DialogTrigger>
-              <EditTaskDialog defaultClientId={clientId} onTaskCreated={() => {
-                window.dispatchEvent(new Event("taskCreated"));
-                setIsNewTaskOpen(false);
-              }} />
-            </Dialog>
+            <div className="flex items-center gap-2">
+              <SendSeoUpdateDialog 
+                defaultClientId={clientId as string} 
+                trigger={
+                  <Button size="sm" className="bg-blue-600 text-white hover:bg-blue-700 px-4 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-9 shadow-none">
+                    <Send className="w-4 h-4 mr-2" /> SEO UPDATE
+                  </Button>
+                }
+              />
+              
+              <Dialog open={isNewTaskOpen} onOpenChange={setIsNewTaskOpen}>
+                <DialogTrigger className="bg-blue-600 text-white hover:bg-blue-700 px-4 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-9">
+                  <Plus className="w-4 h-4 mr-2" /> Task
+                </DialogTrigger>
+                <EditTaskDialog defaultClientId={clientId} onTaskCreated={() => {
+                  window.dispatchEvent(new Event("taskCreated"));
+                  setIsNewTaskOpen(false);
+                }} />
+              </Dialog>
+            </div>
           </div>
 
           <div className="flex-1">
