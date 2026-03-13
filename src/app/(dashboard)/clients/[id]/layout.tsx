@@ -28,6 +28,7 @@ export default function ClientLayout({
     { href: `/clients/${clientId}/tasks`, label: "Tasks" },
     { href: `/clients/${clientId}/articles`, label: "Articles" },
     { href: `/clients/${clientId}/emails`, label: "Email Updates" },
+    { href: `/clients/${clientId}/keywords`, label: "Keywords" },
   ];
 
   const [formData, setFormData] = useState({
