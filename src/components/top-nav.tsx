@@ -106,7 +106,7 @@ export function TopNav() {
       </div>
 
       <div className="flex items-center gap-4 ml-auto">
-        <span className="text-xs font-semibold text-gray-400 select-none mr-2">v1.0.2</span>
+        <span className="text-xs font-semibold text-gray-400 select-none mr-2">v1.0.3</span>
 
         <Popover>
           <PopoverTrigger className="relative p-2 text-gray-400 hover:text-gray-500">
