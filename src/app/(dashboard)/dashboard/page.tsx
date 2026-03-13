@@ -182,10 +182,8 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      {/* Top Row: Email Form and Clients List */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-      {/* Top Row: Clients List and Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* Clients List and Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Clients Column (Left - 75%) */}
         <div className="lg:col-span-9 space-y-6">
           <Card className="shadow-sm border-gray-200">
@@ -501,7 +499,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </div>
       </div>
 
       {/* Agency Tools Row */}
