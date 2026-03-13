@@ -22,6 +22,227 @@ interface KeywordEntry {
   order_index?: number;
 }
 
+interface ClientLink {
+  id?: string;
+  title: string;
+  url: string;
+}
+
+function LinkRepeaterWidget({ clientId, type, title }: { clientId: string, type: 'competitor' | 'resource', title: string }) {
+  const [links, setLinks] = useState<ClientLink[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+
+  useEffect(() => {
+    fetchLinks();
+  }, [clientId]);
+
+  const fetchLinks = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("client_links")
+        .select("*")
+        .eq("client_id", clientId)
+        .eq("type", type)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      setLinks((data || []).map((d: any) => ({
+        id: d.id,
+        title: d.title,
+        url: d.url
+      })));
+    } catch (error: any) {
+      if (error.code !== '42P01') {
+        console.error("Error fetching links:", error.message);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAdd = () => {
+    setLinks([...links, { id: Math.random().toString(36).substr(2, 9), title: "", url: "" }]);
+    setIsDirty(true);
+  };
+
+  const handleRemove = (index: number) => {
+    const newLinks = [...links];
+    newLinks.splice(index, 1);
+    setLinks(newLinks);
+    setIsDirty(true);
+  };
+
+  const handleChange = (index: number, field: 'title'|'url', value: string) => {
+    const newLinks = [...links];
+    newLinks[index] = { ...newLinks[index], [field]: value };
+    setLinks(newLinks);
+    setIsDirty(true);
+  };
+
+  const handleUrlBlur = (e: React.FocusEvent<HTMLInputElement>, index: number) => {
+    let val = e.target.value.trim();
+    if (val && !/^https?:\/\//i.test(val)) {
+      val = `https://${val}`;
+      handleChange(index, 'url', val);
+    }
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const { error: deleteError } = await supabase
+        .from("client_links")
+        .delete()
+        .eq("client_id", clientId)
+        .eq("type", type);
+      if (deleteError) throw deleteError;
+
+      if (links.length > 0) {
+        const toInsert = links.map(l => ({
+          client_id: clientId,
+          type: type,
+          title: l.title,
+          url: l.url
+        }));
+        const { error: insertError } = await supabase
+          .from("client_links")
+          .insert(toInsert);
+        if (insertError) throw insertError;
+      }
+      setIsDirty(false);
+      setIsEditing(false);
+      fetchLinks(); 
+      toast.success(`${title} saved successfully.`);
+    } catch (err: any) {
+      toast.error(`Failed to save ${title}: ` + err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const getFaviconUrl = (url: string) => {
+    try {
+      const hostname = new URL(url).hostname;
+      return `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`;
+    } catch {
+      return null;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="shadow-sm border-gray-200">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+           <h3 className="font-semibold text-gray-900 text-sm">{title}</h3>
+        </div>
+        <CardContent className="p-12 flex justify-center">
+          <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="shadow-sm border-gray-200 flex flex-col h-full bg-white">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+        <h3 className="font-semibold text-gray-900 text-[15px]">{title}</h3>
+        <Button 
+          variant={isEditing ? (isDirty ? "default" : "outline") : "ghost"} 
+          size="sm" 
+          onClick={() => {
+            if (isEditing) {
+              if (isDirty) {
+                handleSave();
+              } else {
+                setIsEditing(false);
+              }
+            } else {
+              setIsEditing(true);
+            }
+          }}
+          disabled={isSaving}
+          className={`h-7 px-3 text-xs shadow-none ${isEditing && isDirty ? 'bg-blue-500 hover:bg-blue-600 text-white border-transparent' : ''}`}
+        >
+          {isSaving ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
+          {isEditing ? (isDirty ? "Save" : "Done") : "Edit"}
+        </Button>
+      </div>
+      <CardContent className="p-0 flex-1 flex flex-col">
+        <div className="divide-y divide-gray-50 flex-1">
+          {!isEditing ? (
+            links.length > 0 ? (
+              links.map((link, idx) => {
+                const favicon = getFaviconUrl(link.url);
+                return (
+                  <div key={link.id || idx} className="px-5 py-3 flex items-center hover:bg-gray-50/50 transition-colors group">
+                    {favicon ? (
+                      <img src={favicon} alt="" className="w-4 h-4 mr-3 rounded-sm object-contain" />
+                    ) : (
+                      <ExternalLink className="w-4 h-4 mr-3 text-gray-400" />
+                    )}
+                    <a 
+                      href={link.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-sm font-medium text-gray-700 hover:text-blue-600 flex-1 truncate transition-colors"
+                    >
+                      {link.title || link.url}
+                    </a>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="px-5 py-8 text-center text-xs text-gray-400 italic">
+                No {title.toLowerCase()} added yet. Click edit to add them.
+              </div>
+            )
+          ) : (
+            <div className="p-4 space-y-3 bg-gray-50/30">
+              {links.map((link, index) => (
+                <div key={link.id || index} className="flex gap-2 items-start">
+                  <Input 
+                    value={link.title} 
+                    onChange={(e) => handleChange(index, 'title', e.target.value)}
+                    placeholder="Title"
+                    className="h-8 text-xs flex-1 bg-white"
+                  />
+                  <Input 
+                    value={link.url} 
+                    onChange={(e) => handleChange(index, 'url', e.target.value)}
+                    onBlur={(e) => handleUrlBlur(e, index)}
+                    placeholder="https://"
+                    className="h-8 text-xs flex-[1.5] bg-white"
+                  />
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleRemove(index)}
+                    className="text-gray-400 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0 shrink-0"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              ))}
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleAdd}
+                className="w-full h-8 border-dashed text-xs hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 bg-white"
+              >
+                <Plus className="w-3 h-3 mr-1" /> Add {title.slice(0, -1)}
+              </Button>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // Separate component for sortable row
 function SortableKeywordRow({ 
   entry, 
@@ -286,23 +507,29 @@ export default function KeywordsPage({ params }: { params: Promise<{ id: string 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">Manage Keywords</h2>
-        <Button 
-          onClick={handleSave} 
-          disabled={!isDirty || isSaving}
-          className="bg-blue-600 hover:bg-blue-700 text-white min-w-[100px]"
-        >
-          {isSaving ? (
-            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-          ) : (
-            <Save className="w-4 h-4 mr-2" />
-          )}
-          Save Changes
-        </Button>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <LinkRepeaterWidget clientId={clientId as string} type="competitor" title="Competitors" />
+        <LinkRepeaterWidget clientId={clientId as string} type="resource" title="Resources" />
       </div>
 
-      <Card className="shadow-sm border-gray-200 overflow-hidden">
+      <Card className="shadow-sm border-gray-200 overflow-hidden bg-white">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <h2 className="text-[17px] font-semibold text-gray-900 tracking-tight">Manage Keywords</h2>
+          <Button 
+            onClick={handleSave} 
+            disabled={!isDirty || isSaving}
+            className="bg-[#7B96E4] hover:bg-[#6882E0] text-white shadow-none h-8 px-4 text-xs font-medium rounded-[6px]"
+          >
+            {isSaving ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+            ) : (
+              <Save className="w-3 h-3 mr-1.5" />
+            )}
+            Save Changes
+          </Button>
+        </div>
+
         <CardContent className="p-0">
           <div className="bg-gray-50/80 px-4 py-3 border-b border-gray-100 flex items-center text-xs font-bold text-gray-500 uppercase tracking-wider">
             <div className="w-6 mr-4 flex-shrink-0"></div> {/* Drag handle space */}
