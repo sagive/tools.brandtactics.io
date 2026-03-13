@@ -605,8 +605,11 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
                   {isUpdating ? "Saving..." : "Save Changes"}
                 </Button>
                 
-                <div className="mt-auto px-1 flex items-center justify-between pb-6">
+                <div className="px-1 mb-6 text-center">
                   <p className="text-[10px] text-gray-400 font-medium">Created: {createdDate}</p>
+                </div>
+                
+                <div className="mt-auto px-1 flex items-center justify-end pb-6">
                   <Button 
                     variant="ghost" 
                     size="sm" 
