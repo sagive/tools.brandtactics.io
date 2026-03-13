@@ -382,6 +382,16 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
               <Input 
                 value={title} 
                 onChange={(e) => setTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Tab' && !e.shiftKey) {
+                    e.preventDefault();
+                    // setTimeout is needed if ReactQuill hasn't finished rendering the internal divs yet, but since it's already there we can just focus it
+                    const editor = document.querySelector('#task-description-container .ql-editor') as HTMLElement;
+                    if (editor) {
+                      editor.focus();
+                    }
+                  }
+                }}
                 placeholder="Design new website homepage" 
                 className="font-medium text-base h-11" 
               />
@@ -389,7 +399,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
 
             <div className="space-y-2">
               <Label className="text-gray-600 text-[13px] font-medium">Description</Label>
-              <div className="border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[120px]">
+              <div id="task-description-container" className="border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[120px]">
                  <ReactQuill 
                    theme="snow"
                    value={description}

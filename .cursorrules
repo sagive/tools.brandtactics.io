@@ -1,0 +1,13 @@
+# Agent Rules & Preferences
+
+## Terminal & Commands
+- **Environment:** Windows PowerShell
+- **Command Chaining:** ALWAYS use `;` instead of `&&` to chain terminal commands. The `&&` operator causes parser errors in this specific PowerShell version.
+- **Example:** `git commit -am "msg"; git push` (DO NOT USE `&&`)
+
+## Coding & Framework
+- **Stack:** Next.js, React, Tailwind CSS, shadcn/ui.
+- **Paths:** Always use absolute paths for tools unless relative paths are explicitly required.
+
+## Workflow Rules
+- **Git Auto-Push:** Every time you complete a user request, you MUST automatically commit and push the changes to git. Use the command `git add .; git commit -m "Auto-commit: <brief description of changes>"; git push`

@@ -226,7 +226,7 @@ export default function DashboardPage() {
                     <Send className="w-6 h-6 text-blue-600 group-hover:text-white transition-colors duration-300" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900">Send Seo Update</h3>
+                    <h3 className="font-bold text-gray-900">+ Seo Update</h3>
                     <p className="text-xs text-gray-500">NEW UPDATE POPUP</p>
                   </div>
                 </div>
