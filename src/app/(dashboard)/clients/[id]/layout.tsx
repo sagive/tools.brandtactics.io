@@ -278,8 +278,8 @@ export default function ClientLayout({
               <SendSeoUpdateDialog 
                 defaultClientId={clientId as string} 
                 trigger={
-                  <Button className="bg-blue-600 text-white hover:bg-blue-700 px-4 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-9 shadow-none border-0">
-                    <Send className="w-4 h-4 mr-2" /> Seo Update
+                  <Button className="bg-blue-600 text-white hover:bg-blue-700 px-4 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-9 shadow-none border-0 cursor-pointer">
+                    <Send className="w-4 h-4 mr-2" /> {formData.name} Seo updates
                   </Button>
                 }
               />

@@ -63,7 +63,6 @@ export default function ClientEmailsPage() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg">Activity Log</CardTitle>
-              <CardDescription>History of all SEO updates sent to this client</CardDescription>
             </div>
           </div>
         </CardHeader>
