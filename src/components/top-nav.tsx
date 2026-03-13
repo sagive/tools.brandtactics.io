@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, LayoutDashboard, Settings, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/components/auth-provider";
@@ -191,16 +191,42 @@ export function TopNav() {
                 {displayName}
               </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push("/settings?tab=profile")}>
-              Profile Settings
+          <DropdownMenuContent align="end" className="w-64 p-2 shadow-xl border-gray-100 rounded-xl">
+            <div className="px-3 py-4 bg-gray-50/50 rounded-lg mb-2 border border-gray-100/50">
+              <p className="text-sm font-bold text-gray-900 truncate">{displayName}</p>
+              <p className="text-[11px] text-gray-500 truncate mt-0.5">{user?.email}</p>
+            </div>
+            
+            <DropdownMenuItem 
+              onClick={() => router.push("/dashboard")}
+              className="rounded-lg h-10 px-3 cursor-pointer mb-1 group"
+            >
+              <div className="flex items-center gap-2 font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
+                <LayoutDashboard className="w-4 h-4" />
+                <span>Dashboard</span>
+              </div>
             </DropdownMenuItem>
-            <DropdownMenuItem>Agency Preferences</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
-              Log out
+            
+            <DropdownMenuItem 
+              onClick={() => router.push("/settings?tab=profile")}
+              className="rounded-lg h-10 px-3 cursor-pointer mb-1 group"
+            >
+              <div className="flex items-center gap-2 font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
+                <Settings className="w-4 h-4" />
+                <span>Profile Settings</span>
+              </div>
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator className="my-2" />
+            
+            <DropdownMenuItem 
+              onClick={handleLogout} 
+              className="rounded-lg h-10 px-3 cursor-pointer text-red-600 focus:text-red-700 focus:bg-red-50/50 group"
+            >
+              <div className="flex items-center gap-2 font-semibold">
+                <LogOut className="w-4 h-4" />
+                <span>Log out</span>
+              </div>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
