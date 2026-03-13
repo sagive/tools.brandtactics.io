@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, CheckCircle2, Trash2, Save, Plus } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Trash2, Save, Plus, CircleDot } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -38,7 +39,8 @@ export default function ClientLayout({
     contactEmail: "",
     contactPhone: "",
     type: "",
-    monthlyFee: ""
+    monthlyFee: "",
+    status: "Active"
   });
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -74,7 +76,8 @@ export default function ClientLayout({
           contactEmail: data.contact_email || "",
           contactPhone: data.contact_phone || "",
           type: data.type || "",
-          monthlyFee: data.monthly_fee ? data.monthly_fee.toString() : ""
+          monthlyFee: data.monthly_fee ? data.monthly_fee.toString() : "",
+          status: data.status || "Active"
         });
       }
       setIsLoading(false);
@@ -99,7 +102,8 @@ export default function ClientLayout({
         contact_email: formData.contactEmail,
         contact_phone: formData.contactPhone,
         type: formData.type,
-        monthly_fee: parseInt(formData.monthlyFee) || 0
+        monthly_fee: parseInt(formData.monthlyFee) || 0,
+        status: formData.status
       })
       .eq("id", clientId);
 
@@ -146,16 +150,33 @@ export default function ClientLayout({
                 <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xl shrink-0">
                   {formData.name.substring(0,2).toUpperCase()}
                 </div>
-                <div className="bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 shrink-0">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Active
-                </div>
+                <Select 
+                  value={formData.status} 
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, status: value });
+                    setIsDirty(true);
+                  }}
+                >
+                  <SelectTrigger className={cn(
+                    "w-28 h-8 text-[11px] font-bold uppercase tracking-wider rounded-full border-none shadow-none focus:ring-0",
+                    formData.status === "Active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
+                  )}>
+                    <div className="flex items-center gap-1.5">
+                      {formData.status === "Active" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <CircleDot className="w-3.5 h-3.5" />}
+                      <SelectValue placeholder="Status" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Active" className="text-xs font-bold uppercase tracking-wider text-green-700">Active</SelectItem>
+                    <SelectItem value="Archived" className="text-xs font-bold uppercase tracking-wider text-gray-500">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="mb-6 space-y-1">
                  <Input 
                    name="name" 
-                   value={formData.name} 
+                   value={formData.name || ""} 
                    onChange={handleChange} 
                    className={cn(inputClasses, "text-xl font-bold tracking-tight h-10")} 
                  />
