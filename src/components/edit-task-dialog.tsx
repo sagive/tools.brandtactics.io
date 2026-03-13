@@ -600,16 +600,17 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
                 <Button 
                   onClick={handleUpdateTask} 
                   disabled={isUpdating || !title.trim() || isDeleting}
-                  className="w-full bg-[#4640A0] hover:bg-[#342e81] text-white shadow-sm font-semibold mb-6"
+                  className="w-full bg-[#4640A0] hover:bg-[#342e81] text-white shadow-sm font-semibold mb-2"
                 >
                   {isUpdating ? "Saving..." : "Save Changes"}
                 </Button>
-                <div className="mt-auto px-1 flex items-center justify-between">
-                  <p className="text-[12px] text-gray-400 font-medium translate-y-[1px]">Created: {createdDate}</p>
+                
+                <div className="mt-auto px-1 flex items-center justify-between pb-6">
+                  <p className="text-[10px] text-gray-400 font-medium">Created: {createdDate}</p>
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-7 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2"
+                    className="h-7 text-[10px] text-red-500 hover:text-red-700 hover:bg-red-50 px-2 uppercase tracking-wider font-bold"
                     onClick={handleDeleteTask}
                     disabled={isDeleting}
                   >
