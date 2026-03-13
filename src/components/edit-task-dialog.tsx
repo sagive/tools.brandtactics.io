@@ -540,7 +540,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
                   <SelectTrigger className="bg-white w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Low"><span className="text-gray-600 font-medium">Low</span></SelectItem>
-                    <SelectItem value="Medium"><span className="text-yellow-600 font-medium">Medium</span></SelectItem>
+                    <SelectItem value="Medium"><span className="text-yellow-600 font-medium">Normal</span></SelectItem>
                     <SelectItem value="High"><span className="text-red-600 font-medium">High</span></SelectItem>
                   </SelectContent>
                 </Select>

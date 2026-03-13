@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
+import { GripVertical, Gauge, Calendar, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -86,18 +86,18 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
                   </div>
                </div>
 
-               <div className="flex items-center gap-1.5 min-w-[100px]">
-                  <span className="text-gray-400">Due:</span>
+               <div className="flex items-center gap-1.5 min-w-[100px]" title="Due Date">
+                  <Calendar className="w-3.5 h-3.5 text-gray-400" />
                   <span className="font-medium text-gray-700">{task.due}</span>
                </div>
 
-               <div className="flex items-center gap-1.5">
-                  <span className="text-gray-400">Priority:</span>
+               <div className="flex items-center gap-1.5" title="Priority">
+                  <Gauge className="w-3.5 h-3.5 text-gray-400" />
                   <span className={cn(
                     "font-bold uppercase text-[9px] tracking-wider",
                     task.priority === 'High' ? 'text-red-500' : task.priority === 'Medium' ? 'text-yellow-600' : 'text-gray-400'
                   )}>
-                    {task.priority}
+                    {task.priority === 'Medium' ? 'NORMAL' : task.priority}
                   </span>
                </div>
             </div>
@@ -116,7 +116,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
           >
             <SelectTrigger className={`h-6 text-[10px] sm:text-xs font-medium px-3 py-0 border-0 focus:ring-0 shadow-none rounded-full w-full ${
                 status === 'Stuck' ? 'bg-red-50 text-red-700 hover:bg-red-100' :
-                status === 'Working on it' ? 'bg-blue-50 text-blue-700 hover:bg-blue-100' :
+                status === 'Working on it' ? 'bg-amber-100 text-black hover:bg-amber-200' :
                 status === 'Review' ? 'bg-purple-50 text-purple-700 hover:bg-purple-100' :
                 status === 'Completed' ? 'bg-green-50 text-green-700 hover:bg-green-100' :
                 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -134,8 +134,8 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
         </div>
 
         <Dialog>
-          <DialogTrigger className="text-gray-400 text-xs font-semibold hover:text-blue-600 cursor-pointer hidden sm:inline-block bg-transparent border-0 p-0 outline-none w-10 text-center shrink-0">
-             Edit
+          <DialogTrigger className="text-gray-400 hover:text-blue-600 cursor-pointer hidden sm:flex items-center justify-center bg-transparent border-0 p-0 outline-none w-8 h-8 rounded-full hover:bg-gray-100 shrink-0" title="Edit">
+             <Pencil className="w-4 h-4" />
           </DialogTrigger>
           <EditTaskDialog task={task} onTaskCreated={onUpdate} />
         </Dialog>
