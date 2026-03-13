@@ -215,15 +215,6 @@ export default function ClientLayout({
 
                 <div className="h-px bg-gray-100" />
 
-                <div>
-                  <div className="text-gray-500 font-medium text-xs uppercase tracking-wider mb-2 px-2">Basic Tools</div>
-                  <ul className="space-y-1 text-gray-700 list-disc pl-4 marker:text-blue-600 px-2 mt-2">
-                    <li>Google Analytics</li>
-                    <li>Google Search Console</li>
-                    <li>Ahrefs Tracker</li>
-                  </ul>
-                </div>
-
                 {isDirty && (
                   <div className="pt-4 mt-4 border-t border-gray-100">
                      <Button 
@@ -279,7 +270,7 @@ export default function ClientLayout({
                 defaultClientId={clientId as string} 
                 trigger={
                   <Button className="bg-blue-600 text-white hover:bg-blue-700 px-4 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-9 shadow-none border-0 cursor-pointer">
-                    <Send className="w-4 h-4 mr-2" /> {formData.name} Seo updates
+                    <Send className="w-4 h-4 mr-2" /> SEO Updates
                   </Button>
                 }
               />

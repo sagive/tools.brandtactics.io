@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Save, Loader2, GripVertical } from "lucide-react";
+import { Plus, Trash2, Save, Loader2, GripVertical, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -59,6 +59,23 @@ function SortableKeywordRow({
     }
   };
 
+  const handleUrlBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    let val = e.target.value.trim();
+    if (val && !/^https?:\/\//i.test(val)) {
+      val = `https://${val}`;
+      onChange(index, "target_url", val);
+    }
+  };
+
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   return (
     <div ref={setNodeRef} style={style} className={`px-4 py-3 flex items-center gap-4 hover:bg-gray-50/50 transition-colors bg-white ${isDragging ? 'opacity-90 relative' : ''}`}>
       <div 
@@ -76,13 +93,25 @@ function SortableKeywordRow({
           className="h-9 text-sm focus-visible:ring-1 focus-visible:border-blue-500"
         />
       </div>
-      <div className="w-[30%]">
+      <div className="w-[30%] relative">
         <Input 
           value={entry.target_url} 
           onChange={(e) => onChange(index, "target_url", e.target.value)}
+          onBlur={handleUrlBlur}
           placeholder="https://example.com/page"
-          className="h-9 text-sm focus-visible:ring-1 focus-visible:border-blue-500"
+          className="h-9 text-sm focus-visible:ring-1 focus-visible:border-blue-500 pr-8"
         />
+        {entry.target_url && isValidUrl(entry.target_url) && (
+          <a
+            href={entry.target_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-blue-600 hover:bg-gray-100 rounded transition-colors"
+            title="Open in new tab"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        )}
       </div>
       <div className="w-[15%]">
         <Input 
@@ -199,9 +228,9 @@ export default function KeywordsPage({ params }: { params: Promise<{ id: string 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      setKeywords((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
+      setKeywords((items: KeywordEntry[]) => {
+        const oldIndex = items.findIndex((item: KeywordEntry) => item.id === active.id);
+        const newIndex = items.findIndex((item: KeywordEntry) => item.id === over.id);
         setIsDirty(true);
         return arrayMove(items, oldIndex, newIndex);
       });
@@ -222,7 +251,7 @@ export default function KeywordsPage({ params }: { params: Promise<{ id: string 
 
       // 2. Insert new list
       if (keywords.length > 0) {
-        const toInsert = keywords.map((k, idx) => ({
+        const toInsert = keywords.map((k: KeywordEntry, idx: number) => ({
           client_id: clientId,
           keyword: k.keyword,
           target_url: k.target_url,
@@ -291,10 +320,10 @@ export default function KeywordsPage({ params }: { params: Promise<{ id: string 
           >
             <div className="divide-y divide-gray-100 min-h-[50px]">
               <SortableContext 
-                items={keywords.map(k => k.id)}
+                items={keywords.map((k: KeywordEntry) => k.id)}
                 strategy={verticalListSortingStrategy}
               >
-                {keywords.map((entry, index) => (
+                {keywords.map((entry: KeywordEntry, index: number) => (
                   <SortableKeywordRow 
                     key={entry.id} 
                     entry={entry} 
