@@ -132,7 +132,6 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
                   <Button
                     variant="outline"
                     role="combobox"
-                    disabled={!!defaultClientId}
                     aria-expanded={openClientDropdown}
                     className={cn(
                       "w-full justify-between bg-white font-normal h-10 px-3",
@@ -147,7 +146,7 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
                         ? clients.find((c) => c.id === clientId)?.name
                         : "Select a client..."}
                     </div>
-                    {!defaultClientId && <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 }/>
                 <PopoverContent className="w-[var(--base-ui-popover-trigger-width)] p-0" align="start">
