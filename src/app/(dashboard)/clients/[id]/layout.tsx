@@ -192,6 +192,7 @@ export default function ClientLayout({
                  </div>
               </div>
 
+              <div className="space-y-4 text-sm">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="text-gray-500 font-medium text-[10px] uppercase tracking-wider pl-2 w-1/3">Contact</div>
