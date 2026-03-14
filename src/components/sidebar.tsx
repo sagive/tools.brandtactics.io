@@ -101,6 +101,17 @@ export function Sidebar() {
             <div className="p-2 space-y-1">
               
               <div className="flex items-center justify-between px-2 py-2 hover:bg-gray-50 rounded-lg transition-colors group cursor-default">
+                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Send SEO Update</span>
+                <div className="flex items-center gap-1 opacity-75 group-hover:opacity-100 transition-opacity">
+                  <kbd className="bg-white border shadow-sm px-1.5 py-0.5 rounded text-[10px] font-semibold text-gray-600 tracking-widest uppercase">Alt</kbd>
+                  <span className="text-gray-400 text-xs">+</span>
+                  <kbd className="bg-white border shadow-sm px-1.5 py-0.5 rounded text-[10px] font-semibold text-gray-600 tracking-widest uppercase">Shift</kbd>
+                  <span className="text-gray-400 text-xs">+</span>
+                  <kbd className="bg-white border shadow-sm px-2 py-0.5 rounded text-[10px] font-semibold text-gray-600">2</kbd>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between px-2 py-2 hover:bg-gray-50 rounded-lg transition-colors group cursor-default">
                 <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">New Task</span>
                 <div className="flex items-center gap-1 opacity-75 group-hover:opacity-100 transition-opacity">
                   <kbd className="bg-white border shadow-sm px-1.5 py-0.5 rounded text-[10px] font-semibold text-gray-600 tracking-widest uppercase">Alt</kbd>

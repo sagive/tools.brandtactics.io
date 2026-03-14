@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search, LayoutDashboard, Settings, LogOut, ListPlus } from "lucide-react";
+import { Bell, Search, LayoutDashboard, Settings, LogOut, ListPlus, MailPlus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/components/auth-provider";
@@ -24,12 +24,14 @@ import { useState, useEffect } from "react";
 import { Check, Trash2, Eye, Circle } from "lucide-react";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { EditTaskDialog } from "@/components/edit-task-dialog";
+import { SendSeoUpdateDialog } from "@/components/send-seo-update-dialog";
 
 export function TopNav() {
   const { user, profile } = useAuth();
   const router = useRouter();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isNewTaskOpen, setIsNewTaskOpen] = useState(false);
+  const [isSeoUpdateOpen, setIsSeoUpdateOpen] = useState(false);
 
   const fetchNotifications = async () => {
     if (!profile?.email) return;
@@ -59,13 +61,18 @@ export function TopNav() {
     };
   }, [profile?.email]);
 
-  // Global Keyboard Shortcut Listener for New Task
+  // Global Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Alt + Shift + 3
+      // Alt + Shift + 3 -> New Task
       if (e.altKey && e.shiftKey && (e.key === '3' || e.code === 'Digit3')) {
         e.preventDefault();
         setIsNewTaskOpen(true);
+      }
+      // Alt + Shift + 2 -> Send SEO Update
+      if (e.altKey && e.shiftKey && (e.key === '2' || e.code === 'Digit2')) {
+        e.preventDefault();
+        setIsSeoUpdateOpen(true);
       }
     };
 
@@ -128,6 +135,13 @@ export function TopNav() {
         <div className="h-5 w-px bg-gray-200" />
 
         <div className="flex items-center gap-1">
+          <SendSeoUpdateDialog 
+             trigger={
+               <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 focus:outline-none rounded-full transition-colors cursor-pointer outline-none" onClick={() => setIsSeoUpdateOpen(true)}>
+                 <MailPlus className="w-5 h-5" />
+               </button>
+             } 
+          />
           <Dialog open={isNewTaskOpen} onOpenChange={setIsNewTaskOpen}>
             <DialogTrigger className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 focus:outline-none rounded-full transition-colors cursor-pointer outline-none">
               <ListPlus className="w-5 h-5" />
