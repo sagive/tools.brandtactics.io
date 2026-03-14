@@ -192,12 +192,25 @@ export default function ClientLayout({
                  </div>
               </div>
 
-              <div className="space-y-4 text-sm">
-                <div>
-                  <div className="text-gray-500 font-medium text-xs uppercase tracking-wider mb-1 px-2">Primary Contact</div>
-                  <Input name="contactName" value={formData.contactName} onChange={handleChange} className={inputClasses} placeholder="Contact Name" />
-                  <Input name="contactEmail" value={formData.contactEmail} onChange={handleChange} className={cn(inputClasses, "text-gray-500 font-normal")} placeholder="Email Address" />
-                  <Input name="contactPhone" value={formData.contactPhone} onChange={handleChange} className={cn(inputClasses, "text-gray-500 font-normal")} placeholder="Phone Number" />
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="text-gray-500 font-medium text-[10px] uppercase tracking-wider pl-2 w-1/3">Contact</div>
+                    <div className="w-2/3 flex items-center border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors px-3 h-9">
+                      <Input name="contactName" value={formData.contactName} onChange={handleChange} placeholder="Contact Name" className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-xs font-medium bg-transparent flex-1" />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-gray-500 font-medium text-[10px] uppercase tracking-wider pl-2 w-1/3">Email</div>
+                    <div className="w-2/3 flex items-center border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors px-3 h-9">
+                      <Input name="contactEmail" value={formData.contactEmail} onChange={handleChange} placeholder="Email Address" className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-xs font-medium text-gray-500 bg-transparent flex-1" />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-gray-500 font-medium text-[10px] uppercase tracking-wider pl-2 w-1/3">Phone</div>
+                    <div className="w-2/3 flex items-center border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors px-3 h-9">
+                      <Input name="contactPhone" value={formData.contactPhone} onChange={handleChange} placeholder="Phone Number" className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-xs font-medium text-gray-500 bg-transparent flex-1" />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="h-px bg-gray-100" />
