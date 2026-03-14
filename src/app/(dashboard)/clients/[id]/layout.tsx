@@ -77,7 +77,7 @@ export default function ClientLayout({
           contactEmail: data.contact_email || "",
           contactPhone: data.contact_phone || "",
           type: data.type || "",
-          monthlyFee: data.monthly_fee ? data.monthly_fee.toString() : "",
+          monthlyFee: data.monthly_fee !== null && data.monthly_fee !== undefined ? data.monthly_fee.toString() : "0",
           status: data.status || "Active"
         });
       }
@@ -231,8 +231,13 @@ export default function ClientLayout({
                       <Input 
                         name="monthlyFee" 
                         type="number" 
+                        min="0"
                         value={formData.monthlyFee} 
-                        onChange={handleChange} 
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData({ ...formData, monthlyFee: val === '' ? '0' : val });
+                          setIsDirty(true);
+                        }}
                         className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-xs font-medium bg-transparent flex-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
                       />
                       <span className="text-gray-400 text-xs font-medium uppercase ml-2">usd</span>
