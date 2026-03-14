@@ -29,6 +29,7 @@ export function TopNav() {
   const { user, profile } = useAuth();
   const router = useRouter();
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [isNewTaskOpen, setIsNewTaskOpen] = useState(false);
 
   const fetchNotifications = async () => {
     if (!profile?.email) return;
@@ -57,6 +58,20 @@ export function TopNav() {
       supabase.removeChannel(channel);
     };
   }, [profile?.email]);
+
+  // Global Keyboard Shortcut Listener for New Task
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Alt + Shift + 3
+      if (e.altKey && e.shiftKey && (e.key === '3' || e.code === 'Digit3')) {
+        e.preventDefault();
+        setIsNewTaskOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -109,8 +124,8 @@ export function TopNav() {
 
       <div className="flex items-center gap-4 ml-auto">
         <div className="flex items-center gap-3 mr-2">
-          <Dialog>
-            <DialogTrigger className="text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors">
+          <Dialog open={isNewTaskOpen} onOpenChange={setIsNewTaskOpen}>
+            <DialogTrigger className="text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors cursor-pointer outline-none">
               + New task
             </DialogTrigger>
             <EditTaskDialog />

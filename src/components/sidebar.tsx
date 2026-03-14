@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, Users, FileText, Mail, Settings, Briefcase, PlusCircle, ChevronRight, ChevronLeft, Menu, LayoutGrid } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Mail, Settings, Briefcase, PlusCircle, ChevronRight, ChevronLeft, Menu, LayoutGrid, Command } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -81,6 +82,38 @@ export function Sidebar() {
             })}
           </ul>
         </div>
+      </div>
+
+      {/* Keyboard Shortcuts Helper */}
+      <div className={cn("border-t p-3 border-gray-100 mt-auto", isExpanded ? "flex items-center" : "flex justify-center")}>
+        <Popover>
+          <PopoverTrigger>
+            <Button variant="ghost" size="icon" className={cn("text-gray-400 hover:text-gray-600 focus-visible:ring-0", isExpanded ? "w-full justify-start px-2 gap-3" : "w-10 h-10")}>
+              <Command className="w-4 h-4 shrink-0" />
+              {isExpanded && <span className="text-sm font-medium">Shortcuts</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent side="right" align="end" sideOffset={16} className="w-72 p-0 shadow-lg border-gray-100 rounded-xl overflow-hidden">
+            <div className="bg-gray-50/80 px-4 py-3 border-b flex items-center justify-between">
+              <span className="font-semibold text-sm text-gray-900">Keyboard Shortcuts</span>
+              <Command className="w-4 h-4 text-gray-500" />
+            </div>
+            <div className="p-2 space-y-1">
+              
+              <div className="flex items-center justify-between px-2 py-2 hover:bg-gray-50 rounded-lg transition-colors group cursor-default">
+                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">New Task</span>
+                <div className="flex items-center gap-1 opacity-75 group-hover:opacity-100 transition-opacity">
+                  <kbd className="bg-white border shadow-sm px-1.5 py-0.5 rounded text-[10px] font-semibold text-gray-600 tracking-widest uppercase">Alt</kbd>
+                  <span className="text-gray-400 text-xs">+</span>
+                  <kbd className="bg-white border shadow-sm px-1.5 py-0.5 rounded text-[10px] font-semibold text-gray-600 tracking-widest uppercase">Shift</kbd>
+                  <span className="text-gray-400 text-xs">+</span>
+                  <kbd className="bg-white border shadow-sm px-2 py-0.5 rounded text-[10px] font-semibold text-gray-600">3</kbd>
+                </div>
+              </div>
+
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
     </aside>
   );
