@@ -18,7 +18,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Check, Trash2, Eye, Circle } from "lucide-react";
@@ -29,6 +29,12 @@ import { SendSeoUpdateDialog } from "@/components/send-seo-update-dialog";
 export function TopNav() {
   const { user, profile } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  
+  // Extract client ID from URL if we are on a client's page
+  const clientIdMatch = pathname?.match(/\/clients\/([^/]+)/);
+  const clientId = clientIdMatch ? clientIdMatch[1] : undefined;
+
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isNewTaskOpen, setIsNewTaskOpen] = useState(false);
   const [isSeoUpdateOpen, setIsSeoUpdateOpen] = useState(false);
@@ -138,6 +144,7 @@ export function TopNav() {
           <SendSeoUpdateDialog 
              open={isSeoUpdateOpen}
              onOpenChange={setIsSeoUpdateOpen}
+             defaultClientId={clientId}
              trigger={
                <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 focus:outline-none rounded-full transition-colors cursor-pointer outline-none" onClick={() => setIsSeoUpdateOpen(true)}>
                  <MailPlus className="w-5 h-5" />
