@@ -202,29 +202,41 @@ export default function ClientLayout({
 
                 <div className="h-px bg-gray-100" />
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-gray-500 font-medium text-xs uppercase tracking-wider mb-1 px-2">Type</div>
-                    <Select 
-                      value={formData.type || ""} 
-                      onValueChange={(value) => {
-                        setFormData({ ...formData, type: value || "" });
-                        setIsDirty(true);
-                      }}
-                    >
-                      <SelectTrigger className={cn(inputClasses, "border-none shadow-none focus:ring-1 bg-transparent")}>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Retainer">Retainer</SelectItem>
-                        <SelectItem value="Prepaid hours">Prepaid hours</SelectItem>
-                        <SelectItem value="Our site">Our site</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="text-gray-500 font-medium text-[10px] uppercase tracking-wider pl-2 w-1/3">Type</div>
+                    <div className="w-2/3 border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors">
+                      <Select 
+                        value={formData.type || ""} 
+                        onValueChange={(value) => {
+                          setFormData({ ...formData, type: value || "" });
+                          setIsDirty(true);
+                        }}
+                      >
+                        <SelectTrigger className="border-none shadow-none focus:ring-0 bg-transparent h-9 text-xs font-medium">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Retainer">Retainer</SelectItem>
+                          <SelectItem value="Prepaid hours">Prepaid hours</SelectItem>
+                          <SelectItem value="Our site">Our site</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-gray-500 font-medium text-xs uppercase tracking-wider mb-1 px-2">Fee/mo ($)</div>
-                    <Input name="monthlyFee" type="number" value={formData.monthlyFee} onChange={handleChange} className={inputClasses} />
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="text-gray-500 font-medium text-[10px] uppercase tracking-wider pl-2 w-1/3">Fee/mo ($)</div>
+                    <div className="w-2/3 flex items-center border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors px-3 h-9">
+                      <Input 
+                        name="monthlyFee" 
+                        type="number" 
+                        value={formData.monthlyFee} 
+                        onChange={handleChange} 
+                        className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-xs font-medium bg-transparent flex-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                      />
+                      <span className="text-gray-400 text-xs font-medium uppercase ml-2">usd</span>
+                    </div>
                   </div>
                 </div>
 
