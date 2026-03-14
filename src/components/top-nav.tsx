@@ -124,13 +124,14 @@ export function TopNav() {
 
       <div className="flex items-center gap-4 ml-auto">
         <div className="flex items-center gap-3 mr-2">
+          <span className="text-xs font-semibold text-gray-400 select-none">v1.0.3</span>
+          <div className="h-4 w-px bg-gray-200" />
           <Dialog open={isNewTaskOpen} onOpenChange={setIsNewTaskOpen}>
             <DialogTrigger className="text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors cursor-pointer outline-none">
               + New task
             </DialogTrigger>
             <EditTaskDialog />
           </Dialog>
-          <span className="text-xs font-semibold text-gray-400 select-none">v1.0.3</span>
         </div>
 
         <Popover>
