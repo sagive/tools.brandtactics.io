@@ -63,6 +63,14 @@ export function EditToolDialog({ tool, onToolSaved }: { tool?: any, onToolSaved?
       toast.success(`Tool ${isEditing ? 'updated' : 'added'} successfully`);
       onToolSaved?.();
       
+      // Clear fields if adding a new tool
+      if (!isEditing) {
+        setName("");
+        setUrl("");
+        setUsername("");
+        setPassword("");
+      }
+      
       // Close dialog
       const closeButton = document.querySelector('[data-slot="dialog-close"]') as HTMLButtonElement;
       if (closeButton) closeButton.click();
