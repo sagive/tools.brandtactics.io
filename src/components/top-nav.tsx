@@ -136,6 +136,8 @@ export function TopNav() {
 
         <div className="flex items-center gap-1">
           <SendSeoUpdateDialog 
+             open={isSeoUpdateOpen}
+             onOpenChange={setIsSeoUpdateOpen}
              trigger={
                <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 focus:outline-none rounded-full transition-colors cursor-pointer outline-none" onClick={() => setIsSeoUpdateOpen(true)}>
                  <MailPlus className="w-5 h-5" />

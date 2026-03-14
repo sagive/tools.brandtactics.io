@@ -20,14 +20,24 @@ interface SendSeoUpdateDialogProps {
   defaultClientId?: string;
   trigger?: React.ReactElement;
   onSuccess?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess }: SendSeoUpdateDialogProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open: externalOpen, onOpenChange: externalOnOpenChange }: SendSeoUpdateDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
+  
+  const setIsOpen = (newOpen: boolean) => {
+    if (externalOnOpenChange) externalOnOpenChange(newOpen);
+    setInternalOpen(newOpen);
+  };
+
   const [clientId, setClientId] = useState(defaultClientId || "");
   const [openClientDropdown, setOpenClientDropdown] = useState(false);
   const [subject, setSubject] = useState("SEO Update from BrandTactics");
   const [body, setBody] = useState("");
+  const [scheduledFor, setScheduledFor] = useState("");
   const [sending, setSending] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
@@ -74,7 +84,7 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess }: Sen
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}` 
         },
-        body: JSON.stringify({ clientId, subject, body }),
+        body: JSON.stringify({ clientId, subject, body, scheduledFor }),
       });
       
       const data = await res.json();
@@ -106,7 +116,7 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess }: Sen
           </Button>
         )
       }/>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
             <Send className="w-5 h-5 text-blue-600" />
@@ -250,9 +260,20 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess }: Sen
               </Popover>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Subject</Label>
-            <Input value={subject} onChange={e => setSubject(e.target.value)} className="bg-white" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Subject</Label>
+              <Input value={subject} onChange={e => setSubject(e.target.value)} className="bg-white" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Schedule Send (Optional)</Label>
+              <Input 
+                type="datetime-local" 
+                value={scheduledFor} 
+                onChange={e => setScheduledFor(e.target.value)} 
+                className="bg-white" 
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Message</Label>
