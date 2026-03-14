@@ -155,7 +155,7 @@ export default function DashboardPage() {
                   ) : (
                     filteredWidgetClients.map(client => {
                       const tasks = client.tasks || [];
-                      const pendingTasks = tasks.filter((t: any) => t.status === 'Pending').length;
+                      const unfinishedTasks = tasks.filter((t: any) => t.status !== 'Completed').length;
                       const completedTasks = tasks.filter((t: any) => t.status === 'Completed').length;
                       const articlesCount = (client.articles || []).length;
                       
@@ -186,7 +186,7 @@ export default function DashboardPage() {
                             <div className="text-center" title="Tasks">
                               <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Tasks</div>
                               <div className="text-[10px] font-medium text-gray-600 bg-gray-50 px-1.5 py-0.5 rounded">
-                                <span className="text-orange-600">{pendingTasks}</span>/<span className="text-green-600">{completedTasks}</span>
+                                <span className="text-orange-600">{unfinishedTasks}</span>/<span className="text-green-600">{completedTasks}</span>
                               </div>
                             </div>
                             
