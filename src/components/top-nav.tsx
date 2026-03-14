@@ -22,6 +22,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Check, Trash2, Eye, Circle } from "lucide-react";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { EditTaskDialog } from "@/components/edit-task-dialog";
 
 export function TopNav() {
   const { user, profile } = useAuth();
@@ -106,7 +108,15 @@ export function TopNav() {
       </div>
 
       <div className="flex items-center gap-4 ml-auto">
-        <span className="text-xs font-semibold text-gray-400 select-none mr-2">v1.0.3</span>
+        <div className="flex items-center gap-3 mr-2">
+          <Dialog>
+            <DialogTrigger className="text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors">
+              + New task
+            </DialogTrigger>
+            <EditTaskDialog />
+          </Dialog>
+          <span className="text-xs font-semibold text-gray-400 select-none">v1.0.3</span>
+        </div>
 
         <Popover>
           <PopoverTrigger className="relative p-2 text-gray-400 hover:text-gray-500">

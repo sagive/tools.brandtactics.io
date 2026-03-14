@@ -42,7 +42,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
   const [description, setDescription] = useState(task?.description || "");
   const [status, setStatus] = useState(task?.status || "Pending");
   const [priority, setPriority] = useState(task?.priority || "Medium");
-  const [assignee, setAssignee] = useState(task?.assignee || "mark");
+  const [assignee, setAssignee] = useState(task?.assignee || "");
   const [requester, setRequester] = useState(task?.requester || "");
   const [comments, setComments] = useState<any[]>(task?.comments || []);
   const [clientId, setClientId] = useState(task?.client_id || defaultClientId || "");
@@ -68,7 +68,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
 
   useEffect(() => {
     // Fetch clients
-    if (!isEditing && !defaultClientId) {
+    if (!isEditing) {
       supabase.from('clients').select('id, name').order('name').then(({data}) => {
          if (data) setClients(data);
       });
@@ -497,7 +497,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
           {/* Right Column Component */}
           <div className="w-full md:w-80 bg-gray-50/30 p-6 space-y-6 flex flex-col">
             
-            {!isEditing && !defaultClientId && (
+            {!isEditing && (
               <div className="space-y-2">
                 <Label className="text-gray-600 text-[13px] font-medium">Client <span className="text-red-500">*</span></Label>
                 <Select value={clientId} onValueChange={setClientId}>
