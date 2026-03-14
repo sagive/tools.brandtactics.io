@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search, LayoutDashboard, Settings, LogOut } from "lucide-react";
+import { Bell, Search, LayoutDashboard, Settings, LogOut, ListPlus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/components/auth-provider";
@@ -127,8 +127,8 @@ export function TopNav() {
           <span className="text-xs font-semibold text-gray-400 select-none">v1.0.3</span>
           <div className="h-4 w-px bg-gray-200" />
           <Dialog open={isNewTaskOpen} onOpenChange={setIsNewTaskOpen}>
-            <DialogTrigger className="text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors cursor-pointer outline-none">
-              + New task
+            <DialogTrigger className="p-2 text-gray-400 hover:text-gray-500 transition-colors cursor-pointer outline-none">
+              <ListPlus className="w-5 h-5" />
             </DialogTrigger>
             <EditTaskDialog />
           </Dialog>
