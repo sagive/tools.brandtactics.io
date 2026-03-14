@@ -212,6 +212,51 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Agency Tools Widget */}
+          <Card className="shadow-sm border-gray-200">
+            <CardHeader className="pb-3 border-b flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">Agency Tools</CardTitle>
+                <CardDescription>Quick access to your workspace</CardDescription>
+              </div>
+              <div className="flex items-center gap-4">
+                <Link href="/tools" className="text-xs text-blue-600 hover:underline font-medium">View Full Dashboard</Link>
+                <Dialog>
+                  <DialogTrigger render={
+                    <Button size="sm" variant="outline" className="h-8 gap-1.5 border-dashed border-gray-300 hover:border-blue-500">
+                      <Plus className="w-3.5 h-3.5" /> Add Tool
+                    </Button>
+                  }/>
+                  <EditToolDialog onToolSaved={fetchTools} />
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4">
+              <Tabs defaultValue="All" value={filter} onValueChange={setFilter} className="w-full">
+                <TabsList className="bg-gray-100/80 mb-4 h-9 p-1 flex-nowrap overflow-x-auto justify-start shadow-none border-none">
+                  {categories.map(cat => (
+                     <TabsTrigger key={cat.name} value={cat.name} className="text-xs data-[state=active]:bg-white whitespace-nowrap px-4 tracking-tight shadow-none">
+                       {cat.name}
+                     </TabsTrigger>
+                  ))}
+                </TabsList>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {filteredTools.length === 0 ? (
+                    <div className="col-span-full py-12 text-center border-2 border-dashed rounded-xl bg-gray-50/50">
+                       <LayoutGrid className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                       <p className="text-sm text-gray-500">No tools found for this category.</p>
+                    </div>
+                  ) : (
+                    filteredTools.map((tool) => (
+                      <DashboardToolCard key={tool.id} tool={tool} onDelete={handleDeleteTool} onRefresh={fetchTools} />
+                    ))
+                  )}
+                </div>
+              </Tabs>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Quick Actions Sidebar (Right - 25%) */}
@@ -263,51 +308,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Agency Tools Row */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <h2 className="text-xl font-bold tracking-tight text-gray-900 font-outfit">Agency Tools</h2>
-            <div className="flex items-center gap-2">
-              <p className="text-xs text-gray-500">Quick access to your workspace</p>
-              <span className="text-gray-300">•</span>
-              <Link href="/tools" className="text-xs text-blue-600 hover:underline font-medium">View Full Dashboard</Link>
-            </div>
-          </div>
-          <Dialog>
-            <DialogTrigger render={
-              <Button size="sm" variant="outline" className="h-8 gap-1.5 border-dashed border-gray-300 hover:border-blue-500">
-                <Plus className="w-3.5 h-3.5" /> Add Tool
-              </Button>
-            }/>
-            <EditToolDialog onToolSaved={fetchTools} />
-          </Dialog>
-        </div>
-
-        <Tabs defaultValue="All" value={filter} onValueChange={setFilter} className="w-full">
-          <TabsList className="bg-gray-100/80 mb-4 h-9 p-1 flex-nowrap overflow-x-auto justify-start shadow-none border-none">
-            {categories.map(cat => (
-               <TabsTrigger key={cat.name} value={cat.name} className="text-xs data-[state=active]:bg-white whitespace-nowrap px-4 tracking-tight shadow-none">
-                 {cat.name}
-               </TabsTrigger>
-            ))}
-          </TabsList>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredTools.length === 0 ? (
-              <div className="col-span-full py-12 text-center border-2 border-dashed rounded-xl bg-gray-50/50">
-                 <LayoutGrid className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                 <p className="text-sm text-gray-500">No tools found for this category.</p>
-              </div>
-            ) : (
-              filteredTools.map((tool) => (
-                <DashboardToolCard key={tool.id} tool={tool} onDelete={handleDeleteTool} onRefresh={fetchTools} />
-              ))
-            )}
-          </div>
-        </Tabs>
       </div>
     </div>
   );
