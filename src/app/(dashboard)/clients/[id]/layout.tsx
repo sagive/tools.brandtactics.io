@@ -205,7 +205,22 @@ export default function ClientLayout({
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-gray-500 font-medium text-xs uppercase tracking-wider mb-1 px-2">Type</div>
-                    <Input name="type" value={formData.type} onChange={handleChange} className={inputClasses} />
+                    <Select 
+                      value={formData.type || ""} 
+                      onValueChange={(value) => {
+                        setFormData({ ...formData, type: value || "" });
+                        setIsDirty(true);
+                      }}
+                    >
+                      <SelectTrigger className={cn(inputClasses, "border-none shadow-none focus:ring-1 bg-transparent")}>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Retainer">Retainer</SelectItem>
+                        <SelectItem value="Prepaid hours">Prepaid hours</SelectItem>
+                        <SelectItem value="Our site">Our site</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <div className="text-gray-500 font-medium text-xs uppercase tracking-wider mb-1 px-2">Fee/mo ($)</div>
