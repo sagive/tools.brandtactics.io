@@ -116,7 +116,7 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
           </Button>
         )
       }/>
-      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl sm:max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
             <Send className="w-5 h-5 text-blue-600" />
