@@ -122,25 +122,26 @@ export function TopNav() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 ml-auto">
-        <div className="flex items-center gap-3 mr-2">
-          <span className="text-xs font-semibold text-gray-400 select-none">v1.0.3</span>
-          <div className="h-4 w-px bg-gray-200" />
+      <div className="flex items-center gap-3 sm:gap-4 ml-auto">
+        <span className="text-xs font-semibold text-gray-400 select-none">v1.0.3</span>
+        
+        <div className="h-5 w-px bg-gray-200" />
+
+        <div className="flex items-center gap-1">
           <Dialog open={isNewTaskOpen} onOpenChange={setIsNewTaskOpen}>
-            <DialogTrigger className="p-2 text-gray-400 hover:text-gray-500 transition-colors cursor-pointer outline-none">
+            <DialogTrigger className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 focus:outline-none rounded-full transition-colors cursor-pointer outline-none">
               <ListPlus className="w-5 h-5" />
             </DialogTrigger>
             <EditTaskDialog />
           </Dialog>
-        </div>
 
-        <Popover>
-          <PopoverTrigger className="relative p-2 text-gray-400 hover:text-gray-500">
-            {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-red-500 ring-2 ring-white" />
-            )}
-            <Bell className="h-5 w-5" />
-          </PopoverTrigger>
+          <Popover>
+            <PopoverTrigger className="relative p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 focus:outline-none rounded-full transition-colors">
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-red-500 ring-2 ring-white" />
+              )}
+              <Bell className="h-5 w-5" />
+            </PopoverTrigger>
           <PopoverContent align="end" className="w-[380px] p-0 shadow-lg">
             <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50/80">
               <span className="font-semibold text-sm">Notifications</span>
@@ -204,6 +205,7 @@ export function TopNav() {
             </div>
           </PopoverContent>
         </Popover>
+        </div>
 
         <div className="h-6 w-px bg-gray-200" />
 
