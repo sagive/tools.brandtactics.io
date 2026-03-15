@@ -42,7 +42,7 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
 
   const [clientId, setClientId] = useState(defaultClientId || "");
   const [openClientDropdown, setOpenClientDropdown] = useState(false);
-  const [subject, setSubject] = useState("Multiple SEO Updates from BrandTactics");
+  const [subject, setSubject] = useState("SEO Updates - BrandTactics");
   const [baseBody, setBaseBody] = useState("");
   
   // Variants State
@@ -419,7 +419,17 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
                   ) : (
                     variants.sort((a,b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime()).map(variant => {
                       // Extract plain text preview using Regex to prevent SSR document errors
-                      let textPreview = variant.content.replace(/<[^>]*>?/gm, '').trim();
+                      let textPreview = variant.content
+                        .replace(/<[^>]*>?/gm, '')
+                        .replace(/&nbsp;/g, ' ')
+                        .replace(/&amp;/g, '&')
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        .replace(/&quot;/g, '"')
+                        .replace(/&#39;/g, "'")
+                        .replace(/\s+/g, ' ')
+                        .trim();
+                      
                       if (textPreview.length > 50) textPreview = textPreview.substring(0, 50) + "...";
 
                       return (
