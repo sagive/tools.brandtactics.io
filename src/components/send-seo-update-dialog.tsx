@@ -166,7 +166,7 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
                                 setClientId(client.id);
                                 setOpenClientDropdown(false);
                               }}
-                              className="flex flex-col items-start px-3 py-2 cursor-pointer transition-colors hover:bg-gray-50"
+                              className="flex flex-col items-start px-3 py-2 cursor-pointer transition-colors hover:bg-gray-50 [&>svg:last-child]:hidden"
                             >
                               <div className="flex items-center w-full">
                                 <div className="flex-1 font-bold text-gray-900">{client.name}</div>
@@ -243,7 +243,7 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
                               });
                               toast.success("Template text injected");
                             }}
-                            className="flex flex-col items-start px-3 py-2 cursor-pointer transition-colors hover:bg-gray-50"
+                            className="flex flex-col items-start px-3 py-2 cursor-pointer transition-colors hover:bg-gray-50 [&>svg:last-child]:hidden"
                           >
                             <div className="flex items-center w-full">
                               <div className="flex-1 font-bold text-gray-900">{template.name}</div>

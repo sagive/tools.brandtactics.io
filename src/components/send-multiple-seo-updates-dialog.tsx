@@ -256,7 +256,7 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
                                      setClientId(client.id);
                                      setOpenClientDropdown(false);
                                    }}
-                                   className="flex flex-col items-start px-3 py-2 cursor-pointer transition-colors hover:bg-gray-50"
+                                   className="flex flex-col items-start px-3 py-2 cursor-pointer transition-colors hover:bg-gray-50 [&>svg:last-child]:hidden"
                                  >
                                    <div className="flex items-center w-full">
                                      <div className="flex-1 font-bold text-gray-900">{client.name}</div>
@@ -331,7 +331,7 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
                                    setBaseBody(template.content);
                                    toast.success("Template text injected");
                                  }}
-                                 className="flex flex-col items-start px-3 py-2 cursor-pointer transition-colors hover:bg-gray-50"
+                                 className="flex flex-col items-start px-3 py-2 cursor-pointer transition-colors hover:bg-gray-50 [&>svg:last-child]:hidden"
                                >
                                  <div className="flex items-center w-full">
                                    <div className="flex-1 font-bold text-gray-900">{template.name}</div>
