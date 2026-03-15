@@ -108,13 +108,23 @@ export default function ClientEmailsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-green-50 text-green-700 border border-green-100">
-                          Sent
-                        </span>
+                        {email.status === 'Scheduled' ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-100">
+                            Scheduled
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-green-50 text-green-700 border border-green-100">
+                            {email.status || 'Sent'}
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-[14px] font-medium text-gray-600">
-                          {email.created_at ? format(new Date(email.created_at), "HH:mm - dd/MM/yyyy") : "N/A"}
+                          {email.scheduled_for 
+                            ? format(new Date(email.scheduled_for), "HH:mm - dd/MM/yyyy") 
+                            : email.created_at 
+                              ? format(new Date(email.created_at), "HH:mm - dd/MM/yyyy") 
+                              : "N/A"}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
