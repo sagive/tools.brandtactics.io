@@ -51,7 +51,8 @@ export function DateTimePicker({
     if (isDateOnly) {
       onChange(format(selectedDate, "yyyy-MM-dd"));
     } else {
-      onChange(format(selectedDate, "yyyy-MM-dd'T'HH:mm"));
+      // Create a clean Date and guarantee proper local to ISO string conversion so we don't lose the local timezone offset
+      onChange(selectedDate.toISOString());
     }
   };
 
@@ -65,7 +66,7 @@ export function DateTimePicker({
     newDate.setHours(hours);
     newDate.setMinutes(minutes);
     
-    onChange(format(newDate, "yyyy-MM-dd'T'HH:mm"));
+    onChange(newDate.toISOString());
   };
 
   const timeValue = date ? format(date, "HH:mm") : "";

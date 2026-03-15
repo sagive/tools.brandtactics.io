@@ -75,7 +75,12 @@ export async function POST(req: Request) {
       };
 
       if (scheduledFor) {
-        emailPayload.scheduled_at = new Date(scheduledFor).toISOString();
+        // Build an explicit ISO string from the localized date-time input
+        const d = new Date(scheduledFor);
+        // Resend officially requires this exact format or it ignores the schedule param and sends immediately.
+        // It must be a valid UTC timestamp in the future.
+        emailPayload.scheduled_at = d.toISOString();
+        console.log(`[RESEND] Attempting to schedule for: ${emailPayload.scheduled_at}`);
       }
 
       const response = await resend.emails.send(emailPayload);
