@@ -179,7 +179,7 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
         <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg font-bold">Recent Updates Sent</CardTitle>
-            <Link href={`/clients/${id}/email-updates`} className="text-sm font-medium text-blue-600 hover:underline flex items-center">
+            <Link href={`/clients/${id}/emails`} className="text-sm font-medium text-blue-600 hover:underline flex items-center">
               View Log <ChevronRight className="w-4 h-4 ml-1" />
             </Link>
           </CardHeader>

@@ -205,7 +205,7 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
         <DialogHeader className="shrink-0 bg-white p-6 border-b">
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
             <Send className="w-5 h-5 text-blue-600" />
-            Send Multiple Scheduled SEO Updates
+            Scheduled SEO Updates
           </DialogTitle>
         </DialogHeader>
         
