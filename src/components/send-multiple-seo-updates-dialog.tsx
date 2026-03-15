@@ -200,7 +200,7 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger render={trigger || <Button>Send Bulk Update</Button>} />
-      <DialogContent className="max-w-6xl sm:max-w-6xl w-[95vw] h-[90vh] flex flex-col overflow-hidden bg-gray-50/50">
+      <DialogContent className="max-w-6xl sm:max-w-6xl w-[95vw] h-[95vh] flex flex-col overflow-hidden bg-white p-0 gap-0 [&>button]:right-6 [&>button]:top-6 [&>button]:w-8 [&>button]:h-8 [&>button]:rounded-full [&>button]:bg-gray-100 hover:[&>button]:bg-gray-200 [&>button]:transition-colors [&>button]:cursor-pointer [&>button>svg]:w-5 [&>button>svg]:h-5">
         <DialogHeader className="shrink-0 bg-white p-6 border-b">
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
             <Send className="w-5 h-5 text-blue-600" />
@@ -209,7 +209,7 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
         </DialogHeader>
         
         <div className="flex-1 overflow-hidden">
-          <div className="h-full flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x border-b border-r border-l bg-white mx-6 my-4 shadow-sm rounded-lg overflow-hidden">
+          <div className="h-full flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x bg-white overflow-hidden">
             
             {/* Left Column: Configuration */}
             <div className="w-full md:w-1/2 p-6 overflow-y-auto bg-white flex flex-col border-b md:border-b-0">
