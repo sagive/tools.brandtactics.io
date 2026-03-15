@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 
@@ -334,17 +335,16 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
           <div className="flex items-center gap-6 text-sm text-gray-500">
              
              {/* Date Picker Auto-save wrapper */}
-             <div className="relative flex items-center gap-2 group cursor-pointer hover:text-gray-900 border border-transparent hover:border-gray-200 rounded-md px-2 py-1 -mx-2 transition-colors">
-               <span className="font-medium whitespace-nowrap">Due: {dueDate ? new Date(dueDate).toLocaleDateString('en-GB', { timeZone: 'UTC' }) : "Set Date"}</span>
-               <Input 
-                 type="date"
-                 lang="en-GB"
+             <div className="flex items-center gap-2 text-gray-500">
+               <span className="font-medium whitespace-nowrap">Due:</span>
+               <DateTimePicker
+                 isDateOnly
                  value={dueDate}
-                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full p-0 m-0 z-10" 
-                 onChange={(e) => { 
-                   setDueDate(e.target.value); 
-                   updateField('end_date', e.target.value); 
+                 onChange={(val: string) => { 
+                   setDueDate(val); 
+                   updateField('end_date', val); 
                  }}
+                 className="h-8 py-1 px-3 bg-transparent border-transparent hover:border-gray-300 hover:bg-gray-50 shadow-none font-medium text-gray-900 w-auto min-w-[120px]"
                />
              </div>
              

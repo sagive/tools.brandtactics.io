@@ -11,6 +11,7 @@ import { Check, ChevronsUpDown, FileText, AlertCircle, Plus, Send } from "lucide
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 
@@ -266,11 +267,9 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Schedule Send (Optional)</Label>
-              <Input 
-                type="datetime-local"
-                lang="en-GB"
+              <DateTimePicker
                 value={scheduledFor} 
-                onChange={e => setScheduledFor(e.target.value)} 
+                onChange={setScheduledFor} 
                 className="bg-white" 
               />
             </div>

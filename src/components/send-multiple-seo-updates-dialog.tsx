@@ -11,6 +11,7 @@ import { Check, ChevronsUpDown, FileText, AlertCircle, Send, Pencil, Trash2 } fr
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 
@@ -377,12 +378,10 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
                   <div className="flex items-end gap-3 mb-3">
                      <div className="space-y-1.5 flex-1">
                        <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Scheduled Time</Label>
-                       <Input 
-                         type="datetime-local" 
-                         lang="en-GB"
+                       <DateTimePicker 
                          value={currentVariantDate} 
-                         onChange={e => setCurrentVariantDate(e.target.value)} 
-                         className="bg-white h-9" 
+                         onChange={setCurrentVariantDate} 
+                         className="h-9" 
                        />
                      </div>
                   </div>
