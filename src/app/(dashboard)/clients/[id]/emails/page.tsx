@@ -76,8 +76,7 @@ export default function ClientEmailsPage() {
         body: JSON.stringify({
           clientId: email.client_id,
           subject: email.title,
-          body: email.body, // In a real scenario, this is already the compiled HTML. The API replaces `[content]` but if the body doesn't have `[content]`, it just prepends/appends. To be safe we wrap it.
-          // We omit scheduledFor to send immediately
+          body: email.body,
         }),
       });
 
