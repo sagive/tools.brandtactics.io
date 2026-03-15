@@ -42,7 +42,7 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
   const [clientId, setClientId] = useState(defaultClientId || "");
   const [openClientDropdown, setOpenClientDropdown] = useState(false);
   const [subject, setSubject] = useState("Multiple SEO Updates from BrandTactics");
-  const [baseBody, setBaseBody] = useState("<p>Hi,<br>We just published a new article with links to your website - You can visit it here:<br>[content]<br><br>Best regards,<br>BrandTactics</p>");
+  const [baseBody, setBaseBody] = useState("");
   
   // Variants State
   const [variants, setVariants] = useState<VariantItem[]>([]);
@@ -185,7 +185,7 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
         toast.success(`Successfully scheduled ${successCount} SEO updates!`);
         setIsOpen(false);
         setVariants([]);
-        setBaseBody("<p>Hi,<br>We just published a new article with links to your website - You can visit it here:<br>[content]<br><br>Best regards,<br>BrandTactics</p>");
+        setBaseBody("");
         onSuccess?.();
       }
     } catch (err: any) {
