@@ -62,42 +62,37 @@ export async function POST(req: Request) {
     // 3. Prepare the HTML content
     const finalHtml = htmlTemplate.replace('[content]', body);
 
-    // 4. Send Email
+    // 4. Send Email logic
     let status = scheduledFor ? 'Scheduled' : 'Queued';
     let resendData = null;
 
-    if (resend) {
-      const emailPayload: any = {
-        from: 'BrandTactics <updates@tools.brandtactics.io>',
-        to: [client.contact_email],
-        subject: subject,
-        html: finalHtml,
-      };
-
-      if (scheduledFor) {
-        // Build an explicit ISO string from the localized date-time input
-        const d = new Date(scheduledFor);
-        // Resend officially requires this exact format or it ignores the schedule param and sends immediately.
-        // It must be a valid UTC timestamp in the future.
-        emailPayload.scheduled_at = d.toISOString();
-        console.log(`[RESEND] Attempting to schedule for: ${emailPayload.scheduled_at}`);
-      }
-
-      const response = await resend.emails.send(emailPayload);
-
-      if (response.error) {
-        console.error("Resend Error:", response.error);
-        return NextResponse.json({ error: response.error.message }, { status: 400 });
-      }
-      resendData = response.data;
-      status = scheduledFor ? 'Scheduled' : 'Delivered';
+    if (scheduledFor) {
+      // INTERNAL SCHEDULER: Skip sending to Resend right now.
+      // We purely rely on the Vercel Cron to pick this up later.
+      console.log(`[SCHEDULER] Skipping immediate dispatch. Saving to database for later execution: ${new Date(scheduledFor).toISOString()}`);
     } else {
-      console.log(`[SIMULATION] Would send to ${client.contact_email}`);
-      console.log(`[SIMULATION] Subject: ${subject}`);
-      if (scheduledFor) {
-        console.log(`[SIMULATION] Scheduled For: ${scheduledFor}`);
+      // Immediate delivery
+      if (resend) {
+        const emailPayload: any = {
+          from: 'BrandTactics <updates@tools.brandtactics.io>',
+          to: [client.contact_email],
+          subject: subject,
+          html: finalHtml,
+        };
+
+        const response = await resend.emails.send(emailPayload);
+
+        if (response.error) {
+          console.error("Resend Error:", response.error);
+          return NextResponse.json({ error: response.error.message }, { status: 400 });
+        }
+        resendData = response.data;
+        status = 'Delivered';
+      } else {
+        console.log(`[SIMULATION] Would send NOW to ${client.contact_email}`);
+        console.log(`[SIMULATION] Subject: ${subject}`);
+        status = 'Delivered';
       }
-      status = scheduledFor ? 'Scheduled' : 'Delivered';
     }
     
     // 5. Log to Supabase
