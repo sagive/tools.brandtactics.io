@@ -379,6 +379,7 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
                        <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Scheduled Time</Label>
                        <Input 
                          type="datetime-local" 
+                         lang="en-GB"
                          value={currentVariantDate} 
                          onChange={e => setCurrentVariantDate(e.target.value)} 
                          className="bg-white h-9" 
@@ -427,7 +428,7 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
                            <div className="flex-1 min-w-0">
                                <p className="font-medium text-sm text-gray-900 truncate">{textPreview || "(Empty Content)"}</p>
                                <p className="text-[11px] text-blue-600 font-semibold mt-0.5">
-                                 {new Date(variant.scheduledFor).toLocaleString(undefined, {
+                                 {new Date(variant.scheduledFor).toLocaleString('en-GB', {
                                     weekday: 'short', month: 'short', day: 'numeric', 
                                     hour: 'numeric', minute: 'numeric'
                                  })}

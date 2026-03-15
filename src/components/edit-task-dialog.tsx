@@ -335,9 +335,10 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
              
              {/* Date Picker Auto-save wrapper */}
              <div className="relative flex items-center gap-2 group cursor-pointer hover:text-gray-900 border border-transparent hover:border-gray-200 rounded-md px-2 py-1 -mx-2 transition-colors">
-               <span className="font-medium whitespace-nowrap">Due: {dueDate ? new Date(dueDate).toLocaleDateString('en-US', { timeZone: 'UTC' }) : "Set Date"}</span>
+               <span className="font-medium whitespace-nowrap">Due: {dueDate ? new Date(dueDate).toLocaleDateString('en-GB', { timeZone: 'UTC' }) : "Set Date"}</span>
                <Input 
-                 type="date" 
+                 type="date"
+                 lang="en-GB"
                  value={dueDate}
                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full p-0 m-0 z-10" 
                  onChange={(e) => { 
