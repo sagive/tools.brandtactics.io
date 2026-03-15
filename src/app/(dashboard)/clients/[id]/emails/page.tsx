@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Send, MoreHorizontal } from "lucide-react";
+import { Send, Trash2, Mail } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { SendSeoUpdateDialog } from "@/components/send-seo-update-dialog";
@@ -49,6 +49,48 @@ export default function ClientEmailsPage() {
       setLoading(false);
     }
   }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this log entry?")) return;
+    
+    const { error } = await supabase
+      .from("email_updates")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Failed to delete log entry");
+    } else {
+      toast.success("Log entry deleted");
+      setEmails(emails.filter(e => e.id !== id));
+    }
+  };
+
+  const handleResend = async (email: any) => {
+    if (!confirm("Are you sure you want to resend this email?")) return;
+    
+    try {
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId: email.client_id,
+          subject: email.title,
+          body: email.body, // In a real scenario, this is already the compiled HTML. The API replaces `[content]` but if the body doesn't have `[content]`, it just prepends/appends. To be safe we wrap it.
+          // We omit scheduledFor to send immediately
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to resend email");
+      }
+      
+      toast.success("Email resent successfully!");
+      fetchEmails(); // Refresh list to show the new log entry
+    } catch (error) {
+      toast.error("Could not resend email");
+    }
+  };
 
   const truncate = (str: string, length: number) => {
     if (!str) return "";
@@ -103,8 +145,8 @@ export default function ClientEmailsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 min-w-[300px]">
-                        <span className="text-sm text-gray-700" title={email.subject}>
-                          {truncate(email.subject, 55)}
+                        <span className="text-sm text-gray-700" title={email.title}>
+                          {truncate(email.title, 55) || "No Subject"}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -127,9 +169,24 @@ export default function ClientEmailsPage() {
                               : "N/A"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                      <td className="px-6 py-4 whitespace-nowrap text-right flex justify-end gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 text-gray-400 hover:text-blue-600"
+                          title="Resend this exact email"
+                          onClick={() => handleResend(email)}
+                        >
+                          <Mail className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
+                          title="Delete this log"
+                          onClick={() => handleDelete(email.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </td>
                     </tr>

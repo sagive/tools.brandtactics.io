@@ -101,6 +101,31 @@ export default function EmailUpdatesPage() {
     }
   };
 
+  const handleResend = async (email: any) => {
+    if (!confirm("Are you sure you want to resend this email immediately?")) return;
+    
+    try {
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId: email.client_id,
+          subject: email.title,
+          body: email.body,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to resend email");
+      }
+      
+      toast.success("Email resent successfully!");
+      fetchData(); // Refresh list to show the new log entry
+    } catch (error) {
+      toast.error("Could not resend email");
+    }
+  };
+
   // Helper to strip HTML and truncate
   const getExcerpt = (html: string) => {
     const text = html.replace(/<[^>]*>/g, ' ');
@@ -274,11 +299,21 @@ export default function EmailUpdatesPage() {
                           {update.status}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right flex justify-end gap-2 pr-4">
+                        <Button 
+                          variant="ghost" 
+                          size="icon-sm" 
+                          className="text-gray-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Resend this exact email"
+                          onClick={() => handleResend(update)}
+                        >
+                          <Mail className="w-4 h-4" />
+                        </Button>
                         <Button 
                           variant="ghost" 
                           size="icon-sm" 
                           className="text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Delete this log"
                           onClick={() => handleDelete(update.id)}
                         >
                           <Trash2 className="w-4 h-4" />
