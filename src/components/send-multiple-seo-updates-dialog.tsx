@@ -200,7 +200,7 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger render={trigger || <Button>Send Bulk Update</Button>} />
-      <DialogContent className="max-w-6xl w-[95vw] h-[90vh] flex flex-col overflow-hidden bg-gray-50/50">
+      <DialogContent className="max-w-6xl sm:max-w-6xl w-[95vw] h-[90vh] flex flex-col overflow-hidden bg-gray-50/50">
         <DialogHeader className="shrink-0 bg-white p-6 border-b">
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
             <Send className="w-5 h-5 text-blue-600" />
