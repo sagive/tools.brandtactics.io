@@ -117,7 +117,7 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
   const inputClasses = "h-auto px-2 py-1 -ml-2 w-full bg-transparent hover:bg-gray-50 border-transparent hover:border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-gray-900 shadow-none";
 
   return (
-    <div className="max-w-3xl">
+    <div className="w-full">
       <Card className="shadow-sm relative overflow-hidden">
         {isDirty && (
            <div className="absolute top-0 inset-x-0 h-1 bg-yellow-400 animate-pulse" />
@@ -183,12 +183,6 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="text-gray-500 font-medium text-[11px] uppercase tracking-wider w-1/3">Email</div>
-                  <div className="w-2/3 flex items-center border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors px-3 h-10">
-                    <Input name="contactEmail" value={formData.contactEmail} onChange={handleChange} placeholder="Email Address" className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-sm font-medium text-gray-700 bg-transparent flex-1" />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
                   <div className="text-gray-500 font-medium text-[11px] uppercase tracking-wider w-1/3">Phone</div>
                   <div className="w-2/3 flex items-center border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors px-3 h-10">
                     <Input name="contactPhone" value={formData.contactPhone} onChange={handleChange} placeholder="Phone Number" className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-sm font-medium text-gray-700 bg-transparent flex-1" />
@@ -241,6 +235,14 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+          
+          <div className="pt-6 border-t border-gray-100 mb-8 space-y-2">
+            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Contact Emails</h3>
+            <p className="text-[11px] text-gray-500">These emails would be used when sending seo updates, use multiple emails by seperating them with commas</p>
+            <div className="flex items-center border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors px-3 h-10">
+              <Input name="contactEmail" value={formData.contactEmail} onChange={handleChange} placeholder="client1@example.com, client2@example.com" className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-sm font-medium text-gray-700 bg-transparent flex-1" />
             </div>
           </div>
 

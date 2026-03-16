@@ -75,7 +75,7 @@ export async function POST(req: Request) {
       if (resend) {
         const emailPayload: any = {
           from: 'BrandTactics <updates@tools.brandtactics.io>',
-          to: [client.contact_email],
+          to: client.contact_email.split(',').map((email: string) => email.trim()).filter((email: string) => email.length > 0),
           subject: subject,
           html: finalHtml,
         };

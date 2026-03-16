@@ -53,7 +53,7 @@ export async function GET(request: Request) {
        if (resend) {
           const emailPayload = {
             from: 'BrandTactics <updates@tools.brandtactics.io>',
-            to: [email.recipient_email],
+            to: email.recipient_email.split(',').map((e: string) => e.trim()).filter((e: string) => e.length > 0),
             subject: email.title,
             html: email.body,
           };

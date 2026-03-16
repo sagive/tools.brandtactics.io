@@ -68,7 +68,7 @@ export default function ClientLayout({
         <div className="flex-1 min-w-0 flex flex-col xl:w-9/12">
           {/* Client Navigation Tabs and Actions */}
           <div className="flex justify-between items-center mb-6">
-            <div className="bg-white border rounded-lg shadow-sm p-1.5 flex space-x-1 overflow-x-auto w-fit">
+            <div className="bg-white border rounded-lg shadow-sm p-1.5 flex space-x-1 overflow-x-auto w-full">
               {NAV_LINKS.map((link) => {
                 const isActive = link.href === `/clients/${clientId}`
                   ? pathname === link.href
