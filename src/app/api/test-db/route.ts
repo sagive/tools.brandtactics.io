@@ -8,7 +8,7 @@ export async function GET() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-  const { data, error } = await supabase.from('email_updates').select('*').limit(1);
+  const { data, error } = await supabase.from('email_updates').select('id, scheduled_for').limit(1);
 
   return NextResponse.json({
     envUrl: supabaseUrl,
