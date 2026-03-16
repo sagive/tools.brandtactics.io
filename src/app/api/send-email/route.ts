@@ -108,7 +108,8 @@ export async function POST(req: Request) {
 
     if (logError) {
       console.error("Log Error:", logError);
-      // We don't return error here if email was actually sent, but it's good to know
+      // Hard fail if we can't save to the database, so the UI knows
+      return NextResponse.json({ error: `Database Save Error: ${logError.message}` }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, simulated: !resend, data: resendData });
