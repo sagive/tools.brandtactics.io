@@ -20,6 +20,13 @@ export default function ClientEmailsPage() {
     if (clientId) {
       fetchClientData();
       fetchEmails();
+
+      const handleEmailScheduled = () => {
+        fetchEmails();
+      };
+
+      window.addEventListener("email-scheduled", handleEmailScheduled);
+      return () => window.removeEventListener("email-scheduled", handleEmailScheduled);
     }
   }, [clientId]);
 

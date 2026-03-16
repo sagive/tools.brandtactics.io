@@ -5,86 +5,63 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChevronRight, Loader2, CheckCircle2, CircleDot, Save } from "lucide-react";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 
-function getStatusColor(status: string) {
-  switch (status) {
-    case "Working on it":
-    case "In Progress": return "bg-blue-100 text-blue-700 hover:bg-blue-100";
-    case "Stuck": return "bg-red-100 text-red-700 hover:bg-red-100";
-    case "Completed": return "bg-green-100 text-green-700 hover:bg-green-100";
-    case "Review": return "bg-purple-100 text-purple-700 hover:bg-purple-100";
-    case "Pending":
-    case "Draft": return "bg-gray-100 text-gray-700 hover:bg-gray-100";
-    case "Published": return "bg-emerald-100 text-emerald-700 hover:bg-emerald-100";
-    default: return "bg-gray-100 text-gray-700 hover:bg-gray-100";
-  }
-}
-
 export default function ClientOverview({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
+  
+  const [formData, setFormData] = useState({
+    name: "",
+    website: "",
+    contactName: "",
+    contactEmail: "",
+    contactPhone: "",
+    type: "",
+    monthlyFee: "",
+    status: "Active"
+  });
+  const [joinDate, setJoinDate] = useState<string | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [data, setData] = useState<{
-    tasks: any[];
-    articles: any[];
-    emails: any[];
-    taskStats: { total: number; inProgress: number; stuck: number };
-    articleStats: { total: number; draft: number; published: number };
     isLoading: boolean;
   }>({
-    tasks: [],
-    articles: [],
-    emails: [],
-    taskStats: { total: 0, inProgress: 0, stuck: 0 },
-    articleStats: { total: 0, draft: 0, published: 0 },
     isLoading: true
   });
 
   useEffect(() => {
     async function fetchData() {
       try {
-        // 1. Fetch Tasks
-        const { data: tasksData } = await supabase
-          .from("tasks")
+        const { data: clientData, error } = await supabase
+          .from("clients")
           .select("*")
-          .eq("client_id", id)
-          .order("created_at", { ascending: false });
-
-        // 2. Fetch Articles
-        const { data: articlesData } = await supabase
-          .from("articles")
-          .select("*")
-          .eq("client_id", id)
-          .order("created_at", { ascending: false });
-
-        // 3. Fetch Emails
-        const { data: emailsData } = await supabase
-          .from("email_updates")
-          .select("*")
-          .eq("client_id", id)
-          .order("sent_date", { ascending: false })
-          .limit(3);
-
-        const tasks = tasksData || [];
-        const articles = articlesData || [];
-        const emails = emailsData || [];
+          .eq("id", id)
+          .single();
+          
+        if (clientData) {
+          setFormData({
+            name: clientData.name || "",
+            website: clientData.website || "",
+            contactName: clientData.contact_name || "",
+            contactEmail: clientData.contact_email || "",
+            contactPhone: clientData.contact_phone || "",
+            type: clientData.type || "",
+            monthlyFee: clientData.monthly_fee !== null && clientData.monthly_fee !== undefined ? clientData.monthly_fee.toString() : "0",
+            status: clientData.status || "Active"
+          });
+          if (clientData.created_at) {
+             setJoinDate(format(new Date(clientData.created_at), "MMM d, yyyy"));
+          }
+        }
 
         setData({
-          tasks: tasks.slice(0, 5),
-          articles: articles.slice(0, 5),
-          emails: emails,
-          taskStats: {
-            total: tasks.length,
-            inProgress: tasks.filter(t => t.status === "Working on it" || t.status === "In Progress").length,
-            stuck: tasks.filter(t => t.status === "Stuck").length
-          },
-          articleStats: {
-            total: articles.length,
-            draft: articles.filter(a => a.status === "Draft").length,
-            published: articles.filter(a => a.status === "Published").length
-          },
           isLoading: false
         });
       } catch (error) {
@@ -96,6 +73,39 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
     fetchData();
   }, [id]);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setIsDirty(true);
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    
+    const { error } = await supabase
+      .from("clients")
+      .update({
+        name: formData.name,
+        website: formData.website,
+        contact_name: formData.contactName,
+        contact_email: formData.contactEmail,
+        contact_phone: formData.contactPhone,
+        type: formData.type,
+        monthly_fee: parseInt(formData.monthlyFee) || 0,
+        status: formData.status
+      })
+      .eq("id", id);
+
+    setIsSaving(false);
+    
+    if (error) {
+      toast.error("Failed to save: " + error.message);
+      return;
+    }
+    
+    setIsDirty(false);
+    toast.success("Client details updated successfully.");
+  };
+
   if (data.isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -104,102 +114,154 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
     );
   }
 
+  const inputClasses = "h-auto px-2 py-1 -ml-2 w-full bg-transparent hover:bg-gray-50 border-transparent hover:border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-gray-900 shadow-none";
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-6">
-        
-        {/* Tasks Overview */}
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-bold">Tasks Overview</CardTitle>
-            <Link href={`/clients/${id}/tasks`} className="text-sm font-medium text-blue-600 hover:underline flex items-center">
-              View All <ChevronRight className="w-4 h-4 ml-1" />
-            </Link>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2 mb-4">
-              <Badge variant="outline" className="bg-gray-50">{data.taskStats.total} Total</Badge>
-              <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-50">{data.taskStats.inProgress} In Progress</Badge>
-              <Badge variant="secondary" className="bg-red-50 text-red-700 hover:bg-red-50">{data.taskStats.stuck} Stuck</Badge>
+    <div className="max-w-3xl">
+      <Card className="shadow-sm relative overflow-hidden">
+        {isDirty && (
+           <div className="absolute top-0 inset-x-0 h-1 bg-yellow-400 animate-pulse" />
+        )}
+        <CardContent className="p-8">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-2xl shrink-0">
+                {(formData.name || "UN").substring(0,2).toUpperCase()}
+              </div>
+              <div className="space-y-1">
+                 <Input 
+                   name="name" 
+                   value={formData.name || ""} 
+                   onChange={handleChange} 
+                   className={cn(inputClasses, "text-2xl font-bold tracking-tight h-auto py-0")} 
+                   placeholder="Client Name"
+                 />
+                 <div className="flex items-center">
+                   <span className="text-gray-400 text-sm pl-2">https://</span>
+                   <Input 
+                     name="website" 
+                     value={formData.website} 
+                     onChange={handleChange} 
+                     className={cn(inputClasses, "text-sm text-blue-600 border-none font-normal pl-0 ml-0 hover:bg-transparent placeholder:text-gray-300")} 
+                     placeholder="www.example.com"
+                   />
+                 </div>
+              </div>
             </div>
             
-            <div className="space-y-3">
-              {data.tasks.length === 0 ? (
-                <p className="text-sm text-gray-500 italic p-4 text-center bg-gray-50 rounded-md border border-dashed">No tasks found for this client.</p>
-              ) : data.tasks.map((task) => (
-                <div key={task.id} className="flex items-center justify-between p-3 rounded-md bg-gray-50 border border-gray-100">
-                  <div className="min-w-0 pr-4">
-                    <p className="text-sm font-medium text-gray-900 truncate">{task.title}</p>
-                    <p className="text-xs text-gray-500">
-                      {task.end_date ? `Due: ${format(new Date(task.end_date), "MMM d, yyyy")}` : "No due date"}
-                    </p>
-                  </div>
-                  <Badge className={`shrink-0 ${getStatusColor(task.status)}`}>
-                    {task.status}
-                  </Badge>
+            <Select 
+              value={formData.status} 
+              onValueChange={(value) => {
+                setFormData({ ...formData, status: value || "Active" });
+                setIsDirty(true);
+              }}
+            >
+              <SelectTrigger className={cn(
+                "w-32 h-10 text-xs font-bold uppercase tracking-wider rounded-full border-none shadow-none focus:ring-0",
+                formData.status === "Active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
+              )}>
+                <div className="flex items-center gap-2">
+                  {formData.status === "Active" ? <CheckCircle2 className="w-4 h-4" /> : <CircleDot className="w-4 h-4" />}
+                  <SelectValue placeholder="Status" />
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Active" className="text-xs font-bold uppercase tracking-wider text-green-700">Active</SelectItem>
+                <SelectItem value="Archived" className="text-xs font-bold uppercase tracking-wider text-gray-500">Archived</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        {/* Articles Overview */}
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-bold">Articles Overview</CardTitle>
-            <Link href={`/clients/${id}/articles`} className="text-sm font-medium text-blue-600 hover:underline flex items-center">
-              View All <ChevronRight className="w-4 h-4 ml-1" />
-            </Link>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2 mb-4">
-              <Badge variant="outline" className="bg-gray-50">{data.articleStats.total} Total</Badge>
-              <Badge variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-100">{data.articleStats.draft} Drafts</Badge>
-              <Badge variant="secondary" className="bg-green-50 text-green-700 hover:bg-green-50">{data.articleStats.published} Published</Badge>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Contact Details</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-gray-500 font-medium text-[11px] uppercase tracking-wider w-1/3">Contact</div>
+                  <div className="w-2/3 flex items-center border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors px-3 h-10">
+                    <Input name="contactName" value={formData.contactName} onChange={handleChange} placeholder="Contact Name" className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-sm font-medium bg-transparent flex-1" />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="text-gray-500 font-medium text-[11px] uppercase tracking-wider w-1/3">Email</div>
+                  <div className="w-2/3 flex items-center border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors px-3 h-10">
+                    <Input name="contactEmail" value={formData.contactEmail} onChange={handleChange} placeholder="Email Address" className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-sm font-medium text-gray-700 bg-transparent flex-1" />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="text-gray-500 font-medium text-[11px] uppercase tracking-wider w-1/3">Phone</div>
+                  <div className="w-2/3 flex items-center border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors px-3 h-10">
+                    <Input name="contactPhone" value={formData.contactPhone} onChange={handleChange} placeholder="Phone Number" className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-sm font-medium text-gray-700 bg-transparent flex-1" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Agreement</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-gray-500 font-medium text-[11px] uppercase tracking-wider w-1/3">Type</div>
+                  <div className="w-2/3 border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors h-10">
+                    <Select 
+                      value={formData.type || ""} 
+                      onValueChange={(value) => {
+                        setFormData({ ...formData, type: value || "" });
+                        setIsDirty(true);
+                      }}
+                    >
+                      <SelectTrigger className="border-none shadow-none focus:ring-0 bg-transparent h-full text-sm font-medium">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Retainer">Retainer</SelectItem>
+                        <SelectItem value="Prepaid hours">Prepaid hours</SelectItem>
+                        <SelectItem value="Our site">Our site</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="text-gray-500 font-medium text-[11px] uppercase tracking-wider w-1/3">Fee/mo ($)</div>
+                  <div className="w-2/3 flex items-center border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors px-3 h-10">
+                    <Input 
+                      name="monthlyFee" 
+                      type="number" 
+                      min="0"
+                      value={formData.monthlyFee} 
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData({ ...formData, monthlyFee: val === '' ? '0' : val });
+                        setIsDirty(true);
+                      }}
+                      className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-sm font-medium bg-transparent flex-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                    />
+                    <span className="text-gray-400 text-xs font-medium uppercase ml-2">usd</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-6 border-t border-gray-100">
+            <div className="text-xs text-gray-400">
+              {joinDate ? `Joined ${joinDate}` : ""}
             </div>
             
-            <div className="space-y-3">
-              {data.articles.length === 0 ? (
-                <p className="text-sm text-gray-500 italic p-4 text-center bg-gray-50 rounded-md border border-dashed">No articles found for this client.</p>
-              ) : data.articles.map((article) => (
-                <div key={article.id} className="flex items-center justify-between p-3 rounded-md bg-gray-50 border border-gray-100">
-                  <div className="min-w-0 pr-4">
-                    <p className="text-sm font-medium text-gray-900 truncate">{article.title}</p>
-                  </div>
-                  <Badge className={`shrink-0 ${getStatusColor(article.status)}`}>
-                    {article.status}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Client Email Updates Overview */}
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-bold">Recent Updates Sent</CardTitle>
-            <Link href={`/clients/${id}/emails`} className="text-sm font-medium text-blue-600 hover:underline flex items-center">
-              View Log <ChevronRight className="w-4 h-4 ml-1" />
-            </Link>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {data.emails.length === 0 ? (
-                <p className="col-span-full text-sm text-gray-500 italic p-8 text-center bg-gray-50 rounded-md border border-dashed">No email updates sent yet.</p>
-              ) : data.emails.map((email) => (
-                <div key={email.id} className="p-4 rounded-lg border border-gray-200 bg-white shadow-sm flex flex-col">
-                  <span className="text-xs font-semibold text-gray-500 mb-1">
-                    {email.sent_date ? format(new Date(email.sent_date), "MMM d, yyyy") : "Unknown Date"}
-                  </span>
-                  <p className="text-sm font-medium text-gray-900 line-clamp-2">{email.title}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-      </div>
+            {isDirty && (
+              <Button 
+                onClick={handleSave} 
+                disabled={isSaving}
+                className="bg-green-600 hover:bg-green-700 text-white min-w-[140px]"
+              >
+                  <Save className="w-4 h-4 mr-2" />
+                  {isSaving ? "Saving..." : "Save Changes"}
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

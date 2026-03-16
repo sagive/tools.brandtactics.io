@@ -25,7 +25,6 @@ import { Check, Trash2, Eye, Circle } from "lucide-react";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { EditTaskDialog } from "@/components/edit-task-dialog";
 import { SendSeoUpdateDialog } from "@/components/send-seo-update-dialog";
-import { SendMultipleSeoUpdatesDialog } from "@/components/send-multiple-seo-updates-dialog";
 
 export function TopNav() {
   const { user, profile } = useAuth();
@@ -39,7 +38,6 @@ export function TopNav() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isNewTaskOpen, setIsNewTaskOpen] = useState(false);
   const [isSeoUpdateOpen, setIsSeoUpdateOpen] = useState(false);
-  const [isMultipleSeoUpdateOpen, setIsMultipleSeoUpdateOpen] = useState(false);
 
   const fetchNotifications = async () => {
     if (!profile?.email) return;
@@ -143,20 +141,11 @@ export function TopNav() {
         <div className="h-5 w-px bg-gray-200" />
 
         <div className="flex items-center gap-1">
-          <SendMultipleSeoUpdatesDialog 
-             open={isMultipleSeoUpdateOpen}
-             onOpenChange={setIsMultipleSeoUpdateOpen}
-             defaultClientId={clientId}
-             trigger={
-               <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 focus:outline-none rounded-full transition-colors cursor-pointer outline-none" onClick={() => setIsMultipleSeoUpdateOpen(true)}>
-                 <Mails className="w-5 h-5" />
-               </button>
-             } 
-          />
           <SendSeoUpdateDialog 
              open={isSeoUpdateOpen}
              onOpenChange={setIsSeoUpdateOpen}
              defaultClientId={clientId}
+             onSuccess={() => window.dispatchEvent(new Event("email-scheduled"))}
              trigger={
                <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 focus:outline-none rounded-full transition-colors cursor-pointer outline-none" onClick={() => setIsSeoUpdateOpen(true)}>
                  <MailPlus className="w-5 h-5" />

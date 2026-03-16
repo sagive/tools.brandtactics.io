@@ -383,6 +383,7 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
                          onChange={setCurrentVariantDate} 
                          className="h-9" 
                        />
+                       <p className="text-[10px] text-gray-400 mt-1">Note: a 5-minute difference is possible due to server limits.</p>
                      </div>
                   </div>
                   <div className="space-y-1.5 mb-3">

@@ -51,6 +51,13 @@ export default function EmailUpdatesPage() {
 
   useEffect(() => {
     fetchData();
+
+    const handleEmailScheduled = () => {
+      fetchData();
+    };
+
+    window.addEventListener("email-scheduled", handleEmailScheduled);
+    return () => window.removeEventListener("email-scheduled", handleEmailScheduled);
   }, []);
 
   async function fetchData() {
