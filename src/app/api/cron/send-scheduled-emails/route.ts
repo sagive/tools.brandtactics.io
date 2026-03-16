@@ -7,12 +7,16 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   try {
     const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    console.log("CRON Auth Header received:", authHeader);
+    console.log("CRON Secret env:", process.env.CRON_SECRET);
+
+    if (!authHeader || !authHeader.includes(process.env.CRON_SECRET || 'undefined')) {
+      console.log("CRON Auth Failed!");
       return new Response('Unauthorized', { status: 401 });
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_btools_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.btools_SUPABASE_SERVICE_ROLE_KEY || process.env.btools_SUPABASE_SECRET_KEY;
     const resendApiKey = process.env.RESEND_API_KEY;
 
     if (!supabaseUrl || !supabaseServiceKey) {
