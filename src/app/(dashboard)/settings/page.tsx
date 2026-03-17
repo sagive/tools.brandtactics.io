@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, UserPlus, Mail, Lock, User, Trash2, Plus, FileText, RotateCw, Clock, Camera, Upload } from "lucide-react";
+import { Save, UserPlus, Mail, Lock, User, Trash2, Plus, FileText, RotateCw, Clock, Camera, Upload, Zap } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
@@ -162,6 +162,62 @@ function SettingsContent() {
       if (data) setPrewrittenTemplates(data);
     } catch (err) {
       // Table might not exist yet
+    }
+  };
+
+  const [articleEndpoints, setArticleEndpoints] = useState<any[]>([]);
+  const [isAddingEndpoint, setIsAddingEndpoint] = useState(false);
+
+  const fetchArticleEndpoints = async () => {
+    try {
+      const { data, error } = await supabase.from('article_endpoints').select('*').order('created_at', { ascending: true });
+      if (data) setArticleEndpoints(data);
+    } catch (err) {
+      // Handle if table doesn't exist
+    }
+  };
+
+  useEffect(() => {
+    fetchArticleEndpoints();
+  }, []);
+
+  const handleCreateEndpoint = async () => {
+    setIsAddingEndpoint(true);
+    const newEndpoint = { name: "New Endpoint", endpoint_url: "https://hook.n8n.example.com/..." };
+    try {
+      const { data, error } = await supabase.from('article_endpoints').insert(newEndpoint).select().single();
+      if (error) throw error;
+      if (data) {
+        setArticleEndpoints([...articleEndpoints, data]);
+        toast.success("New endpoint added");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add endpoint");
+    } finally {
+      setIsAddingEndpoint(false);
+    }
+  };
+
+  const handleUpdateEndpoint = async (id: string, updates: any) => {
+    try {
+      const { error } = await supabase.from('article_endpoints').update(updates).eq('id', id);
+      if (error) throw error;
+      setArticleEndpoints(prev => prev.map(ep => ep.id === id ? { ...ep, ...updates } : ep));
+      toast.success("Endpoint saved successfully.");
+    } catch (err: any) {
+      toast.error("Failed to save endpoint");
+    }
+  };
+
+  const handleDeleteEndpoint = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this endpoint? Articles using this type will lose their AI capabilities.")) return;
+    try {
+      const { error } = await supabase.from('article_endpoints').delete().eq('id', id);
+      if (error) throw error;
+      setArticleEndpoints(prev => prev.filter(ep => ep.id !== id));
+      toast.success("Endpoint deleted");
+    } catch (err: any) {
+      toast.error("Failed to delete endpoint");
     }
   };
 
@@ -424,6 +480,7 @@ function SettingsContent() {
           <TabsTrigger value="users" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Users & Team</TabsTrigger>
           <TabsTrigger value="profile" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">My Profile</TabsTrigger>
           <TabsTrigger value="email" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Email Template</TabsTrigger>
+          <TabsTrigger value="endpoints" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Article Endpoints</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="space-y-6 mt-0 outline-none ring-0">
@@ -804,7 +861,79 @@ function SettingsContent() {
             )}
           </div>
         </TabsContent>
+
+        <TabsContent value="endpoints" className="space-y-6 mt-0 outline-none ring-0">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                <Plus className="w-5 h-5 mr-2 text-yellow-500" />
+                AI Article Endpoints
+              </h3>
+              <p className="text-xs text-gray-500 mt-1 max-w-2xl">
+                Configure the n8n webhook URLs corresponding to each article type (e.g., Guest post, PR). 
+                When a user clicks "Generate with AI" on an article of that type, these endpoints will be called to generate the HTML content.
+              </p>
+            </div>
+            <Button onClick={handleCreateEndpoint} disabled={isAddingEndpoint} className="bg-yellow-500 hover:bg-yellow-600 text-white shadow-sm gap-2">
+              <Plus className="w-4 h-4" /> {isAddingEndpoint ? "Adding..." : "Add Endpoint"}
+            </Button>
+          </div>
+
+          {articleEndpoints.length === 0 ? (
+            <div className="p-12 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+              <Plus className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+              <h4 className="font-semibold text-gray-700">No endpoints configured</h4>
+              <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">Add an endpoint to enable AI generation for client articles.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6">
+              {articleEndpoints.map(ep => (
+                <EndpointRow 
+                  key={ep.id} 
+                  endpoint={ep} 
+                  onDelete={handleDeleteEndpoint} 
+                  onUpdate={handleUpdateEndpoint} 
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function EndpointRow({ endpoint, onDelete, onUpdate }: { endpoint: any, onDelete: (id: string) => void, onUpdate: (id: string, updates: any) => Promise<void> }) {
+  const [name, setName] = useState(endpoint.name);
+  const [url, setUrl] = useState(endpoint.endpoint_url || "");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    await onUpdate(endpoint.id, { name, endpoint_url: url });
+    setIsSaving(false);
+  };
+
+  return (
+    <div className="p-6 border rounded-xl bg-white shadow-sm space-y-4">
+      <div className="flex items-start gap-4 flex-col md:flex-row">
+        <div className="w-full md:w-1/4 space-y-1">
+          <Label className="text-xs font-semibold text-gray-500 uppercase">Article Type</Label>
+          <Input value={name} onChange={(e) => setName(e.target.value)} className="font-bold text-gray-900 border-gray-200" placeholder="e.g., Guest Post" />
+        </div>
+        <div className="w-full md:w-2/4 space-y-1">
+          <Label className="text-xs font-semibold text-gray-500 uppercase">n8n Webhook URL</Label>
+          <Input value={url} onChange={(e) => setUrl(e.target.value)} className="font-mono text-sm text-blue-600 border-gray-200 bg-gray-50" placeholder="https://..." />
+        </div>
+        <div className="flex items-end gap-2 w-full md:w-1/4 md:pt-5 justify-end">
+          <Button variant="outline" onClick={handleSave} disabled={isSaving} className="bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200 shrink-0">
+            {isSaving ? "Saving..." : <><Save className="w-4 h-4 mr-2" /> Save</>}
+          </Button>
+          <Button variant="ghost" className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0" onClick={() => onDelete(endpoint.id)}>
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

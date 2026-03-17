@@ -1,48 +1,71 @@
 "use client";
 
-import React from "react";
-
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Download, MoreHorizontal, Trash2 } from "lucide-react";
+import { Search, Plus, Download, MoreHorizontal, Trash2, Edit } from "lucide-react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-
-const MOCK_ARTICLES = [
-  { id: "1", title: "Top 10 SEO Strategies for 2024", status: "Draft", date: "2023-11-20" },
-  { id: "2", title: "How to Improve Core Web Vitals", status: "Published", date: "2023-11-18" },
-  { id: "3", title: "The Ultimate Guide to Local SEO", status: "Draft", date: "2023-11-15" },
-  { id: "4", title: "Why Backlinks Still Matter", status: "Published", date: "2023-11-10" },
-  { id: "5", title: "E-A-T Explained for Marketers", status: "Published", date: "2023-11-05" },
-  { id: "6", title: "Google algorithm updates", status: "Draft", date: "2023-10-28" },
-];
+import { supabase } from "@/lib/supabase";
+import Link from "next/link";
+import { format } from "date-fns";
 
 export default function ClientArticles({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = React.use(params); // Optional usage to prevent lint error
+  const { id: clientId } = React.use(params);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  
+  const [articles, setArticles] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredArticles = MOCK_ARTICLES.filter(a => {
+  useEffect(() => {
+    fetchArticles();
+  }, [clientId]);
+
+  const fetchArticles = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('articles')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('created_at', { ascending: false });
+      
+    if (data) setArticles(data);
+    setIsLoading(false);
+  };
+
+  const filteredArticles = articles.filter(a => {
     const matchesSearch = a.title.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "All" || a.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
+  const handleDelete = async (articleId: string) => {
+    if (!confirm("Are you sure you want to delete this article?")) return;
+    try {
+      const { error } = await supabase.from('articles').delete().eq('id', articleId);
+      if (error) throw error;
+      setArticles(prev => prev.filter(a => a.id !== articleId));
+      toast.success("Article deleted");
+    } catch (err: any) {
+      toast.error("Failed to delete article");
+    }
+  };
+
+  const draftCount = articles.filter(a => a.status === "Draft").length;
+  const publishedCount = articles.filter(a => a.status === "Published").length;
+
   return (
     <div className="space-y-6">
       {/* Stats Badges */}
       <div className="flex gap-2 mb-4">
-        <Badge variant="outline" className="bg-white">12 Total</Badge>
-        <Badge variant="secondary" className="bg-gray-100 text-gray-700">4 Drafts</Badge>
-        <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">8 Published</Badge>
+        <Badge variant="outline" className="bg-white">{articles.length} Total</Badge>
+        <Badge variant="secondary" className="bg-gray-100 text-gray-700">{draftCount} Drafts</Badge>
+        <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">{publishedCount} Published</Badge>
       </div>
 
       {/* Toolbar */}
@@ -73,30 +96,11 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
           <Button variant="outline" className="w-full sm:w-auto bg-white">
             <Download className="w-4 h-4 mr-2" /> Export
           </Button>
-          <Dialog>
-            <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-9 px-4 py-2 w-full sm:w-auto bg-blue-600 text-white hover:bg-blue-700">
+          <Link href={`/clients/${clientId}/articles/new`} className="w-full sm:w-auto">
+            <Button className="w-full bg-blue-600 text-white hover:bg-blue-700">
               <Plus className="w-4 h-4 mr-2" /> New Article
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-xl">
-              <DialogHeader>
-                <DialogTitle>Create New Article</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label>Title</Label>
-                  <Input placeholder="Enter article title..." />
-                </div>
-                <div className="space-y-2">
-                  <Label>Content Outline / Draft</Label>
-                  <Textarea className="min-h-[200px]" placeholder="Start writing here..." />
-                </div>
-                <div className="flex justify-end gap-3 pt-2">
-                  <Button variant="outline">Save as Draft</Button>
-                  <Button className="bg-blue-600 hover:bg-blue-700">Publish</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -106,22 +110,43 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
           <TableHeader className="bg-gray-50/50">
             <TableRow>
               <TableHead className="w-full min-w-[300px]">Article Title</TableHead>
+              <TableHead className="w-32">Type</TableHead>
               <TableHead className="w-32">Status</TableHead>
               <TableHead className="w-40">Last Updated</TableHead>
               <TableHead className="w-16"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredArticles.length === 0 ? (
+            {isLoading ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center text-gray-500">
+                <TableCell colSpan={5} className="h-24 text-center text-gray-500">
+                  Loading articles...
+                </TableCell>
+              </TableRow>
+            ) : filteredArticles.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center text-gray-500">
                   No articles found.
                 </TableCell>
               </TableRow>
             ) : (
               filteredArticles.map((article) => (
                 <TableRow key={article.id} className="hover:bg-gray-50/50">
-                  <TableCell className="font-medium text-gray-900">{article.title}</TableCell>
+                  <TableCell className="font-medium text-gray-900">
+                    <div className="flex flex-col">
+                      <span>{article.title}</span>
+                      {article.live_url && (
+                        <a href={article.live_url} target="_blank" rel="noreferrer" className="text-[10px] text-blue-500 hover:underline mt-0.5 inline-block truncate max-w-[250px]">
+                          {article.live_url}
+                        </a>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
+                      {article.type || "-"}
+                    </span>
+                  </TableCell>
                   <TableCell>
                     <Badge variant="secondary" className={
                       article.status === 'Published' 
@@ -131,15 +156,21 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
                       {article.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-gray-500 text-sm">{article.date}</TableCell>
+                  <TableCell className="text-gray-500 text-sm">
+                    {format(new Date(article.updated_at), "MMM d, yyyy")}
+                  </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-8 w-8 text-gray-400 hover:text-gray-900">
                         <MoreHorizontal className="w-4 h-4" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer" onClick={() => toast.success("Article deleted.")}>
+                        <Link href={`/clients/${clientId}/articles/${article.id}`}>
+                          <DropdownMenuItem className="cursor-pointer">
+                            <Edit className="w-4 h-4 mr-2" /> Edit
+                          </DropdownMenuItem>
+                        </Link>
+                        <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer" onClick={() => handleDelete(article.id)}>
                           <Trash2 className="w-4 h-4 mr-2" /> Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -150,9 +181,11 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
             )}
           </TableBody>
         </Table>
-        <div className="p-4 border-t bg-gray-50/50 text-sm text-gray-500 flex items-center justify-between">
-          Showing 1 to {filteredArticles.length} of {filteredArticles.length} results
-        </div>
+        {!isLoading && (
+          <div className="p-4 border-t bg-gray-50/50 text-sm text-gray-500 flex items-center justify-between">
+            Showing 1 to {filteredArticles.length} of {filteredArticles.length} results
+          </div>
+        )}
       </Card>
     </div>
   );
