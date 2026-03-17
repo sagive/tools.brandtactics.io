@@ -52,17 +52,23 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
     }
 
     const endpoint = endpoints.find(e => e.name === type);
-    if (!endpoint || !endpoint.endpoint_url) {
+    if (!endpoint) {
       toast.error("No valid webhook configured for this article type in Settings.");
       return;
     }
 
+    const targetUrl = endpoint.use_test_endpoint ? endpoint.endpoint_url_test : endpoint.endpoint_url;
+    if (!targetUrl) {
+      toast.error(`The ${endpoint.use_test_endpoint ? "test" : "live"} webhook URL is missing in Settings.`);
+      return;
+    }
+
     setIsGenerating(true);
-    toast.info("Generating article via AI...");
+    toast.info(`Generating article via ${endpoint.use_test_endpoint ? "test" : "live"} AI endpoint...`);
     try {
       // In a real scenario, this fetches from the n8n webhook
       // We pass the client ID and the title
-      const res = await fetch(endpoint.endpoint_url, {
+      const res = await fetch(targetUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

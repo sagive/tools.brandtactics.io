@@ -183,7 +183,12 @@ function SettingsContent() {
 
   const handleCreateEndpoint = async () => {
     setIsAddingEndpoint(true);
-    const newEndpoint = { name: "New Endpoint", endpoint_url: "https://hook.n8n.example.com/..." };
+    const newEndpoint = { 
+      name: "New Endpoint", 
+      endpoint_url: "https://hook.n8n.example.com/live...", 
+      endpoint_url_test: "https://hook.n8n.example.com/test...",
+      use_test_endpoint: true 
+    };
     try {
       const { data, error } = await supabase.from('article_endpoints').insert(newEndpoint).select().single();
       if (error) throw error;
@@ -906,27 +911,76 @@ function SettingsContent() {
 function EndpointRow({ endpoint, onDelete, onUpdate }: { endpoint: any, onDelete: (id: string) => void, onUpdate: (id: string, updates: any) => Promise<void> }) {
   const [name, setName] = useState(endpoint.name);
   const [url, setUrl] = useState(endpoint.endpoint_url || "");
+  const [testUrl, setTestUrl] = useState(endpoint.endpoint_url_test || "");
+  const [useTest, setUseTest] = useState(endpoint.use_test_endpoint || false);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
     setIsSaving(true);
-    await onUpdate(endpoint.id, { name, endpoint_url: url });
+    await onUpdate(endpoint.id, { 
+      name, 
+      endpoint_url: url,
+      endpoint_url_test: testUrl,
+      use_test_endpoint: useTest
+    });
     setIsSaving(false);
   };
 
   return (
-    <div className="p-6 border rounded-xl bg-white shadow-sm space-y-4">
+    <div className={`p-6 border rounded-xl shadow-sm space-y-4 transition-colors ${useTest ? "bg-amber-50/30 border-amber-200" : "bg-white border-gray-200"}`}>
       <div className="flex items-start gap-4 flex-col md:flex-row">
-        <div className="w-full md:w-1/4 space-y-1">
-          <Label className="text-xs font-semibold text-gray-500 uppercase">Article Type</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} className="font-bold text-gray-900 border-gray-200" placeholder="e.g., Guest Post" />
+        {/* Left Col: Type and Toggle */}
+        <div className="w-full md:w-1/4 space-y-4">
+          <div className="space-y-1">
+            <Label className="text-xs font-semibold text-gray-500 uppercase">Article Type</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} className="font-bold text-gray-900 border-gray-200 bg-white" placeholder="e.g., Guest Post" />
+          </div>
+          
+          <div className="flex items-center gap-2 pt-2 bg-white p-2 rounded-md border border-gray-100 shadow-sm w-fit">
+            <input 
+              type="checkbox" 
+              id={`toggle-${endpoint.id}`}
+              checked={useTest} 
+              onChange={(e) => setUseTest(e.target.checked)} 
+              className="w-4 h-4 text-amber-500 border-gray-300 rounded focus:ring-amber-500"
+            />
+            <Label htmlFor={`toggle-${endpoint.id}`} className="text-xs font-bold text-gray-700 cursor-pointer">
+              Use Test Endpoint
+            </Label>
+          </div>
         </div>
-        <div className="w-full md:w-2/4 space-y-1">
-          <Label className="text-xs font-semibold text-gray-500 uppercase">n8n Webhook URL</Label>
-          <Input value={url} onChange={(e) => setUrl(e.target.value)} className="font-mono text-sm text-blue-600 border-gray-200 bg-gray-50" placeholder="https://..." />
+
+        {/* Middle Col: URLs */}
+        <div className="w-full md:w-2/4 space-y-3">
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <Label className={`text-[11px] font-bold uppercase tracking-wider ${!useTest ? 'text-green-600' : 'text-gray-400'}`}>Live Webhook URL</Label>
+              {!useTest && <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[9px] h-4 py-0 px-1.5">ACTIVE</Badge>}
+            </div>
+            <Input 
+              value={url} 
+              onChange={(e) => setUrl(e.target.value)} 
+              className={`font-mono text-xs ${!useTest ? 'border-green-300 bg-green-50/30 focus-visible:ring-green-500 text-gray-900' : 'border-gray-200 bg-gray-50 text-gray-500'}`}
+              placeholder="https://..." 
+            />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <Label className={`text-[11px] font-bold uppercase tracking-wider ${useTest ? 'text-amber-600' : 'text-gray-400'}`}>Test Webhook URL</Label>
+              {useTest && <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300 text-[9px] h-4 py-0 px-1.5">ACTIVE</Badge>}
+            </div>
+            <Input 
+              value={testUrl} 
+              onChange={(e) => setTestUrl(e.target.value)} 
+              className={`font-mono text-xs ${useTest ? 'border-amber-300 bg-amber-50/50 focus-visible:ring-amber-500 text-gray-900' : 'border-gray-200 bg-gray-50 text-gray-500'}`}
+              placeholder="https://..." 
+            />
+          </div>
         </div>
-        <div className="flex items-end gap-2 w-full md:w-1/4 md:pt-5 justify-end">
-          <Button variant="outline" onClick={handleSave} disabled={isSaving} className="bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200 shrink-0">
+
+        {/* Right Col: Actions */}
+        <div className="flex items-start gap-2 w-full md:w-1/4 md:pt-5 justify-end h-full">
+          <Button variant="outline" onClick={handleSave} disabled={isSaving} className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 shrink-0">
             {isSaving ? "Saving..." : <><Save className="w-4 h-4 mr-2" /> Save</>}
           </Button>
           <Button variant="ghost" className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0" onClick={() => onDelete(endpoint.id)}>

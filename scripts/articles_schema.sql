@@ -3,6 +3,8 @@ CREATE TABLE IF NOT EXISTS public.article_endpoints (
     id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
     name text NOT NULL,
     endpoint_url text NOT NULL,
+    endpoint_url_test text,
+    use_test_endpoint boolean DEFAULT false,
     created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
