@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Send, Trash2, Mail } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -126,7 +127,7 @@ export default function ClientEmailsPage() {
                   <th className="px-6 py-4 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody>
                 {loading ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-500">
@@ -141,7 +142,7 @@ export default function ClientEmailsPage() {
                   </tr>
                 ) : (
                   emails.map((email) => (
-                    <tr key={email.id} className="hover:bg-gray-50/50 transition-colors group">
+                    <tr key={email.id} className="border-b border-gray-100 last:border-none hover:bg-gray-50/50 transition-colors group">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-600 shrink-0">
@@ -150,10 +151,27 @@ export default function ClientEmailsPage() {
                           <span className="text-sm font-semibold text-gray-900">{client?.name || "Client"}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 min-w-[300px]">
-                        <span className="text-sm text-gray-700" title={email.title}>
-                          {truncate(email.title, 55) || "No Subject"}
-                        </span>
+                      <td className="px-6 py-4 min-w-[300px] max-w-[400px]">
+                        <Popover>
+                          <PopoverTrigger render={
+                            <button 
+                              className="text-sm text-gray-700 hover:text-blue-600 font-medium text-left truncate w-full decoration-dashed hover:underline underline-offset-4 focus:outline-none" 
+                              title="Click to view full message"
+                            >
+                              {truncate(email.title, 55) || "No Subject"}
+                            </button>
+                          } />
+                          <PopoverContent className="w-[450px] p-5 shadow-xl border-gray-100 bg-white" align="start">
+                            <div className="space-y-3">
+                              <h4 className="font-bold text-sm text-gray-900 leading-tight">
+                                {email.title || "No Subject"}
+                              </h4>
+                              <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-100 max-h-[300px] overflow-y-auto w-full prose prose-sm prose-p:my-1 prose-a:text-blue-600 [&>p]:whitespace-pre-wrap">
+                                <div dangerouslySetInnerHTML={{ __html: email.body || "No content." }} />
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {email.status === 'Scheduled' ? (

@@ -25,7 +25,8 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
     contactPhone: "",
     type: "",
     monthlyFee: "",
-    status: "Active"
+    status: "Active",
+    description: ""
   });
   const [joinDate, setJoinDate] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
@@ -54,7 +55,8 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
             contactPhone: clientData.contact_phone || "",
             type: clientData.type || "",
             monthlyFee: clientData.monthly_fee !== null && clientData.monthly_fee !== undefined ? clientData.monthly_fee.toString() : "0",
-            status: clientData.status || "Active"
+            status: clientData.status || "Active",
+            description: clientData.description || ""
           });
           if (clientData.created_at) {
              setJoinDate(format(new Date(clientData.created_at), "MMM d, yyyy"));
@@ -91,7 +93,8 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
         contact_phone: formData.contactPhone,
         type: formData.type,
         monthly_fee: parseInt(formData.monthlyFee) || 0,
-        status: formData.status
+        status: formData.status,
+        description: formData.description
       })
       .eq("id", id);
 
@@ -238,6 +241,23 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
             </div>
           </div>
           
+          <div className="pt-6 border-t border-gray-100 mb-8 space-y-2">
+            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Client Description</h3>
+            <p className="text-[11px] text-gray-500">Provide a brief overview of the client, which can be used by AI when generating content.</p>
+            <div className="flex items-center border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors h-24">
+              <textarea 
+                name="description" 
+                value={formData.description} 
+                onChange={(e) => {
+                  setFormData({ ...formData, description: e.target.value });
+                  setIsDirty(true);
+                }}
+                placeholder="Client description..." 
+                className="w-full h-full p-3 text-sm font-medium text-gray-700 bg-transparent border-none shadow-none resize-none focus-visible:outline-none focus-visible:ring-0" 
+              />
+            </div>
+          </div>
+
           <div className="pt-6 border-t border-gray-100 mb-8 space-y-2">
             <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Contact Emails</h3>
             <p className="text-[11px] text-gray-500">These emails would be used when sending seo updates, use multiple emails by seperating them with commas</p>

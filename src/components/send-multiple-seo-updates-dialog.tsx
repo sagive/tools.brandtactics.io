@@ -104,9 +104,9 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
       setVariants(prev => [...prev, { ...newItem, id: Math.random().toString(36).substr(2, 9) }]);
     }
     
-    // Auto increment default date for the next item (default +1 day)
+    // Auto increment default date for the next item (default +2 days)
     const prevDate = new Date(currentVariantDate);
-    prevDate.setDate(prevDate.getDate() + 1);
+    prevDate.setDate(prevDate.getDate() + 2);
     prevDate.setMinutes(prevDate.getMinutes() - prevDate.getTimezoneOffset());
     setCurrentVariantDate(prevDate.toISOString().slice(0, 16));
     

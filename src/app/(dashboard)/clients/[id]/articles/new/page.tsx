@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Save, Bot, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
@@ -32,11 +33,21 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
   const [endpoints, setEndpoints] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  const [isAiMode, setIsAiMode] = useState(false);
+  const [prompt, setPrompt] = useState("");
+  const [keywords, setKeywords] = useState("");
+  const [linkLabel, setLinkLabel] = useState("");
+  const [linkUrl, setLinkUrl] = useState("");
+  const [clientData, setClientData] = useState<{name?: string; description?: string}>({});
 
   useEffect(() => {
     async function fetchEndpoints() {
       const { data } = await supabase.from('article_endpoints').select('*').order('name');
       if (data) setEndpoints(data);
+
+      const { data: cData } = await supabase.from('clients').select('name, description').eq('id', clientId).single();
+      if (cData) setClientData(cData);
     }
     fetchEndpoints();
   }, []);
@@ -74,7 +85,13 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
         body: JSON.stringify({
           title,
           clientId,
-          type
+          type,
+          clientName: clientData.name,
+          clientDescription: clientData.description,
+          prompt,
+          keywords,
+          linkLabel,
+          linkUrl
         })
       });
 
@@ -183,29 +200,101 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
                 />
               </div>
 
-              <div className="space-y-2 pt-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold text-gray-700">Content</Label>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleGenerateAI} 
-                    disabled={isGenerating || !type || !title}
-                    className="h-8 text-indigo-600 hover:text-indigo-700 border-indigo-200 hover:bg-indigo-50"
-                  >
-                    {isGenerating ? <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> : <Bot className="w-3.5 h-3.5 mr-2" />}
-                    Generate with AI
-                  </Button>
-                </div>
-                <div className="border border-gray-200 rounded-md overflow-hidden bg-white">
-                  <ReactQuill 
-                    theme="snow" 
-                    value={content} 
-                    onChange={setContent} 
-                    className="[&_.ql-editor]:min-h-[400px] [&_.ql-editor]:text-base [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" 
-                  />
-                </div>
+              <div className="flex items-center space-x-2 pt-4 pb-2">
+                <Checkbox 
+                  id="ai-mode" 
+                  checked={isAiMode} 
+                  onCheckedChange={(checked) => setIsAiMode(!!checked)} 
+                />
+                <Label htmlFor="ai-mode" className="text-sm font-bold text-indigo-700 cursor-pointer flex items-center gap-1.5 hover:text-indigo-800 transition-colors">
+                  <Bot className="w-4 h-4" />
+                  Generate with AI
+                </Label>
               </div>
+
+              {!isAiMode ? (
+                <div className="space-y-2 pt-2">
+                  <Label className="text-sm font-semibold text-gray-700">Content</Label>
+                  <div className="border border-gray-200 rounded-md overflow-hidden bg-white">
+                    <ReactQuill 
+                      theme="snow" 
+                      value={content} 
+                      onChange={setContent} 
+                      className="[&_.ql-editor]:min-h-[400px] [&_.ql-editor]:text-base [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" 
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6 pt-2 select-none border-t border-indigo-50 mt-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-gray-700">Prompt / Instructions</Label>
+                    <div className="border border-gray-200 rounded-md overflow-hidden bg-white">
+                      <ReactQuill 
+                        theme="snow" 
+                        value={prompt} 
+                        onChange={setPrompt} 
+                        className="[&_.ql-editor]:min-h-[150px] [&_.ql-editor]:text-base [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-gray-700">Keywords (Comma separated)</Label>
+                    <textarea 
+                      value={keywords} 
+                      onChange={(e) => setKeywords(e.target.value)} 
+                      placeholder="e.g. digital marketing, seo, web design" 
+                      className="w-full h-24 p-3 text-sm border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none bg-white font-medium text-gray-800"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold text-gray-700">Link Label</Label>
+                      <Input 
+                        value={linkLabel} 
+                        onChange={(e) => setLinkLabel(e.target.value)} 
+                        placeholder="Click here" 
+                        className="bg-white border-gray-200 font-medium"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold text-gray-700">Link URL</Label>
+                      <Input 
+                        value={linkUrl} 
+                        onChange={(e) => setLinkUrl(e.target.value)} 
+                        placeholder="https://..." 
+                        className="bg-white border-gray-200 font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-4">
+                    <Button 
+                      onClick={handleGenerateAI} 
+                      disabled={isGenerating || !type || !title}
+                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-6 shadow-md transition-all hover:shadow-lg active:scale-[0.98]"
+                    >
+                      {isGenerating ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Bot className="w-5 h-5 mr-2" />}
+                      {isGenerating ? "Generating Article..." : "Generate Article"}
+                    </Button>
+                  </div>
+
+                  {content && (
+                    <div className="space-y-2 pt-6 border-t border-gray-100">
+                      <Label className="text-sm font-semibold text-gray-700">Generated Content Preview</Label>
+                      <div className="border border-indigo-100 rounded-md overflow-hidden bg-white shadow-sm ring-1 ring-indigo-50">
+                        <ReactQuill 
+                          theme="snow" 
+                          value={content} 
+                          onChange={setContent} 
+                          className="[&_.ql-editor]:min-h-[300px] [&_.ql-editor]:text-base [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" 
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
