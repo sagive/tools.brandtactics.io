@@ -39,6 +39,8 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
   const [keywords, setKeywords] = useState("");
   const [linkLabel, setLinkLabel] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
+  const [linkLabel2, setLinkLabel2] = useState("");
+  const [linkUrl2, setLinkUrl2] = useState("");
   const [clientData, setClientData] = useState<{name?: string; description?: string}>({});
 
   useEffect(() => {
@@ -91,7 +93,9 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
           prompt,
           keywords,
           linkLabel,
-          linkUrl
+          linkUrl,
+          linkLabel2,
+          linkUrl2
         })
       });
 
@@ -157,7 +161,7 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
   };
 
   return (
-    <div className="max-w-4xl mx-auto pb-10">
+    <div className="w-full px-4 lg:px-8 pb-10">
       <div className="flex items-center gap-4 mb-6">
         <Link href={`/clients/${clientId}/articles`}>
           <Button variant="ghost" size="icon" className="hover:bg-gray-100">
@@ -250,7 +254,7 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold text-gray-700">Link Label</Label>
+                      <Label className="text-sm font-semibold text-gray-700">Link 1 Label</Label>
                       <Input 
                         value={linkLabel} 
                         onChange={(e) => setLinkLabel(e.target.value)} 
@@ -259,10 +263,31 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold text-gray-700">Link URL</Label>
+                      <Label className="text-sm font-semibold text-gray-700">Link 1 URL</Label>
                       <Input 
                         value={linkUrl} 
                         onChange={(e) => setLinkUrl(e.target.value)} 
+                        placeholder="https://..." 
+                        className="bg-white border-gray-200 font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold text-gray-700">Link 2 Label</Label>
+                      <Input 
+                        value={linkLabel2} 
+                        onChange={(e) => setLinkLabel2(e.target.value)} 
+                        placeholder="Click here" 
+                        className="bg-white border-gray-200 font-medium"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold text-gray-700">Link 2 URL</Label>
+                      <Input 
+                        value={linkUrl2} 
+                        onChange={(e) => setLinkUrl2(e.target.value)} 
                         placeholder="https://..." 
                         className="bg-white border-gray-200 font-medium"
                       />
