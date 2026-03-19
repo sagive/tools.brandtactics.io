@@ -79,12 +79,12 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
     setIsGenerating(true);
     toast.info(`Generating article via ${endpoint.use_test_endpoint ? "test" : "live"} AI endpoint...`);
     try {
-      // In a real scenario, this fetches from the n8n webhook
-      // We pass the client ID and the title
-      const res = await fetch(targetUrl, {
+      // We use a local proxy API route to bypass CORS issues with the external webhook
+      const res = await fetch("/api/proxy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          targetUrl,
           title,
           clientId,
           type,
