@@ -5,14 +5,20 @@ import { supabase } from "@/lib/supabase";
 import { ClientBacklinkCard } from "@/components/client-backlink-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Loader2, Search, Link2, TrendingUp, Info } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Loader2, Search, Link2, TrendingUp, Info, Share2, Tag } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function ClientBacklinksPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: clientId } = React.use(params);
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [backlinks, setBacklinks] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [clientMappings, setClientMappings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -21,12 +27,14 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
   async function fetchData() {
     setLoading(true);
     try {
-      const [backRes, mappingRes] = await Promise.all([
+      const [backRes, catsRes, mappingRes] = await Promise.all([
         supabase.from("backlinks").select("*, backlink_categories(name)").order("rank", { ascending: false }),
+        supabase.from("backlink_categories").select("*").order("rank"),
         supabase.from("client_backlinks").select("*").eq("client_id", clientId)
       ]);
 
       if (backRes.data) setBacklinks(backRes.data);
+      if (catsRes.data) setCategories(catsRes.data);
       if (mappingRes.data) setClientMappings(mappingRes.data);
     } catch (err) {
       console.error("Error fetching backlinks:", err);
@@ -35,11 +43,23 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
     }
   }
 
-  const filteredBacklinks = backlinks.filter(b => 
-    b.website_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.backlink_categories?.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    const search = searchParams.get("search");
+    if (search !== null && search !== searchTerm) {
+      setSearchTerm(search);
+    }
+  }, [searchParams]);
+
+  const filteredBacklinks = backlinks.filter(b => {
+    const matchesSearch = 
+      b.website_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.backlink_categories?.name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = !activeCategoryId || b.category_id === activeCategoryId;
+    
+    return matchesSearch && matchesCategory;
+  });
 
   const usedCount = clientMappings.filter(m => m.is_used).length;
   const totalCount = backlinks.length;
@@ -80,20 +100,60 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
         </Card>
       </div>
 
-      {/* Search & Actions */}
-      <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-        <div className="relative w-full max-w-sm">
-           <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-           <Input 
-             placeholder="Search and filter backlinks..." 
-             className="pl-10 h-10 bg-gray-50/50 border-none focus:bg-white transition-all shadow-none"
-             value={searchTerm}
-             onChange={(e) => setSearchTerm(e.target.value)}
-           />
+      {/* Search & Categories */}
+      <div className="space-y-4">
+        <div className="flex flex-col md:flex-row justify-between items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm gap-4">
+          <div className="relative w-full max-w-sm">
+             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+             <Input 
+               placeholder="Search and filter backlinks..." 
+               className="pl-10 h-10 bg-gray-50/50 border-none focus:bg-white transition-all shadow-none"
+               value={searchTerm}
+               onChange={(e) => {
+                 const value = e.target.value;
+                 setSearchTerm(value);
+                 const params = new URLSearchParams(window.location.search);
+                 if (value) params.set("search", value);
+                 else params.delete("search");
+                 router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false });
+               }}
+             />
+          </div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4">
+             {filteredBacklinks.length} sources found
+          </div>
         </div>
-        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4">
-           {filteredBacklinks.length} sources found
-        </div>
+
+        {/* Category Chips */}
+        {!loading && categories.length > 0 && (
+          <div className="flex flex-wrap gap-2 items-center">
+            <button
+              onClick={() => setActiveCategoryId(null)}
+              className={cn(
+                "px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border",
+                activeCategoryId === null 
+                  ? "bg-blue-600 border-blue-600 text-white shadow-sm"
+                  : "bg-white border-gray-200 text-gray-500 hover:border-blue-200 hover:text-blue-600"
+              )}
+            >
+              ALL SOURCES
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategoryId(cat.id)}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border",
+                  activeCategoryId === cat.id 
+                    ? "bg-blue-600 border-blue-600 text-white shadow-sm"
+                    : "bg-white border-gray-200 text-gray-500 hover:border-blue-200 hover:text-blue-600"
+                )}
+              >
+                {cat.name.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {loading ? (

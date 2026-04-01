@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, User, Lock, Save, Loader2 } from "lucide-react";
+import { ExternalLink, User, Lock, Save, Loader2, Share2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -68,9 +68,22 @@ export function ClientBacklinkCard({ clientId, backlink, clientData, onUpdated }
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
                <h3 className="font-bold text-gray-900 text-sm truncate">{backlink.website_name}</h3>
-               <a href={backlink.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-600">
+               <a href={backlink.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-600 transition-colors">
                  <ExternalLink className="w-3 h-3" />
                </a>
+               <button 
+                 onClick={(e) => {
+                   e.preventDefault();
+                   const url = new URL(window.location.href);
+                   url.searchParams.set("search", backlink.website_name);
+                   navigator.clipboard.writeText(url.toString());
+                   toast.success(`Share link for ${backlink.website_name} copied!`);
+                 }}
+                 className="text-gray-400 hover:text-blue-600 transition-colors"
+                 title="Copy link to this website"
+               >
+                 <Share2 className="w-3 h-3" />
+               </button>
             </div>
             <p className="text-[10px] text-gray-500 font-medium uppercase tracking-tight">
               {backlink.backlink_categories?.name || "General"}
