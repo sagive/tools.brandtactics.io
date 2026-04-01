@@ -19,6 +19,7 @@ interface ClientBacklinkCardProps {
 
 export function ClientBacklinkCard({ clientId, backlink, clientData, onUpdated }: ClientBacklinkCardProps) {
   const [isUsed, setIsUsed] = useState(clientData?.is_used || false);
+  const [isTasked, setIsTasked] = useState(clientData?.is_tasked || false);
   const [username, setUsername] = useState(clientData?.client_username || "");
   const [password, setPassword] = useState(clientData?.client_password || "");
   const [isSaving, setIsSaving] = useState(false);
@@ -31,6 +32,7 @@ export function ClientBacklinkCard({ clientId, backlink, clientData, onUpdated }
         client_id: clientId,
         backlink_id: backlink.id,
         is_used: isUsed,
+        is_tasked: isTasked,
         client_username: username,
         client_password: password,
         updated_at: new Date().toISOString()
@@ -54,6 +56,11 @@ export function ClientBacklinkCard({ clientId, backlink, clientData, onUpdated }
 
   const toggleUsed = (checked: boolean) => {
     setIsUsed(checked);
+    setIsDirty(true);
+  };
+
+  const toggleTasked = (checked: boolean) => {
+    setIsTasked(checked);
     setIsDirty(true);
   };
 
@@ -89,13 +96,23 @@ export function ClientBacklinkCard({ clientId, backlink, clientData, onUpdated }
               {backlink.backlink_categories?.name || "General"}
             </p>
           </div>
-          <div className="flex flex-col items-end gap-1">
-            <Checkbox 
-              checked={isUsed} 
-              onCheckedChange={toggleUsed}
-              className="h-5 w-5"
-            />
-            <span className="text-[9px] font-bold text-gray-400 uppercase">Used</span>
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col items-center gap-1">
+              <Checkbox 
+                checked={isUsed} 
+                onCheckedChange={toggleUsed}
+                className="h-5 w-5"
+              />
+              <span className="text-[9px] font-bold text-gray-400 uppercase">Used</span>
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <Checkbox 
+                checked={isTasked} 
+                onCheckedChange={toggleTasked}
+                className="h-5 w-5 border-blue-200 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+              />
+              <span className="text-[9px] font-bold text-gray-400 uppercase">Tasked</span>
+            </div>
           </div>
         </div>
 
