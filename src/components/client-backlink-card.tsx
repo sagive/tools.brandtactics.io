@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,15 @@ export function ClientBacklinkCard({
   const [password, setPassword] = useState(clientData?.client_password || "");
   const [isSaving, setIsSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+
+  // Sync state with props when clientData changes (e.g. after bulk update)
+  useEffect(() => {
+    setIsUsed(clientData?.is_used || false);
+    setIsTasked(clientData?.is_tasked || false);
+    setUsername(clientData?.client_username || "");
+    setPassword(clientData?.client_password || "");
+    setIsDirty(false);
+  }, [clientData?.is_used, clientData?.is_tasked, clientData?.client_username, clientData?.client_password]);
 
   const handleSave = async () => {
     setIsSaving(true);
