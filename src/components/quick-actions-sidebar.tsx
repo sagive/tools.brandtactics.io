@@ -15,6 +15,25 @@ interface QuickActionsSidebarProps {
 export function QuickActionsSidebar({ onAction, clientId }: QuickActionsSidebarProps) {
   return (
     <div className="space-y-4 w-full">
+      {/* Create New Task Action */}
+      <Dialog>
+        <DialogTrigger className="w-full text-left">
+          <div className="w-full p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group flex items-center gap-4 cursor-pointer">
+            <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center group-hover:bg-orange-500 transition-colors duration-300">
+              <FileText className="w-6 h-6 text-orange-500 group-hover:text-white transition-colors duration-300" />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Create New Task</h3>
+              <p className="text-xs text-gray-500">NEW TASK POPUP</p>
+            </div>
+          </div>
+        </DialogTrigger>
+        <EditTaskDialog defaultClientId={clientId} onTaskCreated={() => {
+          window.dispatchEvent(new Event("taskCreated"));
+          onAction?.();
+        }} />
+      </Dialog>
+
       {/* Send SEO Update Action */}
       <div className="w-full">
         <SendSeoUpdateDialog 
@@ -36,25 +55,6 @@ export function QuickActionsSidebar({ onAction, clientId }: QuickActionsSidebarP
           }
         />
       </div>
-
-      {/* Create New Task Action */}
-      <Dialog>
-        <DialogTrigger className="w-full text-left">
-          <div className="w-full p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group flex items-center gap-4 cursor-pointer">
-            <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center group-hover:bg-orange-500 transition-colors duration-300">
-              <FileText className="w-6 h-6 text-orange-500 group-hover:text-white transition-colors duration-300" />
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-900">Create New Task</h3>
-              <p className="text-xs text-gray-500">NEW TASK POPUP</p>
-            </div>
-          </div>
-        </DialogTrigger>
-        <EditTaskDialog defaultClientId={clientId} onTaskCreated={() => {
-          window.dispatchEvent(new Event("taskCreated"));
-          onAction?.();
-        }} />
-      </Dialog>
 
       {/* Schedule Multiple SEO Updates Action */}
       <div className="w-full">
