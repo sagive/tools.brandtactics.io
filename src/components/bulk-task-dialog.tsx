@@ -94,7 +94,13 @@ export function BulkTaskDialog({ clientId, selectedBacklinks, users, onSuccess, 
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      {trigger && <DialogTrigger render={trigger} />}
+      <DialogTrigger 
+        render={trigger || (
+          <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white gap-2 font-bold uppercase tracking-tight h-10 shadow-md">
+            <ListChecks className="w-4 h-4" /> Bulk Create Tasks ({selectedBacklinks.length})
+          </Button>
+        )}
+      />
       <DialogContent className="sm:max-w-[500px] border-none shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
