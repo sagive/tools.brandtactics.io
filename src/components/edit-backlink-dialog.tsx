@@ -110,16 +110,22 @@ export function EditBacklinkDialog({ backlink, onBacklinkSaved }: { backlink?: a
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Category</Label>
-            <Select value={categoryId} onValueChange={setCategoryId}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {categories.length > 0 ? (
+              <Select value={categoryId} onValueChange={setCategoryId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue>
+                    {categories.find(c => c.id === categoryId)?.name || "Select category"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="h-10 w-full bg-gray-50 animate-pulse rounded-md border border-gray-200" />
+            )}
           </div>
           <div className="space-y-2">
             <Label>Rank</Label>
