@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { EditBacklinkDialog } from "@/components/edit-backlink-dialog";
+import { BulkAddBacklinkDialog } from "@/components/bulk-add-backlink-dialog";
 import { ManageBacklinkCategoriesDialog } from "@/components/manage-backlink-categories-dialog";
 import { 
   Plus, 
@@ -16,6 +17,7 @@ import {
   Link2, 
   Search, 
   ArrowLeft,
+  LayoutGrid,
   SlidersHorizontal,
   User,
   Lock,
@@ -111,6 +113,15 @@ export default function BacklinksDashboard() {
                </Button>
              }/>
              <ManageBacklinkCategoriesDialog onCategoriesChanged={fetchData} />
+          </Dialog>
+
+          <Dialog>
+             <DialogTrigger render={
+               <Button variant="outline" className="gap-2 border-blue-600 text-blue-600 hover:bg-blue-50">
+                 <LayoutGrid className="w-4 h-4" /> Bulk Add
+               </Button>
+             }/>
+             <BulkAddBacklinkDialog onBacklinksSaved={fetchData} />
           </Dialog>
 
           <Dialog>
