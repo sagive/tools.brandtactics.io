@@ -99,19 +99,19 @@ export function ClientBacklinkCard({ clientId, backlink, clientData, onUpdated }
           <div className="flex items-center gap-4">
             <div className="flex flex-col items-center gap-1">
               <Checkbox 
-                checked={isUsed} 
-                onCheckedChange={toggleUsed}
-                className="h-5 w-5"
-              />
-              <span className="text-[9px] font-bold text-gray-400 uppercase">Used</span>
-            </div>
-            <div className="flex flex-col items-center gap-1">
-              <Checkbox 
                 checked={isTasked} 
                 onCheckedChange={toggleTasked}
                 className="h-5 w-5 border-blue-200 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
               />
               <span className="text-[9px] font-bold text-gray-400 uppercase">Tasked</span>
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <Checkbox 
+                checked={isUsed} 
+                onCheckedChange={toggleUsed}
+                className="h-5 w-5"
+              />
+              <span className="text-[9px] font-bold text-gray-400 uppercase">Used</span>
             </div>
           </div>
         </div>
