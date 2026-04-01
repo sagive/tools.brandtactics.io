@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, Users, FileText, Mail, Settings, Briefcase, PlusCircle, ChevronRight, ChevronLeft, Menu, LayoutGrid, Command } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Mail, Settings, Briefcase, PlusCircle, ChevronRight, ChevronLeft, Menu, LayoutGrid, Command, Link2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -12,8 +12,9 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/clients", label: "Clients", icon: Briefcase },
   { href: "/tasks", label: "All Tasks", icon: FileText },
-  { href: "/email-updates", label: "Email Updates", icon: Mail },
+  { href: "/backlinks", label: "All Backlinks", icon: Link2 },
   { href: "/tools", label: "All Tools", icon: LayoutGrid },
+  { href: "/email-updates", label: "Email Updates", icon: Mail },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
