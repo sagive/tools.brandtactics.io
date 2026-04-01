@@ -121,41 +121,29 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
 
   useEffect(() => {
     async function fetchData() {
-      // 1. Fetch specific client if we have one (either from task or default)
-      const targetClientId = task?.client_id || defaultClientId || clientId;
-      if (targetClientId) {
-        const { data: initialClient } = await supabase
-          .from('clients')
-          .select('id, name')
-          .eq('id', targetClientId)
-          .single();
-        
-        if (initialClient) {
-          setClients(prev => {
-            if (prev.some(c => c.id === initialClient.id)) return prev;
-            return [initialClient, ...prev];
-          });
-        }
-      }
+      const targetId = task?.client_id || defaultClientId || clientId;
+      
+      try {
+        // Fetch everything in parallel
+        const [clientsRes, usersRes] = await Promise.all([
+          supabase.from('clients').select('id, name').order('name'),
+          supabase.from('profiles').select('id, full_name, email').order('full_name')
+        ]);
 
-      // 2. Fetch all clients for the dropdown (only if not editing, or if we want to allow changing)
-      const { data: allClients } = await supabase
-        .from('clients')
-        .select('id, name')
-        .order('name');
-      
-      if (allClients) {
-        setClients(allClients);
-      }
-      
-      // 3. Fetch users (profiles)
-      const { data: allUsers } = await supabase
-        .from('profiles')
-        .select('id, full_name, email')
-        .order('full_name');
-      
-      if (allUsers) {
-        setUsers(allUsers);
+        let finalClients = clientsRes.data || [];
+        
+        // If our current client isn't in the full list, fetch it specifically
+        if (targetId && !finalClients.some(c => c.id === targetId)) {
+          const { data: specific } = await supabase.from('clients').select('id, name').eq('id', targetId).single();
+          if (specific) {
+            finalClients = [specific, ...finalClients];
+          }
+        }
+
+        setClients(finalClients);
+        if (usersRes.data) setUsers(usersRes.data);
+      } catch (error) {
+        console.error("Failed to fetch task dialog data:", error);
       }
     }
 
@@ -593,7 +581,9 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
                 <Label className="text-gray-600 text-[13px] font-medium">Client <span className="text-red-500">*</span></Label>
                 <Select value={clientId} onValueChange={setClientId}>
                   <SelectTrigger className="bg-white px-3 w-full border-gray-200">
-                    <SelectValue placeholder="Select a client" />
+                    <SelectValue placeholder="Select a client">
+                      {clients.find(c => c.id === clientId)?.name || (clientId ? "Loading..." : "Select a client")}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {clients.map(c => (
