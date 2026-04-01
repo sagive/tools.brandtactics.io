@@ -47,6 +47,14 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
   const [requester, setRequester] = useState(task?.requester || "");
   const [comments, setComments] = useState<any[]>(task?.comments || []);
   const [clientId, setClientId] = useState(task?.client_id || defaultClientId || "");
+  
+  // Sync clientId with defaultClientId when it changes (for new tasks)
+  useEffect(() => {
+    if (!isEditing && defaultClientId && !clientId) {
+      setClientId(defaultClientId);
+    }
+  }, [defaultClientId, isEditing, clientId]);
+
   const [dueDate, setDueDate] = useState<string>(task?.end_date ? new Date(task.end_date).toISOString().split('T')[0] : "");
   const [clients, setClients] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -315,8 +323,8 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
         }
       }
       
-      // Keep dialog open but reset main content as requested
-      setTitle("");
+      // Keep dialog open but reset content (except title as requested)
+      // setTitle(""); 
       setDescription("");
       
     } catch (err: any) {
