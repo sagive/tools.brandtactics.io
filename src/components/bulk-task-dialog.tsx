@@ -31,8 +31,13 @@ export function BulkTaskDialog({ clientId, selectedBacklinks, onSuccess, trigger
 
   useEffect(() => {
     async function fetchUsers() {
-      const { data } = await supabase.from('profiles').select('id, full_name, email').order('full_name');
-      if (data) setUsers(data);
+      try {
+        const { data, error } = await supabase.from('profiles').select('id, full_name, email').order('full_name');
+        if (error) throw error;
+        if (data) setUsers(data);
+      } catch (err: any) {
+        console.error("Profiles fetch error:", err);
+      }
     }
     if (isOpen) {
       fetchUsers();
@@ -174,9 +179,14 @@ export function BulkTaskDialog({ clientId, selectedBacklinks, onSuccess, trigger
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label className="text-xs font-bold text-gray-500 uppercase">Requester</Label>
-              <Select value={requester} onValueChange={(v: string | null) => v && setRequester(v)}>
-                <SelectTrigger className="bg-gray-50/30"><SelectValue placeholder="Select..." /></SelectTrigger>
+              <Select value={requester} onValueChange={setRequester as any}>
+                <SelectTrigger className="bg-gray-50/30">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
                 <SelectContent>
+                  {users.length === 0 && (
+                    <SelectItem value="none" disabled>No users found</SelectItem>
+                  )}
                   {users.map(u => (
                     <SelectItem key={u.id} value={u.id}>{u.full_name || u.email}</SelectItem>
                   ))}
@@ -185,9 +195,14 @@ export function BulkTaskDialog({ clientId, selectedBacklinks, onSuccess, trigger
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-bold text-gray-500 uppercase">Assignee</Label>
-              <Select value={assignee} onValueChange={(v: string | null) => v && setAssignee(v)}>
-                <SelectTrigger className="bg-gray-50/30"><SelectValue placeholder="Select..." /></SelectTrigger>
+              <Select value={assignee} onValueChange={setAssignee as any}>
+                <SelectTrigger className="bg-gray-50/30">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
                 <SelectContent>
+                  {users.length === 0 && (
+                    <SelectItem value="none" disabled>No users found</SelectItem>
+                  )}
                   {users.map(u => (
                     <SelectItem key={u.id} value={u.id}>{u.full_name || u.email}</SelectItem>
                   ))}
