@@ -59,9 +59,7 @@ export function BulkTaskDialog({ clientId, selectedBacklinks, users, onSuccess, 
         status,
         priority,
         requester,
-        assignee,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        assignee
       }));
 
       // 1. Create tasks
@@ -72,8 +70,7 @@ export function BulkTaskDialog({ clientId, selectedBacklinks, users, onSuccess, 
       const mappings = selectedBacklinks.map(backlink => ({
         client_id: clientId,
         backlink_id: backlink.id,
-        is_tasked: true,
-        updated_at: new Date().toISOString()
+        is_tasked: true
       }));
 
       const { error: mappingError } = await supabase
