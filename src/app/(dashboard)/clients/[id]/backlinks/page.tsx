@@ -5,6 +5,8 @@ import { supabase } from "@/lib/supabase";
 import { ClientBacklinkCard } from "@/components/client-backlink-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Loader2, Search, Link2, TrendingUp, Info, Share2, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,6 +21,9 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+  const [showUsed, setShowUsed] = useState(false);
+  const [showTasked, setShowTasked] = useState(false);
+  const [orderMap, setOrderMap] = useState<Record<string, number>>({});
 
   useEffect(() => {
     fetchData();
@@ -28,12 +33,25 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
     setLoading(true);
     try {
       const [backRes, catsRes, mappingRes] = await Promise.all([
-        supabase.from("backlinks").select("*, backlink_categories(name)").order("rank", { ascending: false }),
+        supabase.from("backlinks").select("*, backlink_categories(name)"),
         supabase.from("backlink_categories").select("*").order("rank"),
         supabase.from("client_backlinks").select("*").eq("client_id", clientId)
       ]);
 
-      if (backRes.data) setBacklinks(backRes.data);
+      if (backRes.data) {
+        let sortedData = backRes.data;
+        // Randomly mix on initial load, but keep order consistent after updates
+        if (Object.keys(orderMap).length === 0) {
+          const map: Record<string, number> = {};
+          const shuffled = [...backRes.data].sort(() => Math.random() - 0.5);
+          shuffled.forEach((b, i) => map[b.id] = i);
+          setOrderMap(map);
+          sortedData = shuffled;
+        } else {
+          sortedData = [...backRes.data].sort((a, b) => (orderMap[a.id] ?? 999) - (orderMap[b.id] ?? 999));
+        }
+        setBacklinks(sortedData);
+      }
       if (catsRes.data) setCategories(catsRes.data);
       if (mappingRes.data) setClientMappings(mappingRes.data);
     } catch (err) {
@@ -51,6 +69,14 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
   }, [searchParams]);
 
   const filteredBacklinks = backlinks.filter(b => {
+    const mapping = clientMappings.find(m => m.backlink_id === b.id);
+    const isUsed = mapping?.is_used || false;
+    const isTasked = mapping?.is_tasked || false;
+
+    // Filter by visibility toggles
+    if (!showUsed && isUsed) return false;
+    if (!showTasked && isTasked) return false;
+
     const matchesSearch = 
       b.website_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       b.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -119,6 +145,28 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
                }}
              />
           </div>
+
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <Checkbox 
+                id="showUsed" 
+                checked={showUsed} 
+                onCheckedChange={(checked) => setShowUsed(checked as boolean)} 
+                className="h-4 w-4"
+              />
+              <Label htmlFor="showUsed" className="text-[10px] font-bold text-gray-500 uppercase cursor-pointer">Show Used</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox 
+                id="showTasked" 
+                checked={showTasked} 
+                onCheckedChange={(checked) => setShowTasked(checked as boolean)} 
+                className="h-4 w-4"
+              />
+              <Label htmlFor="showTasked" className="text-[10px] font-bold text-gray-500 uppercase cursor-pointer">Show Tasked</Label>
+            </div>
+          </div>
+
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4">
              {filteredBacklinks.length} sources found
           </div>
