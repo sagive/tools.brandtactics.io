@@ -74,8 +74,22 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
     const isTasked = mapping?.is_tasked || false;
 
     // Filter by visibility toggles
-    if (!showUsed && isUsed) return false;
-    if (!showTasked && isTasked) return false;
+    // 1. Both checked: Show only Used or Tasked items
+    if (showUsed && showTasked) {
+      if (!isUsed && !isTasked) return false;
+    } 
+    // 2. Only showUsed checked: Show ONLY used items
+    else if (showUsed) {
+      if (!isUsed) return false;
+    }
+    // 3. Only showTasked checked: Show ONLY tasked items
+    else if (showTasked) {
+      if (!isTasked) return false;
+    }
+    // 4. Default (nothing checked): Show only Available (neither used nor tasked)
+    else {
+      if (isUsed || isTasked) return false;
+    }
 
     const matchesSearch = 
       b.website_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
