@@ -7,8 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Loader2, Search, Link2, TrendingUp, Info, Share2, Tag } from "lucide-react";
+import { Loader2, Search, Link2, TrendingUp, Info, Share2, Tag, ListChecks, X } from "lucide-react";
+import { BulkTaskDialog } from "@/components/bulk-task-dialog";
 import { cn } from "@/lib/utils";
 
 export default function ClientBacklinksPage({ params }: { params: Promise<{ id: string }> }) {
@@ -24,6 +26,7 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
   const [showUsed, setShowUsed] = useState(false);
   const [showTasked, setShowTasked] = useState(false);
   const [orderMap, setOrderMap] = useState<Record<string, number>>({});
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -160,24 +163,48 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
              />
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <Checkbox 
-                id="showUsed" 
-                checked={showUsed} 
-                onCheckedChange={(checked) => setShowUsed(checked as boolean)} 
-                className="h-4 w-4"
-              />
-              <Label htmlFor="showUsed" className="text-[10px] font-bold text-gray-500 uppercase cursor-pointer">Show Used</Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox 
-                id="showTasked" 
-                checked={showTasked} 
-                onCheckedChange={(checked) => setShowTasked(checked as boolean)} 
-                className="h-4 w-4"
-              />
-              <Label htmlFor="showTasked" className="text-[10px] font-bold text-gray-500 uppercase cursor-pointer">Show Tasked</Label>
+          <div className="flex items-center gap-4">
+            {selectedIds.length > 0 && (
+              <div className="flex items-center gap-2 pr-4 border-r border-gray-100">
+                <BulkTaskDialog 
+                  clientId={clientId}
+                  selectedBacklinks={backlinks.filter(b => selectedIds.includes(b.id))}
+                  onSuccess={() => {
+                    setSelectedIds([]);
+                    fetchData();
+                  }}
+                />
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setSelectedIds([])}
+                  className="h-8 w-8 p-0 text-gray-400 hover:text-red-500"
+                  title="Clear selection"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  id="showUsed" 
+                  checked={showUsed} 
+                  onCheckedChange={(checked) => setShowUsed(checked as boolean)} 
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="showUsed" className="text-[10px] font-bold text-gray-500 uppercase cursor-pointer">Show Used</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  id="showTasked" 
+                  checked={showTasked} 
+                  onCheckedChange={(checked) => setShowTasked(checked as boolean)} 
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="showTasked" className="text-[10px] font-bold text-gray-500 uppercase cursor-pointer">Show Tasked</Label>
+              </div>
             </div>
           </div>
 
@@ -234,6 +261,12 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
                 backlink={backlink}
                 clientData={mapping}
                 onUpdated={fetchData}
+                isSelected={selectedIds.includes(backlink.id)}
+                onSelect={(selected) => {
+                  setSelectedIds(prev => 
+                    selected ? [...prev, backlink.id] : prev.filter(id => id !== backlink.id)
+                  );
+                }}
               />
             );
           })}

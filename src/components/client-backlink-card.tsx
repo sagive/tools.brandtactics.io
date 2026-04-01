@@ -15,9 +15,18 @@ interface ClientBacklinkCardProps {
   backlink: any; // Global backlink data
   clientData: any; // Client-specific data (from client_backlinks)
   onUpdated: () => void;
+  isSelected?: boolean;
+  onSelect?: (selected: boolean) => void;
 }
 
-export function ClientBacklinkCard({ clientId, backlink, clientData, onUpdated }: ClientBacklinkCardProps) {
+export function ClientBacklinkCard({ 
+  clientId, 
+  backlink, 
+  clientData, 
+  onUpdated, 
+  isSelected, 
+  onSelect 
+}: ClientBacklinkCardProps) {
   const [isUsed, setIsUsed] = useState(clientData?.is_used || false);
   const [isTasked, setIsTasked] = useState(clientData?.is_tasked || false);
   const [username, setUsername] = useState(clientData?.client_username || "");
@@ -66,10 +75,19 @@ export function ClientBacklinkCard({ clientId, backlink, clientData, onUpdated }
 
   return (
     <Card className={cn(
-      "group transition-all border-gray-200 bg-white overflow-hidden",
-      isUsed ? "border-blue-200 shadow-sm" : "opacity-75 grayscale-[0.5] hover:grayscale-0 hover:opacity-100"
+      "group transition-all border-gray-200 bg-white overflow-hidden relative",
+      isSelected ? "ring-2 ring-blue-500 border-blue-500 shadow-md" : (isUsed ? "border-blue-200 shadow-sm" : "opacity-75 grayscale-[0.5] hover:grayscale-0 hover:opacity-100")
     )}>
-      <CardContent className="p-4 space-y-4">
+      {/* Selection Checkbox */}
+      <div className="absolute top-3 left-3 z-20">
+        <Checkbox 
+          checked={isSelected} 
+          onCheckedChange={(checked) => onSelect?.(checked as boolean)}
+          className="h-4 w-4 bg-white/80 data-[state=checked]:bg-blue-600 border-blue-200"
+        />
+      </div>
+
+      <CardContent className="p-4 space-y-4 pt-10">
         {/* Header: Name and Toggle */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
