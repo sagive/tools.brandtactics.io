@@ -40,7 +40,7 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
         supabase.from("backlinks").select("*, backlink_categories(name)"),
         supabase.from("backlink_categories").select("*").order("rank"),
         supabase.from("client_backlinks").select("*").eq("client_id", clientId),
-        supabase.from("profiles").select("id, full_name, email").order("full_name")
+        supabase.from("users").select("id, full_name, email").order("full_name")
       ]);
 
       if (backRes.data) {
@@ -59,7 +59,11 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
       }
       if (catsRes.data) setCategories(catsRes.data);
       if (mappingRes.data) setClientMappings(mappingRes.data);
-      if (usersRes.data) setUsers(usersRes.data);
+      if (usersRes.data) {
+        setUsers(usersRes.data);
+      } else if (usersRes.error) {
+        console.error("Error fetching users from 'users' table:", usersRes.error);
+      }
     } catch (err) {
       console.error("Error fetching backlinks:", err);
     } finally {
