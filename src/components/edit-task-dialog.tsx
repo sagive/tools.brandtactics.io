@@ -27,6 +27,8 @@ const TASK_QUILL_MODULES = {
   ],
 };
 
+const STORAGE_KEY = 'last_task_choices';
+
 export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?: any, defaultClientId?: string, onTaskCreated?: () => void }) {
   const isEditing = !!task;
   const [isOpen, setIsOpen] = useState(true); // Internal state for Dialog if needed, but we typically use DialogClose or parent state.
@@ -61,6 +63,48 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Load from localStorage on mount for new tasks
+  useEffect(() => {
+    if (!isEditing) {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.title) setTitle(parsed.title);
+          if (parsed.status) setStatus(parsed.status);
+          if (parsed.priority) setPriority(parsed.priority);
+          if (parsed.assignee) setAssignee(parsed.assignee);
+          if (parsed.requester) setRequester(parsed.requester);
+          if (parsed.clientId && !defaultClientId) setClientId(parsed.clientId);
+          if (parsed.dueDate) setDueDate(parsed.dueDate);
+        } catch (e) {
+          console.error("Failed to parse saved task choices", e);
+        }
+      }
+    }
+  }, [isEditing, defaultClientId]);
+
+  // Save to localStorage whenever these change (only for new tasks)
+  useEffect(() => {
+    if (!isEditing) {
+      const choices = { title, status, priority, assignee, requester, clientId, dueDate };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(choices));
+    }
+  }, [isEditing, title, status, priority, assignee, requester, clientId, dueDate]);
+
+  const handleResetFields = () => {
+    setTitle("");
+    setDescription("");
+    setStatus("Pending");
+    setPriority("Medium");
+    setAssignee("");
+    setRequester("");
+    setClientId(defaultClientId || "");
+    setDueDate("");
+    localStorage.removeItem(STORAGE_KEY);
+    toast.success("Fields reset");
+  };
 
   // Field display names for toasts
   const FIELD_LABELS: Record<string, string> = {
@@ -373,6 +417,15 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
           <DialogTitle className="text-xl font-bold">{isEditing ? "Edit Task" : "New Task"}</DialogTitle>
           <div className="flex items-center gap-6 text-sm text-gray-500">
              
+             {!isEditing && (
+               <button 
+                 onClick={handleResetFields} 
+                 className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
+               >
+                 Reset fields
+               </button>
+             )}
+
              {/* Date Picker Auto-save wrapper */}
              <div className="flex items-center gap-2 text-gray-500">
                <span className="font-medium whitespace-nowrap">Due:</span>
