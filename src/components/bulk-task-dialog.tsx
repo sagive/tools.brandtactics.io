@@ -10,69 +10,56 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Loader2, ListChecks } from "lucide-react";
+import { useAuth } from "@/components/auth-provider";
 
 interface BulkTaskDialogProps {
   clientId: string;
-  selectedBacklinks: any[]; // Array of full backlink objects
-  onSuccess: () => void;
-  trigger?: React.ReactNode;
+  selectedBacklinks: any[];
+  users: any[];
+  onSuccess?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  trigger?: React.ReactElement;
 }
 
-export function BulkTaskDialog({ clientId, selectedBacklinks, onSuccess, trigger }: BulkTaskDialogProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [title, setTitle] = useState("Create profile in");
-  const [description, setDescription] = useState("Please create a profile for this client on the following website.");
+export function BulkTaskDialog({ clientId, selectedBacklinks, users, onSuccess, open: externalOpen, onOpenChange: externalOnOpenChange, trigger }: BulkTaskDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setIsOpen = (newOpen: boolean) => {
+    if (externalOnOpenChange) externalOnOpenChange(newOpen);
+    setInternalOpen(newOpen);
+  };
+
+  const { profile } = useAuth();
+  const [baseTitle, setBaseTitle] = useState("Create a company profile");
+  const [generalDescription, setGeneralDescription] = useState("Please create a profile for this client on the following website - with logos and links etc");
   const [status, setStatus] = useState("Pending");
   const [priority, setPriority] = useState("Medium");
-  const [assignee, setAssignee] = useState("");
   const [requester, setRequester] = useState("");
-  const [users, setUsers] = useState<any[]>([]);
+  const [assignee, setAssignee] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    async function fetchUsers() {
-      try {
-        const { data, error } = await supabase.from('profiles').select('id, full_name, email').order('full_name');
-        if (error) throw error;
-        if (data) setUsers(data);
-      } catch (err: any) {
-        console.error("Profiles fetch error:", err);
-      }
+    if (profile && !requester) {
+      setRequester(profile.full_name || profile.email || "");
     }
-    if (isOpen) {
-      fetchUsers();
-      // Try to load last choices from localStorage if they exist (reusing some patterns from EditTaskDialog)
-      const saved = localStorage.getItem('bulk_task_choices');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (parsed.status) setStatus(parsed.status);
-          if (parsed.priority) setPriority(parsed.priority);
-          if (parsed.assignee) setAssignee(parsed.assignee);
-          if (parsed.requester) setRequester(parsed.requester);
-        } catch (e) {}
-      }
-    }
-  }, [isOpen]);
+  }, [profile, requester]);
 
   const handleBulkCreate = async () => {
-    if (!title) return toast.error("Please enter a base title");
+    if (!baseTitle) return toast.error("Please enter a base title");
     if (selectedBacklinks.length === 0) return toast.error("No backlinks selected");
     
     setIsSubmitting(true);
 
     try {
-      // Save choices for next time
-      localStorage.setItem('bulk_task_choices', JSON.stringify({ status, priority, assignee, requester }));
-
-      const tasks = selectedBacklinks.map(backlink => ({
+      const tasks = selectedBacklinks.map(b => ({
         client_id: clientId,
-        title: `${title} ${backlink.website_name}`,
-        description: `${description}\n\nWebsite: ${backlink.url}`,
+        title: `${baseTitle.trim()} ${b.website_name}`,
+        description: `${generalDescription.trim()}\n\nURL: ${b.url}`,
         status,
         priority,
-        assignee_id: assignee || null,
-        requester_id: requester || null,
+        requester,
+        assignee,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }));
@@ -97,7 +84,7 @@ export function BulkTaskDialog({ clientId, selectedBacklinks, onSuccess, trigger
 
       toast.success(`Successfully created ${tasks.length} tasks!`);
       setIsOpen(false);
-      onSuccess();
+      if (onSuccess) onSuccess();
     } catch (err: any) {
       toast.error(err.message || "Failed to create bulk tasks");
     } finally {
@@ -107,14 +94,7 @@ export function BulkTaskDialog({ clientId, selectedBacklinks, onSuccess, trigger
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger 
-        render={(trigger as any) || (
-          <Button variant="outline" className="gap-2 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 hover:text-blue-800">
-            <ListChecks className="w-4 h-4" />
-            Bulk Create Tasks ({selectedBacklinks.length})
-          </Button>
-        )}
-      />
+      {trigger && <DialogTrigger render={trigger} />}
       <DialogContent className="sm:max-w-[500px] border-none shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
@@ -132,11 +112,10 @@ export function BulkTaskDialog({ clientId, selectedBacklinks, onSuccess, trigger
               <Label className="text-xs font-bold text-gray-500 uppercase">Base Title</Label>
               <Input 
                 placeholder="e.g. Create profile in" 
-                value={title} 
-                onChange={(e) => setTitle(e.target.value)} 
+                value={baseTitle} 
+                onChange={(e) => setBaseTitle(e.target.value)} 
                 className="bg-white"
               />
-              <p className="text-[10px] text-gray-400 italic">Example output: "{title} Indeed.com"</p>
             </div>
           </div>
 
@@ -144,8 +123,8 @@ export function BulkTaskDialog({ clientId, selectedBacklinks, onSuccess, trigger
             <Label className="text-xs font-bold text-gray-500 uppercase">General Description</Label>
             <Textarea 
               placeholder="Instructions for the team..." 
-              value={description} 
-              onChange={(e) => setDescription(e.target.value)} 
+              value={generalDescription} 
+              onChange={(e) => setGeneralDescription(e.target.value)} 
               className="min-h-[100px] bg-gray-50/30"
             />
           </div>
@@ -153,58 +132,51 @@ export function BulkTaskDialog({ clientId, selectedBacklinks, onSuccess, trigger
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label className="text-xs font-bold text-gray-500 uppercase">Status</Label>
-              <Select value={status} onValueChange={(v: string | null) => v && setStatus(v)}>
+              <Select value={status} onValueChange={(val) => setStatus(val || "Pending")}>
                 <SelectTrigger className="bg-gray-50/30"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Working on it">Working on it</SelectItem>
-                  <SelectItem value="Review">Review</SelectItem>
+                  <SelectItem value="In Progress">In Progress</SelectItem>
+                  <SelectItem value="Completed">Completed</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-bold text-gray-500 uppercase">Priority</Label>
-              <Select value={priority} onValueChange={(v: string | null) => v && setPriority(v)}>
+              <Select value={priority} onValueChange={(val) => setPriority(val || "Medium")}>
                 <SelectTrigger className="bg-gray-50/30"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Low">Low</SelectItem>
                   <SelectItem value="Medium">Medium</SelectItem>
                   <SelectItem value="High">High</SelectItem>
-                  <SelectItem value="Urgent">Urgent</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label className="text-xs font-bold text-gray-500 uppercase">Requester</Label>
-              <Select value={requester} onValueChange={setRequester as any}>
+              <Select value={requester} onValueChange={(val) => setRequester(val || "")}>
                 <SelectTrigger className="bg-gray-50/30">
                   <SelectValue placeholder="Select..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {users.length === 0 && (
-                    <SelectItem value="none" disabled>No users found</SelectItem>
-                  )}
                   {users.map(u => (
-                    <SelectItem key={u.id} value={u.id}>{u.full_name || u.email}</SelectItem>
+                    <SelectItem key={u.id} value={u.full_name || u.email}>{u.full_name || u.email}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-bold text-gray-500 uppercase">Assignee</Label>
-              <Select value={assignee} onValueChange={setAssignee as any}>
+              <Select value={assignee} onValueChange={(val) => setAssignee(val || "")}>
                 <SelectTrigger className="bg-gray-50/30">
                   <SelectValue placeholder="Select..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {users.length === 0 && (
-                    <SelectItem value="none" disabled>No users found</SelectItem>
-                  )}
                   {users.map(u => (
-                    <SelectItem key={u.id} value={u.id}>{u.full_name || u.email}</SelectItem>
+                    <SelectItem key={u.id} value={u.full_name || u.email}>{u.full_name || u.email}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

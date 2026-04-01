@@ -21,6 +21,7 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
   const [categories, setCategories] = useState<any[]>([]);
   const [clientMappings, setClientMappings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [showUsed, setShowUsed] = useState(false);
@@ -35,10 +36,11 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
   async function fetchData() {
     setLoading(true);
     try {
-      const [backRes, catsRes, mappingRes] = await Promise.all([
+      const [backRes, catsRes, mappingRes, usersRes] = await Promise.all([
         supabase.from("backlinks").select("*, backlink_categories(name)"),
         supabase.from("backlink_categories").select("*").order("rank"),
-        supabase.from("client_backlinks").select("*").eq("client_id", clientId)
+        supabase.from("client_backlinks").select("*").eq("client_id", clientId),
+        supabase.from("profiles").select("id, full_name, email").order("full_name")
       ]);
 
       if (backRes.data) {
@@ -57,6 +59,7 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
       }
       if (catsRes.data) setCategories(catsRes.data);
       if (mappingRes.data) setClientMappings(mappingRes.data);
+      if (usersRes.data) setUsers(usersRes.data);
     } catch (err) {
       console.error("Error fetching backlinks:", err);
     } finally {
@@ -169,6 +172,7 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
                 <BulkTaskDialog 
                   clientId={clientId}
                   selectedBacklinks={backlinks.filter(b => selectedIds.includes(b.id))}
+                  users={users}
                   onSuccess={() => {
                     setSelectedIds([]);
                     fetchData();
