@@ -121,13 +121,13 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
 
   useEffect(() => {
     async function fetchData() {
-      // 1. If we have a defaultClientId, fetch that specific client name first 
-      // to avoid showing the UUID string while the full list loads
-      if (!isEditing && defaultClientId) {
+      // 1. Fetch specific client if we have one (either from task or default)
+      const targetClientId = task?.client_id || defaultClientId || clientId;
+      if (targetClientId) {
         const { data: initialClient } = await supabase
           .from('clients')
           .select('id, name')
-          .eq('id', defaultClientId)
+          .eq('id', targetClientId)
           .single();
         
         if (initialClient) {
@@ -138,23 +138,21 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
         }
       }
 
-      // 2. Fetch all clients
-      if (!isEditing) {
-        const { data: allClients } = await supabase
-          .from('clients')
-          .select('id, name')
-          .order('name');
-        
-        if (allClients) {
-          setClients(allClients);
-        }
+      // 2. Fetch all clients for the dropdown (only if not editing, or if we want to allow changing)
+      const { data: allClients } = await supabase
+        .from('clients')
+        .select('id, name')
+        .order('name');
+      
+      if (allClients) {
+        setClients(allClients);
       }
       
-      // 3. Fetch users
+      // 3. Fetch users (profiles)
       const { data: allUsers } = await supabase
-        .from('users')
-        .select('*')
-        .order('email');
+        .from('profiles')
+        .select('id, full_name, email')
+        .order('full_name');
       
       if (allUsers) {
         setUsers(allUsers);
@@ -162,7 +160,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
     }
 
     fetchData();
-  }, [isEditing, defaultClientId]);
+  }, [isEditing, defaultClientId, task?.client_id]);
 
   const createdDate = task?.created_at 
     ? new Date(task.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
