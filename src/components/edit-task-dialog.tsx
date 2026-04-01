@@ -76,17 +76,48 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
   };
 
   useEffect(() => {
-    // Fetch clients
-    if (!isEditing) {
-      supabase.from('clients').select('id, name').order('name').then(({data}) => {
-         if (data) setClients(data);
-      });
+    async function fetchData() {
+      // 1. If we have a defaultClientId, fetch that specific client name first 
+      // to avoid showing the UUID string while the full list loads
+      if (!isEditing && defaultClientId) {
+        const { data: initialClient } = await supabase
+          .from('clients')
+          .select('id, name')
+          .eq('id', defaultClientId)
+          .single();
+        
+        if (initialClient) {
+          setClients(prev => {
+            if (prev.some(c => c.id === initialClient.id)) return prev;
+            return [initialClient, ...prev];
+          });
+        }
+      }
+
+      // 2. Fetch all clients
+      if (!isEditing) {
+        const { data: allClients } = await supabase
+          .from('clients')
+          .select('id, name')
+          .order('name');
+        
+        if (allClients) {
+          setClients(allClients);
+        }
+      }
+      
+      // 3. Fetch users
+      const { data: allUsers } = await supabase
+        .from('users')
+        .select('*')
+        .order('email');
+      
+      if (allUsers) {
+        setUsers(allUsers);
+      }
     }
-    
-    // Fetch users
-    supabase.from('users').select('*').order('email').then(({data}) => {
-      if (data) setUsers(data);
-    });
+
+    fetchData();
   }, [isEditing, defaultClientId]);
 
   const createdDate = task?.created_at 
