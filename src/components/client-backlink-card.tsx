@@ -78,12 +78,19 @@ export function ClientBacklinkCard({
       "group transition-all border-gray-200 bg-white overflow-hidden relative",
       isSelected ? "ring-2 ring-blue-500 border-blue-500 shadow-md" : (isUsed ? "border-blue-200 shadow-sm" : "opacity-75 grayscale-[0.5] hover:grayscale-0 hover:opacity-100")
     )}>
-      {/* Selection Checkbox */}
-      <div className="absolute top-3 left-3 z-20">
+      {/* Clickable Top Area for Selection */}
+      <div 
+        onClick={() => onSelect?.(!isSelected)}
+        className={cn(
+          "absolute top-0 left-0 right-0 h-10 z-20 cursor-pointer flex items-center px-3 transition-colors rounded-t-xl",
+          isSelected ? "bg-blue-500/5" : "hover:bg-gray-50/50"
+        )}
+      >
         <Checkbox 
           checked={isSelected} 
           onCheckedChange={(checked) => onSelect?.(checked as boolean)}
           className="h-4 w-4 bg-white/80 data-[state=checked]:bg-blue-600 border-blue-200"
+          onClick={(e) => e.stopPropagation()}
         />
       </div>
 
