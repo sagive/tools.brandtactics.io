@@ -23,6 +23,7 @@ export default function ClientLayout({
     { href: `/clients/${clientId}/tasks`, label: "Tasks" },
     { href: `/clients/${clientId}/keywords`, label: "SEO Data" },
     { href: `/clients/${clientId}/articles`, label: "Articles" },
+    { href: `/clients/${clientId}/backlinks`, label: "Backlinks" },
     { href: `/clients/${clientId}/emails`, label: "Email Updates" },
   ];
 
