@@ -177,11 +177,37 @@ export default function ClientResources({ clientId }: { clientId: string }) {
         ) : (
           resources.map((resource, index) => {
             const Icon = ICON_MAP[resource.icon_type] || LinkIcon;
+            const isDefaultLink = resource.icon_type === 'link';
+            
+            // Helper to get domain for favicon
+            const getDomain = (url: string) => {
+              try {
+                const cleanUrl = url.startsWith('http') ? url : `https://${url}`;
+                return new URL(cleanUrl).hostname;
+              } catch {
+                return null;
+              }
+            };
+            const domain = getDomain(resource.url);
+
             return (
               <div key={resource.id} className="group flex items-center justify-between p-2 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded bg-gray-100 text-gray-500 flex items-center justify-center shrink-0">
-                    <Icon className="w-4 h-4" />
+                  <div className="w-8 h-8 rounded bg-gray-100 text-gray-500 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200/50">
+                    {isDefaultLink && domain ? (
+                      <img 
+                        src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`} 
+                        alt="" 
+                        className="w-5 h-5 object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          (e.target as HTMLImageElement).parentElement?.querySelector('.fallback-icon')?.classList.remove('hidden');
+                        }}
+                      />
+                    ) : (
+                      <Icon className="w-4 h-4" />
+                    )}
+                    <Icon className={cn("w-4 h-4 fallback-icon", isDefaultLink && domain ? "hidden" : "")} />
                   </div>
                   <div>
                     <a 
