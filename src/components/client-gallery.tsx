@@ -186,16 +186,28 @@ export default function ClientGallery({ clientId }: { clientId: string }) {
 
       {/* Lightbox / Zoom */}
       {selectedImage && (
-        <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4">
-          <Button variant="ghost" size="icon" className="absolute top-4 right-4 text-white hover:bg-white/10" onClick={() => setSelectedImage(null)}>
-            <X className="w-6 h-6" />
+        <div 
+          className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={() => setSelectedImage(null)}
+        >
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="absolute top-6 right-6 text-white hover:bg-white/20 bg-black/20 backdrop-blur-sm rounded-full h-12 w-12 z-[10000]" 
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedImage(null);
+            }}
+          >
+            <X className="w-8 h-8" />
           </Button>
           <img 
             src={getPublicUrl(selectedImage.storage_path)} 
             alt={selectedImage.file_name}
-            className="max-w-full max-h-full object-contain shadow-2xl"
+            className="max-w-[90vw] max-h-[90vh] object-contain shadow-2xl cursor-default"
+            onClick={(e) => e.stopPropagation()}
           />
-          <div className="absolute bottom-4 left-4 text-white font-medium text-sm bg-black/50 px-3 py-1.5 rounded-full">
+          <div className="absolute bottom-6 left-6 text-white font-medium text-sm bg-black/60 backdrop-blur-sm px-4 py-2 rounded-full border border-white/10">
             {selectedImage.file_name}
           </div>
         </div>
