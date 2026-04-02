@@ -242,7 +242,7 @@ export default function ClientResources({ clientId }: { clientId: string }) {
               <label className="text-xs font-bold uppercase text-gray-500">Icon Type</label>
               <Select 
                 value={formData.icon_type || "link"} 
-                onValueChange={(v) => setFormData({...formData, icon_type: v})}
+                onValueChange={(v) => setFormData({...formData, icon_type: v || "link"})}
               >
                 <SelectTrigger>
                   <SelectValue />
