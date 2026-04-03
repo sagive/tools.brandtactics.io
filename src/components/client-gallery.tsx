@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Download, Trash2, ImageIcon, Loader2, Maximize2, X } from "lucide-react";
+import { Plus, Download, Trash2, ImageIcon, Loader2, Maximize2, X, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -116,14 +116,9 @@ export default function ClientGallery({ clientId }: { clientId: string }) {
     return data.publicUrl;
   };
 
-  const handleDownload = async (asset: Asset) => {
+  const handleDownload = (asset: Asset) => {
     const url = getPublicUrl(asset.storage_path);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = asset.file_name;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    window.open(url, '_blank');
   };
 
   return (
@@ -152,37 +147,42 @@ export default function ClientGallery({ clientId }: { clientId: string }) {
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="text-xs text-gray-400 py-4">Loading gallery...</div>
-      ) : assets.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-10 border-2 border-dashed rounded-lg bg-gray-50/50 text-gray-400">
-          <ImageIcon className="w-8 h-8 mb-2 opacity-20" />
-          <span className="text-xs font-medium">No images yet</span>
-        </div>
-      ) : (
-        <div className="grid grid-cols-3 gap-2">
-          {assets.map((asset) => (
-            <div key={asset.id} className="group relative aspect-square rounded-md overflow-hidden bg-gray-100 border border-gray-100">
-              <img 
-                src={getPublicUrl(asset.storage_path)} 
-                alt={asset.file_name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/20" onClick={() => setSelectedImage(asset)}>
-                  <Maximize2 className="w-4 h-4" />
-                </Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/20" onClick={() => handleDownload(asset)}>
-                  <Download className="w-4 h-4" />
-                </Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8 text-red-400 hover:bg-red-400/20" onClick={() => handleDelete(asset)}>
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+      <div className={cn(
+        "rounded-lg border border-gray-100 p-2 bg-gray-50/30",
+        assets.length === 0 && "py-10 flex flex-col items-center justify-center border-dashed"
+      )}>
+        {isLoading ? (
+          <div className="text-xs text-gray-400 py-4 w-full text-center">Loading gallery...</div>
+        ) : assets.length === 0 ? (
+          <>
+            <ImageIcon className="w-8 h-8 mb-2 opacity-20" />
+            <span className="text-xs font-medium text-gray-400">No images yet</span>
+          </>
+        ) : (
+          <div className="grid grid-cols-3 gap-2">
+            {assets.map((asset) => (
+              <div key={asset.id} className="group relative aspect-square rounded-md overflow-hidden bg-white border border-gray-200/50 shadow-sm">
+                <img 
+                  src={getPublicUrl(asset.storage_path)} 
+                  alt={asset.file_name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/20" onClick={() => setSelectedImage(asset)}>
+                    <Maximize2 className="w-4 h-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/20" onClick={() => handleDownload(asset)}>
+                    <ExternalLink className="w-4 h-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-red-400 hover:bg-red-400/20" onClick={() => handleDelete(asset)}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Lightbox / Zoom */}
       {selectedImage && (

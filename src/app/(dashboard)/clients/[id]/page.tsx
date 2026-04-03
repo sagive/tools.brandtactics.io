@@ -248,6 +248,14 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
               </div>
               
               <div className="pt-6 border-t border-gray-100 space-y-2">
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Contact Emails</h3>
+                <p className="text-[11px] text-gray-500">These emails would be used when sending seo updates, use multiple emails by seperating them with commas</p>
+                <div className="flex items-center border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors px-3 h-10">
+                  <Input name="contactEmail" value={formData.contactEmail} onChange={handleChange} placeholder="client1@example.com, client2@example.com" className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-sm font-medium text-gray-700 bg-transparent flex-1" />
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-gray-100 space-y-2">
                 <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Client Description</h3>
                 <p className="text-[11px] text-gray-500">Provide a brief overview of the client, which can be used by AI when generating content.</p>
                 <div className="flex items-center border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors h-24">
@@ -261,14 +269,6 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
                     placeholder="Client description..." 
                     className="w-full h-full p-3 text-sm font-medium text-gray-700 bg-transparent border-none shadow-none resize-none focus-visible:outline-none focus-visible:ring-0" 
                   />
-                </div>
-              </div>
-
-              <div className="pt-6 border-t border-gray-100 space-y-2">
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Contact Emails</h3>
-                <p className="text-[11px] text-gray-500">These emails would be used when sending seo updates, use multiple emails by seperating them with commas</p>
-                <div className="flex items-center border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors px-3 h-10">
-                  <Input name="contactEmail" value={formData.contactEmail} onChange={handleChange} placeholder="client1@example.com, client2@example.com" className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-sm font-medium text-gray-700 bg-transparent flex-1" />
                 </div>
               </div>
 
