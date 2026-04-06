@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, UserPlus, Mail, Lock, User, Trash2, Plus, FileText, RotateCw, Clock, Camera, Upload, Zap, Users } from "lucide-react";
+import { Save, UserPlus, Mail, Lock, User, Trash2, Plus, FileText, RotateCw, Clock, Camera, Upload, Zap, Users, ArrowUp, ArrowDown, Globe } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
@@ -22,6 +22,38 @@ import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
+
+function SiteRow({ site, onDelete, onUpdate, onMove, isFirst, isLast }: { site: any, onDelete: (id: string) => void, onUpdate: (id: string, updates: any) => Promise<void>, onMove: (id: string, direction: 'up' | 'down') => void, isFirst: boolean, isLast: boolean }) {
+  const [name, setName] = useState(site.name);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    await onUpdate(site.id, { name });
+    setIsSaving(false);
+  };
+
+  return (
+    <div className="p-4 border rounded-xl bg-white shadow-sm flex items-center gap-4 group">
+      <div className="flex flex-col gap-1">
+        <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-blue-600 disabled:opacity-0" onClick={() => onMove(site.id, 'up')} disabled={isFirst}>
+          <ArrowUp className="w-4 h-4" />
+        </Button>
+        <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-blue-600 disabled:opacity-0" onClick={() => onMove(site.id, 'down')} disabled={isLast}>
+          <ArrowDown className="w-4 h-4" />
+        </Button>
+      </div>
+      <div className="flex-1">
+        <Input value={name} onChange={(e) => setName(e.target.value)} onBlur={handleSave} className="font-bold text-gray-900 border-transparent hover:border-gray-200 focus:border-blue-300 bg-transparent" placeholder="Site name..." />
+      </div>
+      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button variant="ghost" className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0" onClick={() => onDelete(site.id)}>
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 function PrewrittenTemplateRow({ template, onDelete, onUpdate }: { template: any, onDelete: (id: string) => void, onUpdate: (id: string, updates: any) => Promise<void> }) {
   const [name, setName] = useState(template.name);
@@ -177,9 +209,78 @@ function SettingsContent() {
     }
   };
 
+  const [profileSites, setProfileSites] = useState<any[]>([]);
+  const [isAddingSite, setIsAddingSite] = useState(false);
+
+  const fetchProfileSites = async () => {
+    try {
+      const { data, error } = await supabase.from('profile_sites').select('*').order('rank', { ascending: true });
+      if (data) setProfileSites(data);
+    } catch (err) {}
+  };
+
   useEffect(() => {
     fetchArticleEndpoints();
+    fetchProfileSites();
   }, []);
+
+  const handleCreateSite = async () => {
+    setIsAddingSite(true);
+    const maxRank = profileSites.reduce((max, s) => Math.max(max, s.rank || 0), 0);
+    try {
+      const { data, error } = await supabase.from('profile_sites').insert({ name: "New Site", rank: maxRank + 1 }).select().single();
+      if (error) throw error;
+      if (data) setProfileSites([...profileSites, data]);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setIsAddingSite(false);
+    }
+  };
+
+  const handleDeleteSite = async (id: string) => {
+    try {
+      const { error } = await supabase.from('profile_sites').delete().eq('id', id);
+      if (error) throw error;
+      setProfileSites(profileSites.filter(s => s.id !== id));
+      toast.success("Site removed");
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleUpdateSite = async (id: string, updates: any) => {
+    try {
+      const { error } = await supabase.from('profile_sites').update(updates).eq('id', id);
+      if (error) throw error;
+      setProfileSites(profileSites.map(s => s.id === id ? { ...s, ...updates } : s));
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleMoveSite = async (id: string, direction: 'up' | 'down') => {
+    const index = profileSites.findIndex(s => s.id === id);
+    if ((direction === 'up' && index === 0) || (direction === 'down' && index === profileSites.length - 1)) return;
+
+    const newSites = [...profileSites];
+    const swapIndex = direction === 'up' ? index - 1 : index + 1;
+    [newSites[index], newSites[swapIndex]] = [newSites[swapIndex], newSites[index]];
+
+    // Optimistic UI
+    setProfileSites(newSites);
+
+    // Save to DB (We'll update ranks for all to be safe)
+    try {
+      const updates = newSites.map((s, i) => 
+        supabase.from('profile_sites').update({ rank: i + 1 }).eq('id', s.id)
+      );
+      await Promise.all(updates);
+    } catch (err: any) {
+      toast.error("Failed to reorder");
+      fetchProfileSites(); // Revert
+    }
+  };
 
   const handleCreateEndpoint = async () => {
     setIsAddingEndpoint(true);
@@ -947,6 +1048,45 @@ function SettingsContent() {
               </div>
             </CardContent>
           </Card>
+
+          <div className="space-y-6 pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                  <Globe className="w-5 h-5 mr-2 text-indigo-600" />
+                  Global Sites
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  Manage the platforms (Facebook, Twitter, etc.) that appear when adding credentials to a profile.
+                </p>
+              </div>
+              <Button onClick={handleCreateSite} disabled={isAddingSite} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm gap-2">
+                <Plus className="w-4 h-4" /> {isAddingSite ? "Adding..." : "Add Site"}
+              </Button>
+            </div>
+
+            {profileSites.length === 0 ? (
+              <div className="p-12 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+                <Globe className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                <h4 className="font-semibold text-gray-700">No sites added yet</h4>
+                <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">Click the button above to add your first platform.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {profileSites.map((site, idx) => (
+                  <SiteRow 
+                    key={site.id} 
+                    site={site} 
+                    onDelete={handleDeleteSite} 
+                    onUpdate={handleUpdateSite}
+                    onMove={handleMoveSite}
+                    isFirst={idx === 0}
+                    isLast={idx === profileSites.length - 1}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

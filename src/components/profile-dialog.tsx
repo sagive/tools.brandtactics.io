@@ -16,6 +16,7 @@ interface Credential {
   username: string;
   password: string;
   login_url: string;
+  site_id?: string | null;
 }
 
 interface Profile {
@@ -45,8 +46,10 @@ export function ProfileDialog({ open, onOpenChange, profile, onSuccess }: Profil
   });
 
   const [credentials, setCredentials] = useState<Credential[]>([]);
+  const [sites, setSites] = useState<any[]>([]);
 
   useEffect(() => {
+    fetchSites();
     if (profile) {
       setFormData(profile);
       fetchCredentials(profile.id!);
@@ -69,6 +72,11 @@ export function ProfileDialog({ open, onOpenChange, profile, onSuccess }: Profil
       .order("created_at", { ascending: true });
     
     if (data) setCredentials(data);
+  }
+
+  async function fetchSites() {
+    const { data } = await supabase.from("profile_sites").select("*").order("rank", { ascending: true });
+    if (data) setSites(data);
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,14 +114,14 @@ export function ProfileDialog({ open, onOpenChange, profile, onSuccess }: Profil
   };
 
   const addCredentialLine = () => {
-    setCredentials([...credentials, { username: "", password: "", login_url: "" }]);
+    setCredentials([...credentials, { username: "", password: "", login_url: "", site_id: null }]);
   };
 
   const removeCredentialLine = (index: number) => {
     setCredentials(credentials.filter((_, i) => i !== index));
   };
 
-  const updateCredential = (index: number, field: keyof Credential, value: string) => {
+  const updateCredential = (index: number, field: keyof Credential, value: any) => {
     const newCreds = [...credentials];
     newCreds[index] = { ...newCreds[index], [field]: value };
     setCredentials(newCreds);
@@ -157,7 +165,8 @@ export function ProfileDialog({ open, onOpenChange, profile, onSuccess }: Profil
           profile_id: profileId,
           username: c.username,
           password: c.password,
-          login_url: c.login_url
+          login_url: c.login_url,
+          site_id: c.site_id
         }));
 
       if (credsToInsert.length > 0) {
@@ -177,7 +186,7 @@ export function ProfileDialog({ open, onOpenChange, profile, onSuccess }: Profil
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto rounded-[2rem] border-none shadow-2xl p-0">
+      <DialogContent className="sm:max-w-5xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-[2rem] border-none shadow-2xl p-0">
         <DialogHeader className="p-8 pb-4 border-b border-gray-100">
           <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">{profile ? "Update Persona" : "Create New Persona"}</DialogTitle>
         </DialogHeader>
@@ -277,14 +286,31 @@ export function ProfileDialog({ open, onOpenChange, profile, onSuccess }: Profil
                       <Trash2 className="w-3 h-3" />
                     </Button>
                     
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Platform / Site</Label>
+                        <Select 
+                          value={cred.site_id || "none"} 
+                          onValueChange={(v) => updateCredential(index, "site_id", v === "none" ? null : v)}
+                        >
+                          <SelectTrigger className="h-8 bg-white border-gray-200 text-xs">
+                            <SelectValue placeholder="Select platform" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Manual / Other</SelectItem>
+                            {sites.map(site => (
+                              <SelectItem key={site.id} value={site.id}>{site.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                       <div className="space-y-1">
                         <Label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Username</Label>
                         <Input 
                           value={cred.username}
                           onChange={(e) => updateCredential(index, "username", e.target.value)}
                           placeholder="User / Email" 
-                          className="h-8 text-sm bg-white border-gray-200"
+                          className="h-8 text-[11px] bg-white border-gray-200"
                         />
                       </div>
                       <div className="space-y-1">
@@ -294,7 +320,7 @@ export function ProfileDialog({ open, onOpenChange, profile, onSuccess }: Profil
                           value={cred.password}
                           onChange={(e) => updateCredential(index, "password", e.target.value)}
                           placeholder="Password" 
-                          className="h-8 text-sm bg-white border-gray-200"
+                          className="h-8 text-[11px] bg-white border-gray-200"
                         />
                       </div>
                     </div>
