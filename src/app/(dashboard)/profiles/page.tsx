@@ -9,13 +9,15 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { ProfileDialog } from "@/components/profile-dialog";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useRouter } from "next/navigation";
 
 interface Profile {
   id: string;
@@ -30,8 +32,10 @@ export default function ProfilesPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     fetchProfiles();
@@ -71,13 +75,38 @@ export default function ProfilesPage() {
   };
 
   const handleEdit = (profile: Profile) => {
-    setSelectedProfile(profile);
-    setIsDialogOpen(true);
+    router.push(`/profiles/${profile.id}`);
   };
 
   const handleAdd = () => {
-    setSelectedProfile(null);
-    setIsDialogOpen(true);
+    setNewName("");
+    setIsQuickAddOpen(true);
+  };
+
+  const handleQuickCreate = async () => {
+    if (!newName.trim()) {
+      toast.error("Please enter a name");
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      const { data, error } = await supabase
+        .from("profiles_data")
+        .insert([{ name: newName.trim(), gender: "male" }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      toast.success("Persona created!");
+      setIsQuickAddOpen(false);
+      router.push(`/profiles/${data.id}`);
+    } catch (error: any) {
+      toast.error("Failed to create: " + error.message);
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const filteredProfiles = profiles.filter(p => 
@@ -213,12 +242,37 @@ export default function ProfilesPage() {
         </div>
       )}
 
-      <ProfileDialog 
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        profile={selectedProfile}
-        onSuccess={fetchProfiles}
-      />
+      {/* Quick Add Dialog */}
+      <Dialog open={isQuickAddOpen} onOpenChange={setIsQuickAddOpen}>
+        <DialogContent className="sm:max-w-md rounded-3xl border-none shadow-2xl p-0 overflow-hidden">
+          <DialogHeader className="p-8 pb-4">
+            <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">New Persona</DialogTitle>
+          </DialogHeader>
+          <div className="p-8 pt-2 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-black uppercase text-gray-400 tracking-widest pl-1">What's their name?</Label>
+              <Input 
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="e.g. John Doe" 
+                className="h-12 bg-gray-50/50 border-gray-100 rounded-2xl text-sm font-medium focus:bg-white transition-all"
+                onKeyDown={(e) => e.key === 'Enter' && handleQuickCreate()}
+                autoFocus
+              />
+            </div>
+            <p className="text-[10px] text-gray-400 font-medium leading-relaxed">
+              You can add their address, photo, and accounts on the next page.
+            </p>
+          </div>
+          <DialogFooter className="p-8 pt-0 flex gap-2">
+            <Button variant="ghost" onClick={() => setIsQuickAddOpen(false)} className="rounded-xl font-bold">Cancel</Button>
+            <Button onClick={handleQuickCreate} disabled={isCreating} className="bg-blue-600 hover:bg-blue-700 rounded-xl px-8 shadow-lg shadow-blue-100 font-bold flex-1 h-12">
+              {isCreating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+              Create Persona
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
