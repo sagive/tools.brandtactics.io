@@ -101,11 +101,21 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
   };
 
   const addCredentialLine = () => {
-    setCredentials([...credentials, { username: "", password: "", login_url: "", site_id: null }]);
+    setCredentials([...credentials, { 
+      id: crypto.randomUUID(), 
+      username: "", 
+      password: "", 
+      login_url: "", 
+      site_id: null 
+    }]);
   };
 
   const removeCredentialLine = (index: number) => {
     const credToRemove = credentials[index];
+    // Since we now auto-generate UUIDs for new lines on the client, 
+    // only track for DB deletion if it's an existing row we loaded from the database.
+    // We can assume it's from the DB if it was successfully fetched (not just typed in).
+    // A simple check is if it's already in the DB state. To be safe, we just try to delete all removed IDs.
     if (credToRemove.id) {
       setDeletedIds(prev => [...prev, credToRemove.id!]);
     }
@@ -139,17 +149,15 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
         return;
       }
 
-      // 3. Prepare for upsert
+      // 3. Prepare for upsert: Generate UUIDs for any new rows that somehow don't have one
       const credsToSave = validCreds.map(c => {
-        const { id, ...rest } = c;
-        const cleaned: any = {
-          ...rest,
+        const finalId = c.id && c.id.length > 10 ? c.id : crypto.randomUUID();
+        return {
+          ...c,
+          id: finalId,
           profile_id: profileId,
           site_id: c.site_id === "none" ? null : c.site_id
         };
-        // Only include ID if it's an existing record (UUID)
-        if (id && id.length > 10) cleaned.id = id;
-        return cleaned;
       });
 
       // 4. Upsert (Update existing / Insert new)
