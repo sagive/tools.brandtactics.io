@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, UserPlus, Mail, Lock, User, Trash2, Plus, FileText, RotateCw, Clock, Camera, Upload, Zap } from "lucide-react";
+import { Save, UserPlus, Mail, Lock, User, Trash2, Plus, FileText, RotateCw, Clock, Camera, Upload, Zap, Users } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
@@ -486,6 +486,7 @@ function SettingsContent() {
           <TabsTrigger value="profile" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">My Profile</TabsTrigger>
           <TabsTrigger value="email" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Email Template</TabsTrigger>
           <TabsTrigger value="endpoints" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Article Endpoints</TabsTrigger>
+          <TabsTrigger value="profiles" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Profiles</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="space-y-6 mt-0 outline-none ring-0">
@@ -902,6 +903,50 @@ function SettingsContent() {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="profiles" className="space-y-6 mt-0 outline-none ring-0">
+          <Card className="shadow-sm border-gray-200">
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <Users className="w-5 h-5 mr-2 text-blue-600" />
+                Profiles Configuration
+              </CardTitle>
+              <CardDescription>
+                Manage global settings and categories for user personas.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex gap-4">
+                  <div className="bg-white p-2 rounded-lg h-fit flex items-center justify-center border border-blue-200">
+                    <Zap className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-blue-900">Global Ordering</h4>
+                    <p className="text-xs text-blue-700 leading-relaxed">
+                      Profiles are currently ordered by manual rank and creation date. You can re-order them directly from the Profiles dashboard using drag-and-drop (coming soon).
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                   <div className="flex items-center justify-between">
+                     <Label className="text-xs font-bold uppercase text-gray-500">Enable Profile Categories</Label>
+                     <div className="h-6 w-10 bg-gray-200 rounded-full relative cursor-pointer opacity-50">
+                       <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm" />
+                     </div>
+                   </div>
+                   <div className="flex items-center justify-between">
+                     <Label className="text-xs font-bold uppercase text-gray-500">Auto-Generate Credentials</Label>
+                     <div className="h-6 w-10 bg-gray-200 rounded-full relative cursor-pointer opacity-50">
+                       <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm" />
+                     </div>
+                   </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
