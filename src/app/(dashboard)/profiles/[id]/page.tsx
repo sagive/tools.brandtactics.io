@@ -132,7 +132,7 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
   const inputClasses = "h-auto px-2 py-1 -ml-2 w-full bg-transparent hover:bg-gray-50 border-transparent hover:border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-gray-900 shadow-none rounded-md";
 
   return (
-    <div className="max-w-6xl mx-auto pb-20 px-4 sm:px-6">
+    <div className="w-full pb-20 px-4 sm:px-8">
       {/* Top Navigation */}
       <div className="flex items-center justify-between mb-8">
         <Link href="/profiles" className="group">
@@ -156,7 +156,7 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Profile Card */}
-        <div className="lg:col-span-4 space-y-6">
+        <div className="lg:col-span-3 space-y-6">
           <Card className="rounded-[2.5rem] border-none shadow-2xl shadow-blue-50/50 overflow-hidden bg-white/80 backdrop-blur-sm">
             <CardContent className="p-10 text-center space-y-8">
               <div className="relative inline-block mx-auto">
@@ -178,7 +178,7 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
                 </label>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="space-y-1">
                   <Label className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] block mb-2">Display name</Label>
                   <Input 
@@ -192,14 +192,24 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
                   />
                 </div>
 
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] block mb-2">Residence Address</Label>
+                  <div className="relative group mx-auto max-w-[240px]">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 transition-colors group-focus-within:text-blue-500" />
+                    <Input 
+                      value={formData.address || ""} 
+                      onChange={(e) => {
+                        setFormData({...formData, address: e.target.value});
+                        setIsDirty(true);
+                      }}
+                      className={cn(inputClasses, "pl-10 text-xs font-bold text-gray-600 text-center")}
+                      placeholder="Street, City, Country"
+                    />
+                  </div>
+                </div>
+
                 <div className="pt-6 border-t border-gray-50 flex items-center justify-center gap-6">
                   <div className="text-center">
-                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</span>
-                    <span className="px-3 py-1 rounded-full bg-green-50 text-green-600 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 mx-auto">
-                      <ShieldCheck className="w-3 h-3" /> Active
-                    </span>
-                  </div>
-                  <div className="text-center border-l border-gray-100 pl-6">
                     <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Gender</span>
                     <Select 
                       value={formData.gender || "male"} 
@@ -239,38 +249,22 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
         </div>
 
         {/* Right Column: Dynamic Data */}
-        <div className="lg:col-span-8 space-y-8">
-          <Card className="rounded-[2.5rem] border-none shadow-2xl shadow-blue-50/50 bg-white/80 backdrop-blur-sm">
+        <div className="lg:col-span-9 space-y-8">
+          <Card className="rounded-[2.5rem] border-none shadow-2xl shadow-blue-50/50 bg-white/80 backdrop-blur-sm min-h-[600px]">
             <CardContent className="p-10 space-y-12">
-              {/* Identity Section */}
+              {/* Identity Section - Now compact since address moved */}
               <div className="space-y-6">
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-8 bg-blue-600 rounded-full" />
-                  <h3 className="text-xl font-black text-gray-900 tracking-tight">Identity Details</h3>
+                  <h3 className="text-xl font-black text-gray-900 tracking-tight">Identity Overview</h3>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-black uppercase text-gray-400 tracking-widest pl-1">Primary Address</Label>
-                    <div className="relative group">
-                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                      <Input 
-                        value={formData.address || ""} 
-                        onChange={(e) => {
-                          setFormData({...formData, address: e.target.value});
-                          setIsDirty(true);
-                        }}
-                        className="h-12 pl-12 bg-gray-50/50 border-gray-100 rounded-2xl text-sm font-medium focus:bg-white transition-all"
-                        placeholder="e.g., 123 Main St, New York"
-                      />
-                    </div>
-                  </div>
-                  {/* Future fields can go here */}
-                </div>
+                <p className="text-xs text-gray-500 font-medium leading-relaxed max-w-2xl">
+                  Manage all credentials and platforms associated with this persona record. Use the search bar below to quickly find specific accounts.
+                </p>
               </div>
 
-              {/* Accounts Section */}
-              <div className="pt-10 border-t border-gray-50">
+              <div className="pt-2 border-t border-gray-50">
                 <ProfileCredentials profileId={id} />
               </div>
             </CardContent>
