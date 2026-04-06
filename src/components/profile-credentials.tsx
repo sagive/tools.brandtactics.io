@@ -99,23 +99,38 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Clean credentials to omit 'id' if it doesn't exist (triggers insert)
-      const credsToSave = credentials.map(c => {
-        const { id, ...rest } = c;
-        const cleaned: any = {
-          ...rest,
-          profile_id: profileId,
-          site_id: c.site_id === "none" ? null : c.site_id
-        };
-        if (id) cleaned.id = id;
-        return cleaned;
-      });
+      // 1. Filter out completely empty rows
+      const validCreds = credentials.filter(c => c.username || c.password || c.login_url || c.site_id);
+      
+      if (validCreds.length === 0) {
+        // If everything was removed, just delete and we're done
+        await supabase.from("profile_credentials").delete().eq("profile_id", profileId);
+        toast.success("All credentials removed");
+        fetchCredentials();
+        return;
+      }
 
-      const { error } = await supabase
+      // 2. Clear existing credentials for this profile to ensure a clean state
+      const { error: deleteError } = await supabase
         .from("profile_credentials")
-        .upsert(credsToSave);
+        .delete()
+        .eq("profile_id", profileId);
 
-      if (error) throw error;
+      if (deleteError) throw deleteError;
+
+      // 3. Insert the current list (without IDs to let DB generate fresh ones)
+      const credsToInsert = validCreds.map(({ id, ...rest }) => ({
+        ...rest,
+        profile_id: profileId,
+        site_id: rest.site_id === "none" ? null : rest.site_id
+      }));
+
+      const { error: insertError } = await supabase
+        .from("profile_credentials")
+        .insert(credsToInsert);
+
+      if (insertError) throw insertError;
+
       toast.success("Credentials saved successfully");
       fetchCredentials();
     } catch (error: any) {
