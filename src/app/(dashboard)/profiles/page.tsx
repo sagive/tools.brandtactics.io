@@ -141,10 +141,10 @@ export default function ProfilesPage() {
   return (
     <div className="space-y-8 max-w-[1400px] mx-auto pb-20">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-sm border border-gray-100 shadow-sm transition-all hover:shadow-md">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-sm border border-gray-300 transition-all hover:border-gray-400">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <div className="bg-blue-600 rounded p-1.5 shadow-lg shadow-blue-200">
+            <div className="bg-blue-600 rounded p-1.5 border border-blue-700">
               <Users className="w-4 h-4 text-white" />
             </div>
             <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">
@@ -155,17 +155,17 @@ export default function ProfilesPage() {
         
         <div className="flex items-center gap-3">
           <div className="relative group min-w-[240px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors group-focus-within:text-blue-500" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 transition-colors group-focus-within:text-blue-600" />
             <Input 
               placeholder="Search personas..." 
-              className="pl-11 h-10 rounded-sm bg-gray-50/50 border-gray-100 focus:bg-white focus:ring-2 focus:ring-blue-100/50 transition-all text-sm font-medium"
+              className="pl-11 h-10 rounded-sm bg-gray-50/50 border-gray-300 focus:bg-white focus:ring-1 focus:ring-blue-300 transition-all text-sm font-medium shadow-none"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <Button 
             onClick={handleAdd} 
-            className="h-10 bg-blue-600 hover:bg-blue-700 rounded-sm px-6 shadow-lg shadow-blue-100 font-bold transition-all hover:-translate-y-0.5 active:translate-y-0 text-sm"
+            className="h-10 bg-blue-600 hover:bg-blue-700 rounded-sm px-6 font-bold transition-all text-sm shadow-none"
           >
             <Plus className="w-4 h-4 mr-2" />
             New Persona
@@ -174,33 +174,33 @@ export default function ProfilesPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center h-[500px] bg-white rounded-sm border border-gray-100 border-dashed">
+        <div className="flex flex-col items-center justify-center h-[500px] bg-white rounded-sm border border-gray-300 border-dashed">
           <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
           <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Loading personas...</p>
         </div>
       ) : filteredProfiles.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-[500px] bg-white rounded-sm border border-gray-100 border-dashed p-8 text-center">
+        <div className="flex flex-col items-center justify-center h-[500px] bg-white rounded-sm border border-gray-300 border-dashed p-8 text-center">
           <div className="bg-gray-50 p-6 rounded-full mb-6">
             <Users className="w-12 h-12 text-gray-200" />
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-2">No personas found</h3>
           <p className="text-gray-500 max-w-sm mb-8">Start by creating your first user profile. You can store their details and multiple social or web app credentials.</p>
-          <Button onClick={handleAdd} size="lg" className="bg-blue-600 hover:bg-blue-700 rounded-sm px-8 shadow-lg shadow-blue-100">
+          <Button onClick={handleAdd} size="lg" className="bg-blue-600 hover:bg-blue-700 rounded-sm px-8 font-bold shadow-none">
             Create First Profile
           </Button>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
           {filteredProfiles.map((profile) => (
-            <Card key={profile.id} className="group relative overflow-hidden bg-white rounded-sm border-transparent hover:border-blue-100 transition-all duration-300 hover:shadow-xl border shadow-sm flex flex-col cursor-pointer">
-              <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100">
+            <Card key={profile.id} className="group relative overflow-hidden bg-white rounded-sm border-gray-300 transition-all duration-300 hover:border-blue-600 border flex flex-col cursor-pointer shadow-none">
+              <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-all">
                 <DropdownMenu>
                   <DropdownMenuTrigger onClick={(e) => e.stopPropagation()}>
-                    <Button variant="secondary" size="icon" className="h-7 w-7 rounded-sm bg-white/90 backdrop-blur-md shadow-sm border border-gray-100">
+                    <Button variant="secondary" size="icon" className="h-7 w-7 rounded-sm bg-white border border-gray-300 shadow-none">
                       <MoreVertical className="w-3.5 h-3.5 text-gray-600" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 rounded-sm p-1 shadow-xl border-gray-100">
+                  <DropdownMenuContent align="end" className="w-48 rounded-sm p-1 border-gray-300 shadow-none">
                     <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(profile); }} className="rounded-sm py-2 cursor-pointer font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50">
                       <Edit2 className="w-4 h-4 mr-3" /> Edit Persona
                     </DropdownMenuItem>
@@ -244,7 +244,7 @@ export default function ProfilesPage() {
 
       {/* Quick Add Dialog */}
       <Dialog open={isQuickAddOpen} onOpenChange={setIsQuickAddOpen}>
-        <DialogContent className="sm:max-w-md rounded-sm border-none shadow-2xl p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-md rounded-sm border border-gray-300 p-0 overflow-hidden shadow-none">
           <DialogHeader className="p-8 pb-4">
             <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">New Persona</DialogTitle>
           </DialogHeader>
@@ -255,7 +255,7 @@ export default function ProfilesPage() {
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="e.g. John Doe" 
-                className="h-12 bg-gray-50/50 border-gray-100 rounded-sm text-sm font-medium focus:bg-white transition-all shadow-none"
+                className="h-12 bg-gray-50/50 border-gray-300 rounded-sm text-sm font-medium focus:bg-white transition-all shadow-none"
                 onKeyDown={(e) => e.key === 'Enter' && handleQuickCreate()}
                 autoFocus
               />
@@ -266,7 +266,7 @@ export default function ProfilesPage() {
           </div>
           <DialogFooter className="p-8 pt-0 flex gap-2">
             <Button variant="ghost" onClick={() => setIsQuickAddOpen(false)} className="rounded-sm font-bold">Cancel</Button>
-            <Button onClick={handleQuickCreate} disabled={isCreating} className="bg-blue-600 hover:bg-blue-700 rounded-sm px-8 shadow-lg shadow-blue-100 font-bold flex-1 h-12">
+            <Button onClick={handleQuickCreate} disabled={isCreating} className="bg-blue-600 hover:bg-blue-700 rounded-sm px-8 font-bold flex-1 h-12 shadow-none">
               {isCreating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
               Create Persona
             </Button>
