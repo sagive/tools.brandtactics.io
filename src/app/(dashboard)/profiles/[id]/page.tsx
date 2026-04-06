@@ -157,10 +157,10 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Profile Card */}
         <div className="lg:col-span-3 space-y-6">
-          <Card className="rounded-[2.5rem] border-none shadow-2xl shadow-blue-50/50 overflow-hidden bg-white/80 backdrop-blur-sm">
+          <Card className="rounded-xl border border-gray-100 shadow-sm overflow-hidden bg-white/80 backdrop-blur-sm">
             <CardContent className="p-10 text-center space-y-8">
               <div className="relative inline-block mx-auto">
-                <div className="w-40 h-40 rounded-[2rem] border-4 border-white shadow-2xl bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center overflow-hidden">
+                <div className="w-40 h-40 rounded-xl border-2 border-gray-100 shadow-sm bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center overflow-hidden">
                   {formData.image_url ? (
                     <img key={formData.image_url} src={formData.image_url} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
@@ -172,7 +172,7 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
                     </div>
                   )}
                 </div>
-                <label className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-3 rounded-2xl shadow-xl shadow-blue-200 cursor-pointer hover:bg-blue-700 hover:scale-110 transition-all z-30">
+                <label className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-3 rounded-xl shadow-lg cursor-pointer hover:bg-blue-700 hover:scale-110 transition-all z-30">
                   <Camera className="w-5 h-5" />
                   <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploading} />
                 </label>
@@ -187,14 +187,14 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
                       setFormData({...formData, name: e.target.value});
                       setIsDirty(true);
                     }}
-                    className={cn(inputClasses, "text-2xl font-black text-center tracking-tight h-auto py-2 -ml-0")}
+                    className={cn(inputClasses, "text-2xl font-black text-center tracking-tight h-auto py-2 -ml-0 bg-gray-50/50")}
                     placeholder="Enter full name..."
                   />
                 </div>
 
                 <div className="space-y-1">
                   <Label className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] block mb-2">Residence Address</Label>
-                  <div className="relative group mx-auto max-w-[240px]">
+                  <div className="relative group mx-auto w-full">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 transition-colors group-focus-within:text-blue-500" />
                     <Input 
                       value={formData.address || ""} 
@@ -202,14 +202,14 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
                         setFormData({...formData, address: e.target.value});
                         setIsDirty(true);
                       }}
-                      className={cn(inputClasses, "pl-10 text-xs font-bold text-gray-600 text-center")}
+                      className={cn(inputClasses, "pl-10 text-xs font-bold text-gray-600 text-center bg-gray-50/50")}
                       placeholder="Street, City, Country"
                     />
                   </div>
                 </div>
 
                 <div className="pt-6 border-t border-gray-50 flex items-center justify-center gap-6">
-                  <div className="text-center">
+                  <div className="text-center w-full">
                     <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Gender</span>
                     <Select 
                       value={formData.gender || "male"} 
@@ -218,10 +218,10 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
                         setIsDirty(true);
                       }}
                     >
-                      <SelectTrigger className="border-none shadow-none focus:ring-0 bg-transparent h-6 text-xs font-bold text-indigo-600 p-0 text-center uppercase tracking-wider">
+                      <SelectTrigger className="border border-gray-100 shadow-none focus:ring-0 bg-gray-50/50 h-10 text-xs font-bold text-gray-700 px-4 rounded-xl w-full uppercase tracking-wider">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-none shadow-xl">
+                      <SelectContent className="rounded-xl border border-gray-100 shadow-xl">
                         <SelectItem value="male" className="text-xs font-bold uppercase tracking-wider">Male</SelectItem>
                         <SelectItem value="female" className="text-xs font-bold uppercase tracking-wider">Female</SelectItem>
                         <SelectItem value="other" className="text-xs font-bold uppercase tracking-wider">Other</SelectItem>
@@ -232,25 +232,11 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
               </div>
             </CardContent>
           </Card>
-
-          <Card className="rounded-[2rem] border-none shadow-xl bg-indigo-600 p-8 text-white">
-            <div className="flex items-start gap-4">
-              <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md">
-                <Info className="w-5 h-5 text-white" />
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-bold text-sm">Persona Bio Data</h4>
-                <p className="text-xs text-indigo-100 leading-relaxed font-medium">
-                  Use this dedicated profile to manage all credentials, addresses, and bios for this identity. Changes are synced across your entire workspace.
-                </p>
-              </div>
-            </div>
-          </Card>
         </div>
 
         {/* Right Column: Dynamic Data */}
         <div className="lg:col-span-9 space-y-8">
-          <Card className="rounded-[2.5rem] border-none shadow-2xl shadow-blue-50/50 bg-white/80 backdrop-blur-sm min-h-[600px]">
+          <Card className="rounded-xl border border-gray-100 shadow-sm bg-white/80 backdrop-blur-sm min-h-[600px]">
             <CardContent className="p-10 space-y-12">
               {/* Identity Section - Now compact since address moved */}
               <div className="space-y-6">
