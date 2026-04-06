@@ -99,12 +99,17 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Upsert the credentials
-      const credsToSave = credentials.map(c => ({
-        ...c,
-        profile_id: profileId,
-        site_id: c.site_id === "none" ? null : c.site_id
-      }));
+      // Clean credentials to omit 'id' if it doesn't exist (triggers insert)
+      const credsToSave = credentials.map(c => {
+        const { id, ...rest } = c;
+        const cleaned: any = {
+          ...rest,
+          profile_id: profileId,
+          site_id: c.site_id === "none" ? null : c.site_id
+        };
+        if (id) cleaned.id = id;
+        return cleaned;
+      });
 
       const { error } = await supabase
         .from("profile_credentials")
