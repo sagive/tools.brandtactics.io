@@ -149,14 +149,15 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
         return;
       }
 
-      // 3. Prepare for upsert: Generate UUIDs for any new rows that somehow don't have one
+      // 3. Prepare for upsert: Generate UUIDs and Timestamps for any new rows that don't have them
       const credsToSave = validCreds.map(c => {
         const finalId = c.id && c.id.length > 10 ? c.id : crypto.randomUUID();
         return {
           ...c,
           id: finalId,
           profile_id: profileId,
-          site_id: c.site_id === "none" ? null : c.site_id
+          site_id: c.site_id === "none" ? null : c.site_id,
+          created_at: (c as any).created_at || new Date().toISOString()
         };
       });
 
