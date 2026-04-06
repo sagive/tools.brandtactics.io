@@ -11,10 +11,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/clients", label: "Clients", icon: Briefcase },
-  { href: "/tasks", label: "All Tasks", icon: FileText },
+  { href: "/tasks", label: "Tasks", icon: FileText },
   { href: "/profiles", label: "Profiles", icon: Users },
-  { href: "/backlinks", label: "All Backlinks", icon: Link2 },
-  { href: "/tools", label: "All Tools", icon: LayoutGrid },
+  { href: "/backlinks", label: "Backlinks", icon: Link2 },
+  { href: "/tools", label: "Tools", icon: LayoutGrid },
   { href: "/email-updates", label: "Email Updates", icon: Mail },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
