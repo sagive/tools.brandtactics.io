@@ -293,8 +293,12 @@ export function ProfileDialog({ open, onOpenChange, profile, onSuccess }: Profil
                           value={cred.site_id || "none"} 
                           onValueChange={(v) => updateCredential(index, "site_id", v === "none" ? null : v)}
                         >
-                          <SelectTrigger className="h-8 bg-white border-gray-200 text-xs">
-                            <SelectValue placeholder="Select platform" />
+                          <SelectTrigger className="h-8 bg-white border-gray-200 text-[11px]">
+                            <SelectValue>
+                              {cred.site_id 
+                                ? sites.find(s => s.id === cred.site_id)?.name || "Loading..." 
+                                : "Manual / Other"}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">Manual / Other</SelectItem>
