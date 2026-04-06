@@ -177,14 +177,14 @@ export function ProfileDialog({ open, onOpenChange, profile, onSuccess }: Profil
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{profile ? "Edit Profile" : "Create New Profile"}</DialogTitle>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2rem] border-none shadow-2xl p-0">
+        <DialogHeader className="p-8 pb-4 border-b border-gray-100">
+          <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">{profile ? "Update Persona" : "Create New Persona"}</DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-4">
-          {/* Left Column: Image & Basic Info */}
-          <div className="md:col-span-1 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 p-8">
+          {/* Left Column: Image & Basic Info (Now smaller) */}
+          <div className="lg:col-span-3 space-y-8">
             <div className="flex flex-col items-center gap-4">
               <div className="relative group">
                 <div className="w-32 h-32 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden">
@@ -224,8 +224,8 @@ export function ProfileDialog({ open, onOpenChange, profile, onSuccess }: Profil
             </div>
           </div>
 
-          {/* Right Column: Form Fields & Credentials */}
-          <div className="md:col-span-2 space-y-8">
+          {/* Right Column: Form Fields & Credentials (Now larger) */}
+          <div className="lg:col-span-9 space-y-10">
             <div className="space-y-4">
               <div className="grid gap-2">
                 <Label className="text-xs uppercase font-bold text-gray-500 tracking-wider">Full Name</Label>
@@ -324,10 +324,10 @@ export function ProfileDialog({ open, onOpenChange, profile, onSuccess }: Profil
           </div>
         </div>
 
-        <DialogFooter className="mt-8 border-t pt-6 bg-gray-50 -mx-6 -mb-6 px-6">
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isSaving}>Cancel</Button>
-          <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 min-w-[120px]" disabled={isSaving}>
-            {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+        <DialogFooter className="mt-4 border-t p-8 bg-gray-50/80 backdrop-blur-md rounded-b-[2rem]">
+          <Button variant="ghost" className="rounded-xl font-bold h-12 px-6" onClick={() => onOpenChange(false)} disabled={isSaving}>Cancel</Button>
+          <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 h-12 px-10 rounded-xl shadow-lg shadow-blue-100 font-bold min-w-[160px]" disabled={isSaving}>
+            {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
             {profile ? "Save Changes" : "Create Profile"}
           </Button>
         </DialogFooter>
