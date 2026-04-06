@@ -27,6 +27,7 @@ interface Profile {
   gender: string;
   image_url: string;
   rank: number;
+  gmail?: string;
 }
 
 export default function ProfilesPage() {
@@ -44,19 +45,41 @@ export default function ProfilesPage() {
 
   async function fetchProfiles() {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from("profiles_data")
-      .select("*")
-      .order("rank", { ascending: true })
-      .order("created_at", { ascending: false });
-    
-    if (error) {
+    try {
+      // Fetch profiles with their credentials and site info
+      const { data, error } = await supabase
+        .from("profiles_data")
+        .select(`
+          *,
+          profile_credentials (
+            username,
+            profile_sites (name)
+          )
+        `)
+        .order("rank", { ascending: true })
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+
+      // Extract Gmail if it exists for each profile
+      const processedProfiles = (data || []).map((p: any) => {
+        const gmailCred = p.profile_credentials?.find((c: any) => 
+          c.profile_sites?.name?.toLowerCase() === "gmail" || 
+          c.username?.includes("@gmail.com")
+        );
+        return {
+          ...p,
+          gmail: gmailCred?.username
+        };
+      });
+
+      setProfiles(processedProfiles);
+    } catch (error: any) {
       console.error("Error fetching profiles:", error);
       toast.error("Failed to load profiles");
-    } else {
-      setProfiles(data || []);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }
 
   const handleDelete = async (id: string) => {
@@ -112,7 +135,7 @@ export default function ProfilesPage() {
 
   const filteredProfiles = profiles.filter(p => 
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (p.address && p.address.toLowerCase().includes(searchTerm.toLowerCase()))
+    (p.gmail && p.gmail.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -191,22 +214,26 @@ export default function ProfilesPage() {
               <Link href={`/profiles/${profile.id}`} className="flex-1 flex flex-col">
                 <CardContent className="p-0 flex-1 flex flex-col">
                   {/* Header Image Area */}
-                  <div className="relative aspect-square bg-gray-50 flex items-center justify-center">
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/10" />
-                    <div className="relative w-full h-full bg-gray-100 overflow-hidden transition-transform duration-500 group-hover:scale-101 border-b border-gray-50">
-                      {profile.image_url ? (
-                        <img src={profile.image_url} alt={profile.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-blue-50">
-                          <User className="w-10 h-10 text-blue-200" />
-                        </div>
-                      )}
-                    </div>
+                  <div className="relative w-full aspect-square bg-gray-100 overflow-hidden group-hover:scale-101 transition-transform duration-500">
+                    {profile.image_url ? (
+                      <img src={profile.image_url} alt={profile.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-blue-50">
+                        <User className="w-10 h-10 text-blue-200" />
+                      </div>
+                    )}
                   </div>
 
                   {/* Content Area */}
-                  <div className="p-4 text-center">
-                    <h3 className="text-sm font-black text-gray-900 group-hover:text-blue-600 transition-colors uppercase tracking-tight truncate px-2">{profile.name}</h3>
+                  <div className="p-3 text-center space-y-0.5">
+                    <h3 className="text-[11px] font-black text-gray-900 group-hover:text-blue-600 transition-colors uppercase tracking-tight truncate px-1">
+                      {profile.name}
+                    </h3>
+                    {profile.gmail && (
+                      <p className="text-[9px] font-bold text-gray-400 truncate px-1">
+                        {profile.gmail}
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Link>
