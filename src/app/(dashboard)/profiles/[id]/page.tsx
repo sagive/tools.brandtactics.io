@@ -171,8 +171,8 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
                     </div>
                   )}
                 </div>
-                <label className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-3 rounded-xl cursor-pointer hover:bg-blue-700 hover:scale-110 transition-all z-30">
-                  <Camera className="w-5 h-5" />
+                <label className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1.5 rounded-sm cursor-pointer hover:bg-blue-700 transition-all z-30 border border-blue-700">
+                  <Camera className="w-3 h-3" />
                   <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploading} />
                 </label>
               </div>
@@ -236,22 +236,8 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
         {/* Right Column: Dynamic Data */}
         <div className="lg:col-span-9 space-y-8">
           <Card className="rounded-xl border border-gray-300 bg-white min-h-[600px]">
-            <CardContent className="p-10 space-y-12">
-              {/* Identity Section - Now compact since address moved */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-8 bg-blue-600 rounded-full" />
-                  <h3 className="text-xl font-black text-gray-900 tracking-tight">Identity Overview</h3>
-                </div>
-                
-                <p className="text-xs text-gray-500 font-medium leading-relaxed max-w-2xl">
-                  Manage all credentials and platforms associated with this persona record. Use the search bar below to quickly find specific accounts.
-                </p>
-              </div>
-
-              <div className="pt-2 border-t border-gray-300">
-                <ProfileCredentials profileId={id} />
-              </div>
+            <CardContent className="p-8 space-y-8">
+              <ProfileCredentials profileId={id} />
             </CardContent>
           </Card>
         </div>

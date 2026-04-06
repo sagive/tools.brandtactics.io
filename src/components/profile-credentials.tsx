@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Trash2, Key, Globe, Lock, Loader2, Save, Search } from "lucide-react";
+import { Plus, Trash2, Key, Globe, Lock, Loader2, Save, Search, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,10 +28,14 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isNotesOpen, setIsNotesOpen] = useState(false);
+  const [notes, setNotes] = useState("");
+  const [isSavingNotes, setIsSavingNotes] = useState(false);
 
   useEffect(() => {
     fetchSites();
     fetchCredentials();
+    fetchNotes();
   }, [profileId]);
 
   async function fetchCredentials() {
@@ -51,6 +55,33 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
     if (data) setSites(data);
   }
 
+  async function fetchNotes() {
+    const { data } = await supabase
+      .from("profiles_data")
+      .select("notes")
+      .eq("id", profileId)
+      .single();
+    
+    if (data?.notes) {
+      setNotes(data.notes);
+    }
+  }
+
+  const handleSaveNotes = async () => {
+    setIsSavingNotes(true);
+    const { error } = await supabase
+      .from("profiles_data")
+      .update({ notes })
+      .eq("id", profileId);
+    
+    if (error) {
+      toast.error("Failed to save notes");
+    } else {
+      toast.success("Notes saved");
+    }
+    setIsSavingNotes(false);
+  };
+
   const addCredentialLine = () => {
     setCredentials([...credentials, { username: "", password: "", login_url: "", site_id: null }]);
   };
@@ -68,39 +99,34 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // 1. Delete existing for this profile
-      await supabase.from("profile_credentials").delete().eq("profile_id", profileId);
-      
-      // 2. Insert filtered list
-      const credsToInsert = credentials
-        .filter(c => c.username || c.password || c.login_url)
-        .map(c => ({
-          profile_id: profileId,
-          username: c.username,
-          password: c.password,
-          login_url: c.login_url,
-          site_id: c.site_id
-        }));
+      // Upsert the credentials
+      const credsToSave = credentials.map(c => ({
+        ...c,
+        profile_id: profileId,
+        site_id: c.site_id === "none" ? null : c.site_id
+      }));
 
-      if (credsToInsert.length > 0) {
-        const { error } = await supabase.from("profile_credentials").insert(credsToInsert);
-        if (error) throw error;
-      }
+      const { error } = await supabase
+        .from("profile_credentials")
+        .upsert(credsToSave);
 
-      toast.success("Accounts updated successfully");
-      fetchCredentials(); // Refresh to get proper IDs from DB
+      if (error) throw error;
+      toast.success("Credentials saved successfully");
+      fetchCredentials();
     } catch (error: any) {
-      toast.error("Failed to save accounts: " + error.message);
+      toast.error(error.message);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const filteredCredentials = credentials.filter(c => 
-    c.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.login_url?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sites.find(s => s.id === c.site_id)?.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCredentials = credentials.filter(c => {
+    const siteName = sites.find(s => s.id === c.site_id)?.name || "Manual / Other";
+    return (
+      siteName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.username.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   if (isLoading) {
     return (
@@ -114,8 +140,8 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h4 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
-            <Lock className="w-4 h-4 text-blue-600" />
+          <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-[0.2em] flex items-center gap-2">
+            <Lock className="w-2.5 h-2.5 text-blue-600" />
             Accounts & Credentials
           </h4>
         </div>
@@ -131,16 +157,64 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
             />
           </div>
           <div className="flex items-center gap-2">
+            <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setIsNotesOpen(!isNotesOpen)} 
+                className={cn(
+                    "border-gray-300 h-10 px-4 font-bold text-[10px] uppercase rounded-sm shadow-none gap-2",
+                    isNotesOpen ? "bg-amber-50 text-amber-700 border-amber-300" : "text-gray-600 hover:bg-gray-50"
+                )}
+            >
+              <Info className="w-3 h-3" /> Note
+            </Button>
             <Button variant="outline" size="sm" onClick={addCredentialLine} className="text-blue-600 hover:bg-blue-50 border-blue-300 h-10 px-4 font-bold text-[10px] uppercase rounded-sm shadow-none">
               <Plus className="w-3 h-3 mr-1" /> Add Account
             </Button>
             {credentials.length > 0 && (
-              <Button size="sm" onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-6 font-bold text-[10px] uppercase gap-2 rounded-sm shadow-none">
+              <Button size="sm" onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-6 font-bold text-[10px] uppercase gap-2 rounded-sm shadow-none transition-all active:scale-95">
                 {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
                 Save All
               </Button>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Notebook Section */}
+      <div className={cn(
+        "overflow-hidden transition-all duration-500 ease-in-out border-gray-300",
+        isNotesOpen ? "max-h-[600px] mb-8 border" : "max-h-0 mb-0 border-transparent pointer-events-none"
+      )}>
+        <div className="bg-[#fdfcf0] p-0 relative min-h-[300px] flex flex-col">
+            {/* Lined Paper effect */}
+            <div className="absolute inset-0 z-0 pointer-events-none opacity-50" 
+                 style={{ 
+                     backgroundImage: 'repeating-linear-gradient(transparent, transparent 27px, #e5e7eb 27px, #e5e7eb 28px)', 
+                     backgroundSize: '100% 28px' 
+                 }} 
+            />
+            {/* Vertical Margin line */}
+            <div className="absolute left-10 top-0 bottom-0 w-[1px] bg-red-200/60 z-0" />
+            
+            <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Start typing your notes here..."
+                className="relative z-10 w-full min-h-[300px] bg-transparent border-none focus:ring-0 p-10 pl-16 text-sm font-medium text-gray-700 leading-[28px] resize-none"
+                style={{ lineHeight: '28px' }}
+            />
+            
+            <div className="relative z-10 p-4 border-t border-gray-200/50 bg-white/50 backdrop-blur-sm flex justify-end">
+                <Button 
+                    onClick={handleSaveNotes} 
+                    disabled={isSavingNotes}
+                    className="bg-blue-600 hover:bg-blue-700 h-8 px-4 text-[10px] font-black uppercase rounded-sm shadow-none"
+                >
+                    {isSavingNotes ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Save className="w-3 h-3 mr-2" />}
+                    Save Note
+                </Button>
+            </div>
         </div>
       </div>
 
