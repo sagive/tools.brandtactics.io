@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import ProfileCredentials from "@/components/profile-credentials";
+import ProfileGallery from "@/components/profile-gallery";
 
 interface ProfileData {
   id: string;
@@ -30,6 +31,7 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [activeTab, setActiveTab] = useState<'accounts' | 'gallery'>('accounts');
 
   useEffect(() => {
     fetchProfile();
@@ -135,21 +137,49 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
       {/* Top Navigation */}
       <div className="flex items-center justify-between mb-8">
         <Link href="/profiles" className="group">
-          <Button variant="ghost" className="text-gray-500 group-hover:text-blue-600 px-0">
+          <Button variant="ghost" className="text-gray-500 group-hover:text-blue-600 px-0 translate-y-1">
             <ArrowLeft className="w-4 h-4 mr-2 transition-transform group-hover:-translate-x-1" />
             Back to Profiles
           </Button>
         </Link>
-        <div className="flex items-center gap-3">
-          {isDirty && (
-            <Button onClick={handleUpdate} disabled={isSaving} className="bg-green-600 hover:bg-green-700 text-white px-6 font-bold h-10 gap-2 shadow-none rounded-sm">
-              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              Save Changes
+        
+        <div className="flex items-center gap-6">
+          {/* Tab Switcher */}
+          <div className="flex items-center bg-gray-100 p-1 rounded-sm border border-gray-300">
+            <Button 
+              variant="ghost" 
+              onClick={() => setActiveTab('accounts')}
+              className={cn(
+                "h-8 px-4 text-[10px] font-black uppercase tracking-widest rounded-sm transition-all",
+                activeTab === 'accounts' ? "bg-white text-blue-600 border border-gray-300 shadow-none" : "text-gray-500 hover:text-gray-900"
+              )}
+            >
+              <ShieldCheck className="w-3 h-3 mr-2" /> Accounts
             </Button>
-          )}
-          <Button variant="outline" className="text-red-500 hover:bg-red-50 hover:text-red-600 border-red-300 h-10 px-4 font-bold text-xs uppercase tracking-wider rounded-sm shadow-none">
-            <Trash2 className="w-4 h-4 mr-2" /> Delete
-          </Button>
+            <Button 
+              variant="ghost" 
+              onClick={() => setActiveTab('gallery')}
+              className={cn(
+                "h-8 px-4 text-[10px] font-black uppercase tracking-widest rounded-sm transition-all",
+                activeTab === 'gallery' ? "bg-white text-blue-600 border border-gray-300 shadow-none" : "text-gray-500 hover:text-gray-900"
+              )}
+            >
+              <Camera className="w-3 h-3 mr-2" /> Gallery
+            </Button>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-3">
+            {isDirty && (
+              <Button onClick={handleUpdate} disabled={isSaving} className="bg-green-600 hover:bg-green-700 text-white px-6 font-bold h-10 gap-2 shadow-none rounded-sm">
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Changes
+              </Button>
+            )}
+            <Button variant="outline" className="text-red-500 hover:bg-red-50 hover:text-red-600 border-red-300 h-10 px-4 font-bold text-xs uppercase tracking-wider rounded-sm shadow-none">
+              <Trash2 className="w-4 h-4 mr-2" /> Delete
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -237,7 +267,11 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
         <div className="lg:col-span-9 space-y-8">
           <Card className="rounded-xl border border-gray-300 bg-white min-h-[600px]">
             <CardContent className="p-8 space-y-8">
-              <ProfileCredentials profileId={id} />
+              {activeTab === 'accounts' ? (
+                <ProfileCredentials profileId={id} />
+              ) : (
+                <ProfileGallery profileId={id} />
+              )}
             </CardContent>
           </Card>
         </div>
