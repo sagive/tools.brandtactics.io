@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Save, User as UserIcon, MapPin, Camera, ArrowLeft, Trash2, ShieldCheck, Info } from "lucide-react";
+import { Loader2, Save, User as UserIcon, MapPin, Camera, ArrowLeft, Trash2, ShieldCheck, Info, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import ProfileCredentials from "@/components/profile-credentials";
 import ProfileGallery from "@/components/profile-gallery";
+import ProfileNotes from "@/components/profile-notes";
 
 interface ProfileData {
   id: string;
@@ -31,7 +32,7 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-  const [activeTab, setActiveTab] = useState<'accounts' | 'gallery'>('accounts');
+  const [activeTab, setActiveTab] = useState<'notes' | 'accounts' | 'gallery'>('accounts');
 
   useEffect(() => {
     fetchProfile();
@@ -146,6 +147,16 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
         <div className="flex items-center gap-6">
           {/* Tab Switcher */}
           <div className="flex items-center bg-gray-100 p-1 rounded-sm border border-gray-300">
+            <Button 
+              variant="ghost" 
+              onClick={() => setActiveTab('notes')}
+              className={cn(
+                "h-8 px-4 text-[10px] font-black uppercase tracking-widest rounded-sm transition-all",
+                activeTab === 'notes' ? "bg-white text-blue-600 border border-gray-300 shadow-none" : "text-gray-500 hover:text-gray-900"
+              )}
+            >
+              <FileText className="w-3 h-3 mr-2" /> Notes
+            </Button>
             <Button 
               variant="ghost" 
               onClick={() => setActiveTab('accounts')}
@@ -267,11 +278,9 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
         <div className="lg:col-span-9 space-y-8">
           <Card className="rounded-xl border border-gray-300 bg-white min-h-[600px]">
             <CardContent className="p-8 space-y-8">
-              {activeTab === 'accounts' ? (
-                <ProfileCredentials profileId={id} />
-              ) : (
-                <ProfileGallery profileId={id} />
-              )}
+              {activeTab === 'notes' && <ProfileNotes profileId={id} />}
+              {activeTab === 'accounts' && <ProfileCredentials profileId={id} />}
+              {activeTab === 'gallery' && <ProfileGallery profileId={id} />}
             </CardContent>
           </Card>
         </div>

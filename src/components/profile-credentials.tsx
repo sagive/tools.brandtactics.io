@@ -46,15 +46,11 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isNotesOpen, setIsNotesOpen] = useState(false);
-  const [notes, setNotes] = useState("");
-  const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [deletedIds, setDeletedIds] = useState<string[]>([]);
 
   useEffect(() => {
     fetchSites();
     fetchCredentials();
-    fetchNotes();
   }, [profileId]);
 
   async function fetchSites() {
@@ -75,30 +71,6 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
     }
     setIsLoading(false);
   }
-
-  async function fetchNotes() {
-    const { data } = await supabase
-      .from("profiles_data")
-      .select("notes")
-      .eq("id", profileId)
-      .single();
-    if (data?.notes) setNotes(data.notes);
-  }
-
-  const handleSaveNotes = async () => {
-    setIsSavingNotes(true);
-    const { error } = await supabase
-      .from("profiles_data")
-      .update({ notes })
-      .eq("id", profileId);
-
-    if (error) {
-      toast.error("Failed to save notes");
-    } else {
-      toast.success("Notes saved");
-    }
-    setIsSavingNotes(false);
-  };
 
   const addCredentialLine = () => {
     setCredentials([...credentials, { 
@@ -220,17 +192,6 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
         <div className="flex items-center gap-2">
           <Button 
             variant="ghost" 
-            size="sm"
-            onClick={() => setIsNotesOpen(!isNotesOpen)}
-            className={cn(
-               "h-9 px-4 text-[10px] font-black uppercase tracking-widest rounded-sm border transition-all",
-               isNotesOpen ? "bg-amber-50 text-amber-600 border-amber-200" : "text-gray-500 hover:text-gray-900 border-gray-300"
-            )}
-          >
-            <Info className="w-3 h-3 mr-2" /> Note
-          </Button>
-          <Button 
-            variant="ghost" 
             size="sm" 
             onClick={addCredentialLine}
             className="text-blue-600 hover:bg-blue-50 border border-blue-300 h-9 px-4 font-bold text-[10px] uppercase rounded-sm shadow-none"
@@ -247,38 +208,6 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
           </Button>
         </div>
       </div>
-
-      {/* Slide-down Notebook */}
-      {isNotesOpen && (
-        <div className="animate-in slide-in-from-top duration-300 overflow-hidden border border-gray-300 rounded-sm bg-[#fdfcf0] relative">
-          <div className="absolute top-0 bottom-0 left-10 border-l border-red-200" />
-          <div className="relative z-10 p-10 pt-8">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="text-[10px] font-black uppercase text-amber-900/40 tracking-widest pl-2">Persona Notebook</h4>
-              <Button 
-                onClick={handleSaveNotes} 
-                disabled={isSavingNotes}
-                variant="ghost"
-                size="sm"
-                className="h-7 text-[9px] font-black uppercase tracking-widest border border-amber-200 text-amber-700 hover:bg-amber-100/50"
-              >
-                {isSavingNotes ? "Saving..." : "Save Note"}
-              </Button>
-            </div>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Paste cookies, browser history notes, or identity details here..."
-              className="w-full min-h-[200px] bg-transparent border-none focus:ring-0 text-sm font-medium text-gray-800 leading-[1.8] resize-none placeholder:text-amber-900/20"
-              style={{
-                backgroundImage: 'linear-gradient(transparent, transparent 1.7rem, #e2e8f0 1.7rem)',
-                backgroundSize: '100% 1.8rem',
-                lineHeight: '1.8rem'
-              }}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Table Interface */}
       <div className="border border-gray-300 rounded-sm overflow-hidden bg-gray-50/50">
