@@ -58,7 +58,7 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
   }, [profileId]);
 
   async function fetchSites() {
-    const { data } = await supabase.from("profile_sites").select("*").order("name");
+    const { data } = await supabase.from("profile_sites").select("*").order("rank");
     if (data) setSites(data);
   }
 
@@ -295,7 +295,9 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
                     onValueChange={(val) => updateCredential(index, "site_id", val)}
                   >
                     <SelectTrigger className="h-9 border-none bg-transparent font-black text-[10px] uppercase tracking-wider focus:ring-0 shadow-none flex items-center gap-2">
-                       <SelectValue />
+                       <SelectValue placeholder="Select Platform">
+                         {cred.site_id && cred.site_id !== "none" ? sites.find(s => s.id === cred.site_id)?.name : "Select Platform"}
+                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="rounded-sm border-gray-300">
                       <SelectItem value="none" className="text-[10px] font-black uppercase">Select Platform</SelectItem>
