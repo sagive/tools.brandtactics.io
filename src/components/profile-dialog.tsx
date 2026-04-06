@@ -177,7 +177,7 @@ export function ProfileDialog({ open, onOpenChange, profile, onSuccess }: Profil
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2rem] border-none shadow-2xl p-0">
+      <DialogContent className="sm:max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto rounded-[2rem] border-none shadow-2xl p-0">
         <DialogHeader className="p-8 pb-4 border-b border-gray-100">
           <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">{profile ? "Update Persona" : "Create New Persona"}</DialogTitle>
         </DialogHeader>
