@@ -510,7 +510,7 @@ export default function KeywordsPage({ params }: { params: Promise<{ id: string 
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <LinkRepeaterWidget clientId={clientId as string} type="competitor" title="Competitors" />
-        <LinkRepeaterWidget clientId={clientId as string} type="resource" title="Resources" />
+        <LinkRepeaterWidget clientId={clientId as string} type="resource" title="Social Accounts" />
       </div>
 
       <Card className="shadow-sm border-gray-200 overflow-hidden bg-white">
