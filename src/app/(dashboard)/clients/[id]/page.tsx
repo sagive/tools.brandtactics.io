@@ -15,6 +15,7 @@ import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 import ClientResources from "@/components/client-resources";
 import ClientGallery from "@/components/client-gallery";
+import ClientSocials from "@/components/client-socials";
 
 export default function ClientOverview({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
@@ -290,8 +291,9 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
               </div>
             </div>
 
-            {/* Right Column: Resources & Gallery */}
+            {/* Right Column: Socials, Resources & Gallery */}
             <div className="space-y-12">
+              <ClientSocials clientId={id} />
               <ClientResources clientId={id} />
               <div className="pt-8 border-t border-gray-100">
                 <ClientGallery clientId={id} />

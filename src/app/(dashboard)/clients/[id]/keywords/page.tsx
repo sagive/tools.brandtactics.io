@@ -508,79 +508,84 @@ export default function KeywordsPage({ params }: { params: Promise<{ id: string 
   return (
     <div className="space-y-6">
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <LinkRepeaterWidget clientId={clientId as string} type="competitor" title="Competitors" />
-        <LinkRepeaterWidget clientId={clientId as string} type="resource" title="Social Accounts" />
-      </div>
-
-      <Card className="shadow-sm border-gray-200 overflow-hidden bg-white">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <h2 className="text-[17px] font-semibold text-gray-900 tracking-tight">Manage Keywords</h2>
-          <Button 
-            onClick={handleSave} 
-            disabled={!isDirty || isSaving}
-            className="bg-[#7B96E4] hover:bg-[#6882E0] text-white shadow-none h-8 px-4 text-xs font-medium rounded-[6px]"
-          >
-            {isSaving ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
-            ) : (
-              <Save className="w-3 h-3 mr-1.5" />
-            )}
-            Save Changes
-          </Button>
+      <div className="flex flex-col xl:flex-row gap-6 items-start">
+        {/* Left Side: Competitors */}
+        <div className="w-full xl:w-[350px] shrink-0">
+          <LinkRepeaterWidget clientId={clientId as string} type="competitor" title="Competitors" />
         </div>
 
-        <CardContent className="p-0">
-          <div className="bg-gray-50/80 px-4 py-3 border-b border-gray-100 flex items-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-            <div className="w-6 mr-4 flex-shrink-0"></div> {/* Drag handle space */}
-            <div className="w-[30%] text-left">Keyword</div>
-            <div className="w-[30%]">Target URL</div>
-            <div className="w-[15%]">Search Volume</div>
-            <div className="w-[15%]">Importance</div>
-            <div className="w-[10%] text-right">Actions</div>
-          </div>
-          
-          <DndContext 
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <div className="divide-y divide-gray-100 min-h-[50px]">
-              <SortableContext 
-                items={keywords.map((k: KeywordEntry) => k.id)}
-                strategy={verticalListSortingStrategy}
+        {/* Right Side: Manage Keywords */}
+        <div className="w-full xl:flex-1 min-w-0">
+          <Card className="shadow-sm border-gray-200 overflow-hidden bg-white">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <h2 className="text-[17px] font-semibold text-gray-900 tracking-tight">Manage Keywords</h2>
+              <Button 
+                onClick={handleSave} 
+                disabled={!isDirty || isSaving}
+                className="bg-[#7B96E4] hover:bg-[#6882E0] text-white shadow-none h-8 px-4 text-xs font-medium rounded-[6px]"
               >
-                {keywords.map((entry: KeywordEntry, index: number) => (
-                  <SortableKeywordRow 
-                    key={entry.id} 
-                    entry={entry} 
-                    index={index} 
-                    onChange={handleChange} 
-                    onRemove={handleRemoveRow} 
-                  />
-                ))}
-              </SortableContext>
-
-            {keywords.length === 0 && (
-              <div className="py-12 text-center text-gray-500 text-sm italic">
-                No keywords added yet. Click the button below to add your first keyword.
-              </div>
-            )}
+                {isSaving ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                ) : (
+                  <Save className="w-3 h-3 mr-1.5" />
+                )}
+                Save Changes
+              </Button>
             </div>
-          </DndContext>
-          
-          <div className="p-4 bg-gray-50/30 border-t border-gray-100">
-            <Button 
-              variant="outline" 
-              onClick={handleAddRow}
-              className="w-full border-dashed border-2 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 transition-all font-medium py-6"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Keyword Row
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+
+            <CardContent className="p-0">
+              <div className="bg-gray-50/80 px-4 py-3 border-b border-gray-100 flex items-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <div className="w-6 mr-4 flex-shrink-0"></div> {/* Drag handle space */}
+                <div className="w-[30%] text-left">Keyword</div>
+                <div className="w-[30%]">Target URL</div>
+                <div className="w-[15%]">Search Volume</div>
+                <div className="w-[15%]">Importance</div>
+                <div className="w-[10%] text-right">Actions</div>
+              </div>
+              
+              <DndContext 
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <div className="divide-y divide-gray-100 min-h-[50px]">
+                  <SortableContext 
+                    items={keywords.map((k: KeywordEntry) => k.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {keywords.map((entry: KeywordEntry, index: number) => (
+                      <SortableKeywordRow 
+                        key={entry.id} 
+                        entry={entry} 
+                        index={index} 
+                        onChange={handleChange} 
+                        onRemove={handleRemoveRow} 
+                      />
+                    ))}
+                  </SortableContext>
+
+                {keywords.length === 0 && (
+                  <div className="py-12 text-center text-gray-500 text-sm italic">
+                    No keywords added yet. Click the button below to add your first keyword.
+                  </div>
+                )}
+                </div>
+              </DndContext>
+              
+              <div className="p-4 bg-gray-50/30 border-t border-gray-100">
+                <Button 
+                  variant="outline" 
+                  onClick={handleAddRow}
+                  className="w-full border-dashed border-2 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 transition-all font-medium py-6"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Keyword Row
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
       
       <div className="text-[13px] text-gray-500 bg-blue-50/50 p-4 rounded-lg border border-blue-100 flex gap-3">
         <div className="font-bold text-blue-700">Ref:</div>
