@@ -18,6 +18,8 @@ interface SocialLink {
   client_id: string;
   title: string;
   url: string;
+  username?: string;
+  password?: string;
 }
 
 // Separate Sortable Item component because hooks must be at top level
@@ -86,6 +88,12 @@ function SortableSocialItem({
           >
             {social.title || social.url}
           </a>
+          {(social.username || social.password) && (
+            <div className="flex items-center gap-3 mt-1">
+              {social.username && <span className="text-[11px] text-gray-500 font-medium">User: <span className="text-gray-900 select-all">{social.username}</span></span>}
+              {social.password && <span className="text-[11px] text-gray-500 font-medium">Pass: <span className="text-gray-900 select-all">{social.password}</span></span>}
+            </div>
+          )}
         </div>
       </div>
       
@@ -118,9 +126,13 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
   const [formData, setFormData] = useState<{
     title: string;
     url: string;
+    username?: string;
+    password?: string;
   }>({
     title: "",
-    url: ""
+    url: "",
+    username: "",
+    password: ""
   });
 
   const sensors = useSensors(
@@ -155,7 +167,7 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
 
   const handleOpenAdd = () => {
     setIsEditing(null);
-    setFormData({ title: "", url: "" });
+    setFormData({ title: "", url: "", username: "", password: "" });
     setIsDialogOpen(true);
   };
 
@@ -163,7 +175,9 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
     setIsEditing(social);
     setFormData({
       title: social.title,
-      url: social.url
+      url: social.url,
+      username: social.username || "",
+      password: social.password || ""
     });
     setIsDialogOpen(true);
   };
@@ -184,7 +198,9 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
         .from("client_links")
         .update({
           title: formData.title || valUrl,
-          url: valUrl
+          url: valUrl,
+          username: formData.username,
+          password: formData.password
         })
         .eq("id", isEditing.id);
 
@@ -200,7 +216,9 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
           client_id: clientId,
           type: "resource",
           title: formData.title || valUrl,
-          url: valUrl
+          url: valUrl,
+          username: formData.username,
+          password: formData.password
         });
 
       if (error) {
@@ -277,6 +295,26 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
                   placeholder="https://" 
                   className="font-medium"
                 />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Username</label>
+                  <Input 
+                    value={formData.username || ''} 
+                    onChange={(e) => setFormData({...formData, username: e.target.value})} 
+                    placeholder="Optional" 
+                    className="font-medium"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Password</label>
+                  <Input 
+                    value={formData.password || ''} 
+                    onChange={(e) => setFormData({...formData, password: e.target.value})} 
+                    placeholder="Optional" 
+                    className="font-medium"
+                  />
+                </div>
               </div>
             </div>
             <DialogFooter>
