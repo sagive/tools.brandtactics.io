@@ -222,7 +222,8 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
         .eq("id", isEditing.id);
 
       if (error) {
-        toast.error("Failed to update social account");
+        console.error("Save error:", error);
+        toast.error("Failed to update: " + error.message);
       } else {
         toast.success("Social account updated");
       }
@@ -239,7 +240,8 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
         });
 
       if (error) {
-        toast.error("Failed to add social account");
+        console.error("Insert error:", error);
+        toast.error("Failed to add: " + error.message);
       } else {
         toast.success("Social account added");
       }
