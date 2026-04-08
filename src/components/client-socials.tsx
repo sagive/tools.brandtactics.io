@@ -25,10 +25,12 @@ interface SocialLink {
 // Separate Sortable Item component because hooks must be at top level
 function SortableSocialItem({ 
   social, 
+  index,
   onEdit, 
   onRemove 
 }: { 
   social: SocialLink; 
+  index: number;
   onEdit: () => void; 
   onRemove: () => void; 
 }) {
@@ -64,7 +66,8 @@ function SortableSocialItem({
       ref={setNodeRef} 
       style={style} 
       className={cn(
-        "group flex items-center justify-between p-3 rounded-md border border-transparent hover:border-gray-200 hover:bg-gray-50 transition-colors bg-white",
+        "group flex items-center justify-between p-3 rounded-md border border-transparent hover:border-gray-200 transition-colors",
+        index % 2 === 1 ? "bg-gray-50/50" : "bg-white",
         isDragging && "opacity-80 border-gray-300"
       )}
     >
@@ -97,15 +100,7 @@ function SortableSocialItem({
         </div>
       </div>
       
-      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity items-center shrink-0">
-        <a 
-          href={social.url} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors rounded-sm hover:bg-blue-50"
-        >
-          <ExternalLink className="w-4 h-4" />
-        </a>
+      <div className="flex gap-1 items-center shrink-0">
         <Button variant="ghost" size="icon" onClick={onEdit} className="h-7 w-7 text-gray-400 hover:text-gray-900 hover:bg-gray-200">
           <Pencil className="w-3.5 h-3.5" />
         </Button>
@@ -345,10 +340,11 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
                 items={socials.map(s => s.id)}
                 strategy={verticalListSortingStrategy}
               >
-                {socials.map((social) => (
+                {socials.map((social, idx) => (
                   <SortableSocialItem 
                     key={social.id} 
                     social={social} 
+                    index={idx}
                     onEdit={() => handleOpenEdit(social)} 
                     onRemove={() => handleDelete(social.id)} 
                   />
