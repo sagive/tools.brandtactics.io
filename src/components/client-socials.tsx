@@ -78,7 +78,14 @@ function SortableSocialItem({
             )}
         </div>
         <div className="truncate pr-4 flex-1">
-          <p className="text-sm font-semibold text-gray-900 truncate">{social.title || social.url}</p>
+          <a
+            href={social.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-semibold text-gray-900 hover:text-blue-600 truncate transition-colors block w-full outline-none"
+          >
+            {social.title || social.url}
+          </a>
         </div>
       </div>
       

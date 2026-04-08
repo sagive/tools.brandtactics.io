@@ -159,15 +159,18 @@ export default function ClientResources({ clientId }: { clientId: string }) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Resources</h3>
-        <Button variant="ghost" size="sm" onClick={handleOpenAdd} className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8 font-bold text-xs uppercase">
-          <Plus className="w-4 h-4 mr-1" /> Add New
+    <Card className="border-gray-200 shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-bold uppercase tracking-wider text-gray-900 border-none">
+          Resources
+        </CardTitle>
+        <Button variant="ghost" size="sm" onClick={handleOpenAdd} className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-[11px] font-black uppercase tracking-widest px-3">
+          <Plus className="w-3.5 h-3.5 mr-1.5" /> Add New
         </Button>
-      </div>
+      </CardHeader>
 
-      <div className="space-y-2">
+      <CardContent>
+        <div className="space-y-2">
         {isLoading ? (
           <div className="text-xs text-gray-400 py-4">Loading resources...</div>
         ) : resources.length === 0 ? (
@@ -291,6 +294,7 @@ export default function ClientResources({ clientId }: { clientId: string }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

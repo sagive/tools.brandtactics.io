@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Asset {
   id: string;
@@ -122,9 +123,11 @@ export default function ClientGallery({ clientId }: { clientId: string }) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Gallery</h3>
+    <Card className="border-gray-200 shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-bold uppercase tracking-wider text-gray-900 border-none">
+          Gallery
+        </CardTitle>
         <div className="relative">
           <input
             type="file"
@@ -145,9 +148,9 @@ export default function ClientGallery({ clientId }: { clientId: string }) {
             Add Image
           </Button>
         </div>
-      </div>
+      </CardHeader>
 
-      <div className={cn(
+      <CardContent>      <div className={cn(
         "rounded-lg border border-gray-100 p-2 bg-gray-50/30",
         assets.length === 0 && "py-10 flex flex-col items-center justify-center border-dashed"
       )}>
@@ -212,6 +215,7 @@ export default function ClientGallery({ clientId }: { clientId: string }) {
           </div>
         </div>
       )}
-    </div>
+      </CardContent>
+    </Card>
   );
 }
