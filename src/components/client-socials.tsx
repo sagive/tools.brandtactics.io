@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Globe, Trash2, GripVertical, Pencil, ExternalLink, Loader2 } from "lucide-react";
+import { Plus, Globe, Trash2, GripVertical, Pencil, ExternalLink, Loader2, User, Lock, Eye, EyeOff, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,7 @@ function SortableSocialItem({
   onEdit: () => void; 
   onRemove: () => void; 
 }) {
+  const [showPassword, setShowPassword] = useState(false);
   const {
     attributes,
     listeners,
@@ -91,16 +92,37 @@ function SortableSocialItem({
           >
             {social.title || social.url}
           </a>
-          {(social.username || social.password) && (
-            <div className="flex items-center gap-3 mt-1">
-              {social.username && <span className="text-[11px] text-gray-500 font-medium">User: <span className="text-gray-900 select-all">{social.username}</span></span>}
-              {social.password && <span className="text-[11px] text-gray-500 font-medium">Pass: <span className="text-gray-900 select-all">{social.password}</span></span>}
-            </div>
-          )}
         </div>
       </div>
       
-      <div className="flex gap-1 items-center shrink-0">
+      <div className="flex gap-2 items-center shrink-0">
+        {(social.username || social.password) && (
+          <div className="flex items-center gap-1.5 mr-2">
+            {social.username && (
+              <div 
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white border border-gray-200 text-[11px] text-gray-600 font-medium cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => {
+                  navigator.clipboard.writeText(social.username || "");
+                  toast.success("Username copied");
+                }}
+                title="Click to copy"
+              >
+                <User className="w-3 h-3 text-gray-400" />
+                <span className="truncate max-w-[100px]">{social.username}</span>
+              </div>
+            )}
+            {social.password && (
+              <div 
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white border border-gray-200 text-[11px] text-gray-600 font-medium cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => setShowPassword(!showPassword)}
+                title="Click to reveal/hide"
+              >
+                <Lock className="w-3 h-3 text-gray-400" />
+                <span className="w-12 tracking-widest">{showPassword ? social.password : "••••"}</span>
+              </div>
+            )}
+          </div>
+        )}
         <Button variant="ghost" size="icon" onClick={onEdit} className="h-7 w-7 text-gray-400 hover:text-gray-900 hover:bg-gray-200">
           <Pencil className="w-3.5 h-3.5" />
         </Button>
