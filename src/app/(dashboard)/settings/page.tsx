@@ -132,14 +132,32 @@ function SettingsContent() {
   const [isUploading, setIsUploading] = useState(false);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [geminiApiKey, setGeminiApiKey] = useState("");
+  const [isSavingApiKey, setIsSavingApiKey] = useState(false);
+
+  const handleSaveApiKey = async () => {
+    setIsSavingApiKey(true);
+    try {
+      const { error } = await supabase.from('app_settings').update({ gemini_api_key: geminiApiKey }).eq('id', 'global');
+      if (error) throw error;
+      toast.success("AI API Key saved successfully.");
+    } catch (err: any) {
+      toast.error("Failed to save API key");
+    } finally {
+      setIsSavingApiKey(false);
+    }
+  };
 
   // Fetch initial template, handle password recovery, and fetch staff
   useEffect(() => {
-    // 1. Fetch Template
-    supabase.from('app_settings').select('email_template').eq('id', 'global').single()
+    // 1. Fetch Template & Settings
+    supabase.from('app_settings').select('email_template, gemini_api_key').eq('id', 'global').single()
       .then(({data, error}: {data: any, error: any}) => {
         if (data?.email_template) {
           setTemplate(data.email_template);
+        }
+        if (data?.gemini_api_key) {
+          setGeminiApiKey(data.gemini_api_key);
         }
       });
       
@@ -588,7 +606,41 @@ function SettingsContent() {
           <TabsTrigger value="email" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Email Template</TabsTrigger>
           <TabsTrigger value="endpoints" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Article Endpoints</TabsTrigger>
           <TabsTrigger value="profiles" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Profiles</TabsTrigger>
+          <TabsTrigger value="ai" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">AI Integrations</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="ai" className="space-y-6 mt-0 outline-none ring-0">
+          <Card className="shadow-sm border-gray-200">
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <Zap className="w-5 h-5 mr-2 text-yellow-500" />
+                AI API Keys
+              </CardTitle>
+              <CardDescription>
+                Configure integration with Google Gemini for AI-assisted task styling, transcribing, and formatting.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 max-w-xl">
+                <div className="space-y-2">
+                  <Label>Google Gemini API Key</Label>
+                  <Input 
+                    type="password" 
+                    value={geminiApiKey}
+                    onChange={(e) => setGeminiApiKey(e.target.value)}
+                    placeholder="AIzaSy..." 
+                  />
+                  <p className="text-[11px] text-gray-500">
+                    This key acts globally for features utilizing the AI helper on tasks. Note: Make sure to add the 'gemini_api_key' column to the 'app_settings' table in Supabase!
+                  </p>
+                </div>
+                <Button onClick={handleSaveApiKey} disabled={isSavingApiKey} className="bg-blue-600 hover:bg-blue-700">
+                  {isSavingApiKey ? "Saving..." : <><Save className="w-4 h-4 mr-2" /> Save Settings</>}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="users" className="space-y-6 mt-0 outline-none ring-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

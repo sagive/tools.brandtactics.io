@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Trash2 } from "lucide-react";
+import { Search, Plus, Trash2, Zap } from "lucide-react";
+import Link from "next/link";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -81,12 +82,20 @@ export default function GlobalTasksPage() {
           />
         </div>
         
-        <Dialog>
-          <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-9 px-4 py-2 w-full sm:w-auto bg-blue-600 text-white hover:bg-blue-700">
-            <Plus className="w-4 h-4 mr-2" /> New Task
-          </DialogTrigger>
-          <EditTaskDialog onTaskCreated={fetchTasks} />
-        </Dialog>
+        <div className="flex w-full sm:w-auto items-center gap-2 flex-col sm:flex-row">
+          <Link href="/tasks/quick" className="w-full sm:w-auto">
+            <Button variant="default" className="bg-purple-600 hover:bg-purple-700 text-white shrink-0 px-3 w-full sm:w-auto" title="Quick Task (AI)">
+              <Zap className="w-4 h-4 sm:mr-2" />
+              <span className="inline">Quick Add</span>
+            </Button>
+          </Link>
+          <Dialog>
+            <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-9 px-4 py-2 w-full sm:w-auto bg-blue-600 text-white hover:bg-blue-700">
+              <Plus className="w-4 h-4 mr-2" /> Full Task
+            </DialogTrigger>
+            <EditTaskDialog onTaskCreated={fetchTasks} />
+          </Dialog>
+        </div>
       </div>
 
       <div className="space-y-6">

@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Trash2 } from "lucide-react";
+import { Search, Plus, Trash2, Zap } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -69,14 +70,22 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-          <Input
-            placeholder="Search tasks..."
-            className="pl-9 bg-white"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="flex flex-1 items-center gap-3 w-full sm:w-auto">
+          <div className="relative w-full sm:w-80">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <Input
+              placeholder="Search tasks..."
+              className="pl-9 bg-white"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <Link href={`/tasks/quick?clientId=${id}`}>
+            <Button variant="default" className="bg-purple-600 hover:bg-purple-700 text-white shrink-0 px-3" title="Quick Task (AI)">
+              <Zap className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Quick Add</span>
+            </Button>
+          </Link>
         </div>
       </div>
 
