@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     // 2. Prepare prompt
     const prompt = `You are a professional task formatting assistant. 
 Your goal is to parse a raw voice dictation from a user into a clean, concise, properly formatted HTML task description suitable for a rich text editor.
-Only use tags like <p>, <ul>, <ol>, <li>, <strong>, <em>, <br>. Do not wrap in ```html or include any conversational filler. Just the HTML.
+Only use tags like <p>, <ul>, <ol>, <li>, <strong>, <em>, <br>. Do not wrap in HTML code blocks or include any conversational filler. Just the HTML.
 Fix minor grammatical errors but keep the core meaning intact.
 
 Raw Dictation:
