@@ -175,7 +175,7 @@ export default function QuickTaskPage() {
         <CardContent className="p-4 sm:p-6 space-y-6">
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase text-gray-500">Client</Label>
-            <Select value={clientId} onValueChange={setClientId}>
+            <Select value={clientId} onValueChange={(val) => setClientId(val || "")}>
               <SelectTrigger className="bg-white h-12">
                 <SelectValue placeholder="Select Client" />
               </SelectTrigger>
