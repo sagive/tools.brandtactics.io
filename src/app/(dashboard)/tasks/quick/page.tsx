@@ -140,9 +140,9 @@ export default function QuickTaskPage() {
   };
 
   return (
-    <div className="w-full sm:max-w-3xl sm:mx-auto space-y-4 sm:space-y-6 sm:pb-24 pb-20">
+    <div className="-mx-6 -mt-6 px-4 pt-4 sm:mx-auto sm:mt-0 sm:px-0 sm:pt-0 sm:max-w-3xl space-y-4 sm:space-y-6 sm:pb-24 pb-20">
       {/* Header */}
-      <div className="flex items-center gap-4 px-4 pt-4 sm:px-0 sm:pt-0">
+      <div className="flex items-center gap-4 sm:px-0 sm:pt-0">
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
           <ArrowLeft className="w-5 h-5" />
         </Button>
@@ -152,8 +152,8 @@ export default function QuickTaskPage() {
         </div>
       </div>
 
-      <Card className="shadow-none border-0 rounded-none sm:rounded-xl sm:shadow-sm sm:border sm:border-gray-200">
-        <CardContent className="p-4 sm:p-6 space-y-6">
+      <Card className="shadow-none border-x-0 border-t border-b-0 rounded-none sm:rounded-xl sm:shadow-sm sm:border sm:border-gray-200">
+        <CardContent className="p-0 pt-4 sm:p-6 space-y-6">
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase text-gray-500">Client</Label>
             <Select value={clientId} onValueChange={(val) => setClientId(val || "")}>
