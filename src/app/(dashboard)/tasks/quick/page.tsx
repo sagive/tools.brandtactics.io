@@ -15,6 +15,14 @@ import "react-quill-new/dist/quill.snow.css";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
+const quillModules = {
+  toolbar: [
+    [{ 'header': [1, 2, false] }],
+    ['bold', 'underline', 'link'],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }]
+  ]
+};
+
 export default function QuickTaskPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -229,6 +237,7 @@ export default function QuickTaskPage() {
                   theme="snow" 
                   value={description} 
                   onChange={setDescription} 
+                  modules={quillModules}
                   placeholder="Type or dictate your task details here..."
                   className="[&_.ql-editor]:min-h-[200px] [&_.ql-editor]:text-base [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" 
                 />
