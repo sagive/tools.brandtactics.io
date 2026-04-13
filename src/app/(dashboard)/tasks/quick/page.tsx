@@ -176,7 +176,7 @@ export default function QuickTaskPage() {
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase text-gray-500">Client</Label>
             <Select value={clientId} onValueChange={(val) => setClientId(val || "")}>
-              <SelectTrigger className="bg-white h-12">
+              <SelectTrigger className="bg-white h-12 w-full">
                 <SelectValue placeholder="Select Client" />
               </SelectTrigger>
               <SelectContent>
@@ -198,15 +198,14 @@ export default function QuickTaskPage() {
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-bold uppercase text-gray-500">Task Description</Label>
-              <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <Label className="text-xs font-bold uppercase text-gray-500 w-full sm:w-auto">Task Description</Label>
+              <div className="flex gap-2 w-full sm:w-auto">
                 <Button 
                   type="button"
                   variant="outline" 
-                  size="sm" 
                   onClick={toggleListening}
-                  className={isListening ? "bg-red-50 text-red-600 border-red-200" : "bg-gray-50 text-gray-600"}
+                  className={`flex-1 sm:flex-none ${isListening ? "bg-red-50 text-red-600 border-red-200" : "bg-gray-50 text-gray-600"}`}
                 >
                   {isListening ? <MicOff className="w-4 h-4 mr-2" /> : <Mic className="w-4 h-4 mr-2" />}
                   {isListening ? "Stop" : "Dictate"}
@@ -214,10 +213,9 @@ export default function QuickTaskPage() {
                 <Button 
                   type="button"
                   variant="default" 
-                  size="sm" 
                   onClick={handleMagicClean}
                   disabled={isCleaning}
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                  className="flex-1 sm:flex-none bg-purple-600 hover:bg-purple-700 text-white"
                 >
                   {isCleaning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
                   Clean with AI
