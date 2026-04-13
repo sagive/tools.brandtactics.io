@@ -31,10 +31,10 @@ export default function QuickTaskPage() {
   // Speech Recognition State
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const [dictateLang, setDictateLang] = useState<"en-US" | "he-IL">("en-US");
 
   useEffect(() => {
     fetchClients();
-    initSpeechRecognition();
   }, []);
 
   const fetchClients = async () => {
@@ -42,63 +42,57 @@ export default function QuickTaskPage() {
     if (data) setClients(data);
   };
 
-  const initSpeechRecognition = () => {
-    if (typeof window !== "undefined") {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        
-        recognition.onresult = (event: any) => {
-          let finalTranscript = '';
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) {
-              finalTranscript += event.results[i][0].transcript + ' ';
-            }
-          }
-          if (finalTranscript) {
-            // Append the dictated text to the description
-            setDescription((prev) => {
-               // Simple trick to append plain text to Quill's HTML
-               if (!prev || prev === '<p><br></p>') return `<p>${finalTranscript}</p>`;
-               return prev + ` <p>${finalTranscript}</p>`;
-            });
-          }
-        };
-
-        recognition.onend = () => {
-          setIsListening(false);
-        };
-
-        recognition.onerror = (event: any) => {
-          console.error("Speech recognition error", event.error);
-          setIsListening(false);
-          toast.error("Microphone error: " + event.error);
-        };
-
-        recognitionRef.current = recognition;
-      }
-    }
-  };
-
   const toggleListening = () => {
-    if (!recognitionRef.current) {
+    if (typeof window === "undefined") return;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
       toast.error("Your browser does not support speech recognition.");
       return;
     }
 
     if (isListening) {
-      recognitionRef.current.stop();
+      if (recognitionRef.current) recognitionRef.current.stop();
       setIsListening(false);
-    } else {
-      try {
-        recognitionRef.current.start();
-        setIsListening(true);
-        toast.info("Listening...");
-      } catch (err) {
-        console.error(err);
-      }
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = dictateLang;
+      recognition.continuous = true;
+      recognition.interimResults = false; // prevents stuttering/repeating words
+
+      recognition.onresult = (event: any) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          transcript += event.results[i][0].transcript + ' ';
+        }
+        if (transcript.trim()) {
+          setDescription((prev) => {
+             if (!prev || prev === '<p><br></p>') return `<p>${transcript.trim()}</p>`;
+             return prev + ` <p>${transcript.trim()}</p>`;
+          });
+        }
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error("Speech recognition error", event.error);
+        setIsListening(false);
+        if (event.error !== 'no-speech') toast.error("Microphone error: " + event.error);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+      setIsListening(true);
+      toast.info(`Listening in ${dictateLang === 'en-US' ? 'English' : 'Hebrew'}...`);
+    } catch (err) {
+      console.error(err);
+      setIsListening(false);
     }
   };
 
@@ -201,6 +195,15 @@ export default function QuickTaskPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <Label className="text-xs font-bold uppercase text-gray-500 w-full sm:w-auto">Task Description</Label>
               <div className="flex gap-2 w-full sm:w-auto">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setDictateLang(prev => prev === "en-US" ? "he-IL" : "en-US")}
+                  title={`Current: ${dictateLang === "en-US" ? "English" : "Hebrew"}. Click to swap.`}
+                  className="px-3 bg-gray-50 text-gray-600 border-gray-200"
+                >
+                  {dictateLang === "en-US" ? "EN" : "HE"}
+                </Button>
                 <Button 
                   type="button"
                   variant="outline" 
