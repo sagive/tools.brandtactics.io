@@ -139,7 +139,8 @@ export default function QuickTaskPage() {
       if (error) throw error;
       
       toast.success("Task created successfully!");
-      router.back(); // Return to previous page 
+      setTitle("");
+      setDescription("");
     } catch (err: any) {
       toast.error("Failed to save task: " + err.message);
     } finally {
@@ -164,16 +165,22 @@ export default function QuickTaskPage() {
         <CardContent className="px-4 py-2 sm:p-6 space-y-6">
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase text-gray-500">Client</Label>
-            <Select value={clientId} onValueChange={(val) => setClientId(val || "")}>
-              <SelectTrigger className="bg-white h-12 w-full">
-                <SelectValue placeholder="Select Client" />
-              </SelectTrigger>
-              <SelectContent>
-                {clients.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {clients.length > 0 ? (
+              <Select value={clientId} onValueChange={(val) => setClientId(val || "")}>
+                <SelectTrigger className="bg-white h-12 w-full">
+                  <SelectValue placeholder="Select Client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="h-12 w-full border border-gray-200 rounded-md flex items-center px-3 bg-gray-50 text-gray-500 text-sm">
+                Loading clients...
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
