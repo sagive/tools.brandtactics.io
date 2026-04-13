@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mic, MicOff, Image as ImageIcon, Save, Loader2, ArrowLeft } from "lucide-react";
+import { Mic, MicOff, Image as ImageIcon, Save, Loader2, ArrowLeft, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import dynamic from "next/dynamic";
@@ -151,24 +151,24 @@ export default function QuickTaskPage() {
   return (
     <div className="-mx-6 -mt-6 sm:mx-auto sm:mt-0 sm:max-w-3xl sm:space-y-6 sm:pb-24 pb-20">
       {/* Header */}
-      <div className="flex items-center gap-4 px-4 pt-4 sm:px-0 sm:pt-0">
-        <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
+      <div className="flex items-center justify-between gap-4 px-4 pt-4 pb-2 sm:px-0 sm:pt-0 sm:pb-0">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">Quick Task</h1>
-          <p className="text-gray-500 text-xs sm:text-sm">Create a task on the go.</p>
         </div>
+        <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
+          <ArrowRight className="w-5 h-5 text-gray-500 hover:text-gray-900" />
+        </Button>
       </div>
 
-      <Card className="shadow-none border-none rounded-none sm:rounded-xl sm:shadow-sm sm:border-solid sm:border sm:border-gray-200">
-        <CardContent className="px-4 py-2 sm:p-6 space-y-6">
-          <div className="space-y-2">
+      <div className="px-4 py-2 space-y-6 sm:p-6 sm:bg-white sm:rounded-xl sm:shadow-sm sm:border sm:border-gray-200">
+        <div className="space-y-2">
             <Label className="text-xs font-bold uppercase text-gray-500">Client</Label>
             {clients.length > 0 ? (
               <Select value={clientId} onValueChange={(val) => setClientId(val || "")}>
-                <SelectTrigger className="bg-white h-12 w-full">
-                  <SelectValue placeholder="Select Client" />
+                <SelectTrigger className="bg-white h-14 sm:h-12 w-full text-base sm:text-sm px-4">
+                  <div className="flex-1 text-left truncate">
+                    {clientId ? (clients.find(c => c.id === clientId)?.name || "Select Client") : "Select Client"}
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
                   {clients.map(c => (
@@ -177,7 +177,7 @@ export default function QuickTaskPage() {
                 </SelectContent>
               </Select>
             ) : (
-              <div className="h-12 w-full border border-gray-200 rounded-md flex items-center px-3 bg-gray-50 text-gray-500 text-sm">
+              <div className="h-14 sm:h-12 w-full border border-gray-200 rounded-md flex items-center px-4 bg-gray-50 text-gray-500 text-sm">
                 Loading clients...
               </div>
             )}
@@ -190,14 +190,14 @@ export default function QuickTaskPage() {
                 value={title} 
                 onChange={e => setTitle(e.target.value)} 
                 placeholder="e.g. Update homepage banner" 
-                className="h-12 bg-white pr-12"
+                className="h-14 sm:h-12 bg-white text-base pr-12"
               />
               <Button 
                 type="button"
                 variant="ghost" 
                 size="icon"
                 onClick={() => toggleListening("title")}
-                className={`absolute right-1 top-1.5 h-9 w-9 rounded-full ${activeDictationTarget === "title" ? "bg-red-50 text-red-600 hover:text-red-700 hover:bg-red-100" : "text-gray-400 hover:text-gray-600"}`}
+                className={`absolute right-1 top-2.5 sm:top-1.5 h-9 w-9 rounded-full ${activeDictationTarget === "title" ? "bg-red-50 text-red-600 hover:text-red-700 hover:bg-red-100" : "text-gray-400 hover:text-gray-600"}`}
               >
                  {activeDictationTarget === "title" ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
               </Button>
@@ -221,7 +221,7 @@ export default function QuickTaskPage() {
                   type="button"
                   variant="outline" 
                   onClick={() => toggleListening("description")}
-                  className={`flex-1 sm:flex-none ${activeDictationTarget === "description" ? "bg-red-50 text-red-600 border-red-200" : "bg-gray-50 text-gray-600"}`}
+                  className={`flex-1 ${activeDictationTarget === "description" ? "bg-red-50 text-red-600 border-red-200" : "bg-gray-50 text-gray-600"}`}
                 >
                   {activeDictationTarget === "description" ? <MicOff className="w-4 h-4 mr-2" /> : <Mic className="w-4 h-4 mr-2" />}
                   {activeDictationTarget === "description" ? "Stop" : "Dictate"}
@@ -230,10 +230,10 @@ export default function QuickTaskPage() {
                   type="button"
                   variant="default" 
                   onClick={handleImageClick}
-                  className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-3"
+                  title="Insert Image"
                 >
-                  <ImageIcon className="w-4 h-4 mr-2" />
-                  Image
+                  <ImageIcon className="w-5 h-5" />
                   <input type="file" accept="image/*" ref={hiddenFileInput} onChange={handleImageChange} className="hidden" />
                 </Button>
               </div>
@@ -250,8 +250,7 @@ export default function QuickTaskPage() {
                 />
             </div>
           </div>
-        </CardContent>
-      </Card>
+      </div>
 
       {/* Mobile Sticky Save Button */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50 md:relative md:bg-transparent md:border-t-0 md:p-0 md:z-auto">
