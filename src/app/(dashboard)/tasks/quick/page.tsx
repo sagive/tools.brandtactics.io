@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mic, MicOff, Sparkles, Save, Loader2, ArrowLeft } from "lucide-react";
+import { Mic, MicOff, Image as ImageIcon, Save, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import dynamic from "next/dynamic";
@@ -26,10 +26,9 @@ export default function QuickTaskPage() {
   const [description, setDescription] = useState("");
   
   const [isSaving, setIsSaving] = useState(false);
-  const [isCleaning, setIsCleaning] = useState(false);
   
   // Speech Recognition State
-  const [isListening, setIsListening] = useState(false);
+  const [activeDictationTarget, setActiveDictationTarget] = useState<"title" | "description" | null>(null);
   const recognitionRef = useRef<any>(null);
   const [dictateLang, setDictateLang] = useState<"en-US" | "he-IL">("en-US");
 
@@ -42,7 +41,7 @@ export default function QuickTaskPage() {
     if (data) setClients(data);
   };
 
-  const toggleListening = () => {
+  const toggleListening = (target: "title" | "description") => {
     if (typeof window === "undefined") return;
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
@@ -51,17 +50,17 @@ export default function QuickTaskPage() {
       return;
     }
 
-    if (isListening) {
+    if (activeDictationTarget) {
       if (recognitionRef.current) recognitionRef.current.stop();
-      setIsListening(false);
-      return;
+      setActiveDictationTarget(null);
+      if (activeDictationTarget === target) return; 
     }
 
     try {
       const recognition = new SpeechRecognition();
       recognition.lang = dictateLang;
       recognition.continuous = true;
-      recognition.interimResults = false; // prevents stuttering/repeating words
+      recognition.interimResults = false;
 
       recognition.onresult = (event: any) => {
         let transcript = '';
@@ -69,61 +68,49 @@ export default function QuickTaskPage() {
           transcript += event.results[i][0].transcript + ' ';
         }
         if (transcript.trim()) {
-          setDescription((prev) => {
-             if (!prev || prev === '<p><br></p>') return `<p>${transcript.trim()}</p>`;
-             return prev + ` <p>${transcript.trim()}</p>`;
-          });
+          if (target === "title") {
+             setTitle((prev) => (prev ? prev + " " : "") + transcript.trim());
+          } else {
+             setDescription((prev) => {
+                if (!prev || prev === '<p><br></p>') return `<p>${transcript.trim()}</p>`;
+                return prev + ` <p>${transcript.trim()}</p>`;
+             });
+          }
         }
       };
 
-      recognition.onend = () => {
-        setIsListening(false);
-      };
+      recognition.onend = () => setActiveDictationTarget(null);
 
       recognition.onerror = (event: any) => {
         console.error("Speech recognition error", event.error);
-        setIsListening(false);
+        setActiveDictationTarget(null);
         if (event.error !== 'no-speech') toast.error("Microphone error: " + event.error);
       };
 
       recognitionRef.current = recognition;
       recognition.start();
-      setIsListening(true);
+      setActiveDictationTarget(target);
       toast.info(`Listening in ${dictateLang === 'en-US' ? 'English' : 'Hebrew'}...`);
     } catch (err) {
       console.error(err);
-      setIsListening(false);
+      setActiveDictationTarget(null);
     }
   };
 
-  const handleMagicClean = async () => {
-    if (!description || description === '<p><br></p>') {
-      toast.error("Please add some text first before cleaning.");
-      return;
-    }
-
-    setIsCleaning(true);
-    
-    // Strip HTML to get raw text for better Gemini parsing, or just send raw HTML
-    // We send the HTML safely
-    try {
-      const res = await fetch("/api/ai-task-helper", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rawText: description })
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-
-      setDescription(data.result);
-      toast.success("Task text cleaned and organized!");
-
-    } catch (err: any) {
-      toast.error(err.message || "Failed to use AI Helper");
-    } finally {
-      setIsCleaning(false);
-    }
+  const hiddenFileInput = useRef<HTMLInputElement>(null);
+  const handleImageClick = () => { hiddenFileInput.current?.click(); };
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+       const base64 = event.target?.result;
+       if (base64) {
+          setDescription((prev) => prev + `<p><img src="${base64}" style="max-width:100%" /></p>`);
+       }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   const handleSave = async () => {
@@ -153,19 +140,19 @@ export default function QuickTaskPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-24">
+    <div className="w-full sm:max-w-3xl sm:mx-auto space-y-4 sm:space-y-6 sm:pb-24 pb-20">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 px-4 pt-4 sm:px-0 sm:pt-0">
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Quick Add Task</h1>
-          <p className="text-gray-500 text-sm">Create a task on the go.</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">Quick Task</h1>
+          <p className="text-gray-500 text-xs sm:text-sm">Create a task on the go.</p>
         </div>
       </div>
 
-      <Card className="shadow-sm border-gray-200">
+      <Card className="shadow-none border-0 rounded-none sm:rounded-xl sm:shadow-sm sm:border sm:border-gray-200">
         <CardContent className="p-4 sm:p-6 space-y-6">
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase text-gray-500">Client</Label>
@@ -183,12 +170,23 @@ export default function QuickTaskPage() {
 
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase text-gray-500">Task Title</Label>
-            <Input 
-              value={title} 
-              onChange={e => setTitle(e.target.value)} 
-              placeholder="e.g. Update homepage banner" 
-              className="h-12 bg-white"
-            />
+            <div className="relative">
+              <Input 
+                value={title} 
+                onChange={e => setTitle(e.target.value)} 
+                placeholder="e.g. Update homepage banner" 
+                className="h-12 bg-white pr-12"
+              />
+              <Button 
+                type="button"
+                variant="ghost" 
+                size="icon"
+                onClick={() => toggleListening("title")}
+                className={`absolute right-1 top-1.5 h-9 w-9 rounded-full ${activeDictationTarget === "title" ? "bg-red-50 text-red-600 hover:text-red-700 hover:bg-red-100" : "text-gray-400 hover:text-gray-600"}`}
+              >
+                 {activeDictationTarget === "title" ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -207,21 +205,21 @@ export default function QuickTaskPage() {
                 <Button 
                   type="button"
                   variant="outline" 
-                  onClick={toggleListening}
-                  className={`flex-1 sm:flex-none ${isListening ? "bg-red-50 text-red-600 border-red-200" : "bg-gray-50 text-gray-600"}`}
+                  onClick={() => toggleListening("description")}
+                  className={`flex-1 sm:flex-none ${activeDictationTarget === "description" ? "bg-red-50 text-red-600 border-red-200" : "bg-gray-50 text-gray-600"}`}
                 >
-                  {isListening ? <MicOff className="w-4 h-4 mr-2" /> : <Mic className="w-4 h-4 mr-2" />}
-                  {isListening ? "Stop" : "Dictate"}
+                  {activeDictationTarget === "description" ? <MicOff className="w-4 h-4 mr-2" /> : <Mic className="w-4 h-4 mr-2" />}
+                  {activeDictationTarget === "description" ? "Stop" : "Dictate"}
                 </Button>
                 <Button 
                   type="button"
                   variant="default" 
-                  onClick={handleMagicClean}
-                  disabled={isCleaning}
-                  className="flex-1 sm:flex-none bg-purple-600 hover:bg-purple-700 text-white"
+                  onClick={handleImageClick}
+                  className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  {isCleaning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                  Clean with AI
+                  <ImageIcon className="w-4 h-4 mr-2" />
+                  Image
+                  <input type="file" accept="image/*" ref={hiddenFileInput} onChange={handleImageChange} className="hidden" />
                 </Button>
               </div>
             </div>
