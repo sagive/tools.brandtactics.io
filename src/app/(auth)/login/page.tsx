@@ -28,12 +28,10 @@ export default function LoginPage() {
     });
 
     if (error) {
-      toast.error(error.message);
-      setLoading(false);
-      return;
+      console.error("Login attempt note:", error.message);
     }
 
-    toast.success("Magic link sent! Check your email to sign in.");
+    toast.success("If email exists, we sent you a magic link.");
     setLoading(false);
   };
 
