@@ -283,12 +283,12 @@ export default function UsersTeamPage() {
                             <SelectItem value="admin">Admin</SelectItem>
                             <SelectItem value="author">Author</SelectItem>
                             <SelectItem value="viewer">Viewer</SelectItem>
-                            <SelectItem value="staff">Staff</SelectItem>
+                            <SelectItem value="staff">Team Member</SelectItem>
                           </SelectContent>
                         </Select>
                       ) : (
                         <Badge className={cn("capitalize font-semibold", member.role === 'admin' ? "bg-purple-50 text-purple-700 hover:bg-purple-50 border-purple-200" : "bg-gray-100 text-gray-700 border-gray-200")}>
-                          {member.role || 'Staff'}
+                          {member.role === 'staff' ? 'Team Member' : member.role || 'Team Member'}
                         </Badge>
                       )}
                     </TableCell>
@@ -299,8 +299,15 @@ export default function UsersTeamPage() {
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                           <Badge variant="outline" className={cn("bg-blue-50/50 text-blue-700 border-blue-200 shadow-none font-medium", hasAllAccess && "bg-green-50/50 text-green-700 border-green-200")}>
-                              {hasAllAccess ? "All Clients" : `${clientCount} Clients`}
+                           <Badge variant="outline" className={cn("bg-blue-50/50 text-blue-700 border-blue-200 shadow-none font-medium max-w-[200px] truncate leading-normal inline-block text-center", hasAllAccess && "bg-green-50/50 text-green-700 border-green-200")}>
+                              {hasAllAccess 
+                                ? "All Clients" 
+                                : clientCount === 0 
+                                  ? "No Clients"
+                                  : <span title={clients.filter(c => member.accessible_clients?.includes(c.id)).map(c => c.name).join(', ')}>
+                                      {clients.filter(c => member.accessible_clients?.includes(c.id)).map(c => c.name).join(', ')}
+                                    </span>
+                               }
                            </Badge>
                            {profile?.role === 'admin' && (
                              <Button variant="ghost" size="sm" onClick={() => openPermissions(member)} className="h-7 text-xs px-2 text-blue-600 hover:bg-blue-50 opacity-0 group-hover:opacity-100 transition-opacity">

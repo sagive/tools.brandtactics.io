@@ -23,19 +23,31 @@ export default function ClientsPage() {
   const [clients, setClients] = React.useState<any[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isCreating, setIsCreating] = React.useState(false);
-  const { profile } = useAuth();
+  const { profile, isLoading: isAuthLoading } = useAuth();
   const isAdmin = profile?.role === 'admin';
 
   async function fetchClients() {
     setIsLoading(true);
     const { data } = await supabase.from("clients").select("*").order("name");
-    if (data) setClients(data);
+    
+    let finalClients = data || [];
+    
+    if (profile && !isAdmin) {
+      const allowed = profile.accessible_clients || [];
+      if (!allowed.includes('all')) {
+        finalClients = finalClients.filter(c => allowed.includes(c.id));
+      }
+    }
+    
+    setClients(finalClients);
     setIsLoading(false);
   }
 
   useEffect(() => {
-    fetchClients();
-  }, []);
+    if (!isAuthLoading) {
+      fetchClients();
+    }
+  }, [isAuthLoading, profile?.id]);
 
   const filteredClients = clients.filter(c => 
     (c.name || "").toLowerCase().includes(search.toLowerCase())

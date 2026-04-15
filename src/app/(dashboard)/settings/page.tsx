@@ -621,7 +621,7 @@ function SettingsContent() {
                     <div className="space-y-1 pt-1">
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Account Role</p>
                       <Badge className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-50 uppercase text-[10px] px-2 py-0.5">
-                        {profile?.role || "Staff"}
+                        {profile?.role === 'staff' ? 'Team Member' : profile?.role || 'Team Member'}
                       </Badge>
                     </div>
                   </div>

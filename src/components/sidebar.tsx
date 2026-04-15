@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useAuth } from "@/components/auth-provider";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -24,6 +25,9 @@ export function Sidebar() {
   const pathname = usePathname();
   const [isExpanded, setIsExpanded] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { profile } = useAuth();
+  
+  const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
     setMounted(true);
@@ -62,7 +66,10 @@ export function Sidebar() {
         {/* Main Navigation */}
         <div className={cn("mb-6", isExpanded ? "px-4" : "px-2")}>
           <ul className="space-y-2">
-            {NAV_ITEMS.map((item) => {
+            {NAV_ITEMS.filter(i => {
+               if (i.href === '/users' || i.href === '/settings') return isAdmin;
+               return true;
+            }).map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
                 <li key={item.href}>
