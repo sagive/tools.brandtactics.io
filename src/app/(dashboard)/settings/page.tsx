@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, Mail, Lock, User, Trash2, Plus, FileText, RotateCw, Clock, Camera, Upload, Zap, ArrowUp, ArrowDown, Globe } from "lucide-react";
+import { Save, Mail, Lock, User, Users, Trash2, Plus, FileText, RotateCw, Clock, Camera, Upload, Zap, ArrowUp, ArrowDown, Globe } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth-provider";
@@ -466,10 +466,8 @@ function SettingsContent() {
       if (error) throw error;
       toast.success("Profile updated successfully!");
       
-      // Refresh global profile state and local staff list
+      // Refresh global profile state
       await refreshProfile();
-      const { data } = await supabase.from('users').select('*').order('created_at', { ascending: true });
-      if (data) setStaff(data);
     } catch (err: any) {
       const msg = err.message?.includes("column users.full_name does not exist")
         ? "Database Error: The 'full_name' column is missing from your 'users' table. Please see the troubleshooting guide."
@@ -623,7 +621,7 @@ function SettingsContent() {
                     <div className="space-y-1 pt-1">
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Account Role</p>
                       <Badge className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-50 uppercase text-[10px] px-2 py-0.5">
-                        {staff.find(s => s.email === user?.email)?.role || "Staff"}
+                        {profile?.role || "Staff"}
                       </Badge>
                     </div>
                   </div>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { UserPlus, Trash2, RotateCw, Clock, Users, Shield, Briefcase } from "lucide-react";
+import { UserPlus, Trash2, RotateCw, Clock, Users, Shield, Briefcase, Loader2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
@@ -188,12 +188,11 @@ export default function UsersTeamPage() {
         </div>
         
         {profile?.role === 'admin' && (
-          <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
-                <UserPlus className="w-4 h-4 mr-2" /> Invite Member
-              </Button>
-            </DialogTrigger>
+          <>
+            <Button onClick={() => setIsInviteOpen(true)} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+              <UserPlus className="w-4 h-4 mr-2" /> Invite Member
+            </Button>
+            <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Invite Team Member</DialogTitle>
@@ -231,6 +230,7 @@ export default function UsersTeamPage() {
               </form>
             </DialogContent>
           </Dialog>
+          </>
         )}
       </div>
 
