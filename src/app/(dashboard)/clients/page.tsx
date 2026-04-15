@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/components/auth-provider";
 
 export default function ClientsPage() {
   const router = useRouter();
@@ -22,6 +23,8 @@ export default function ClientsPage() {
   const [clients, setClients] = React.useState<any[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isCreating, setIsCreating] = React.useState(false);
+  const { profile } = useAuth();
+  const isAdmin = profile?.role === 'admin';
 
   async function fetchClients() {
     setIsLoading(true);
@@ -130,9 +133,11 @@ export default function ClientsPage() {
                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20`}>
                           Active
                         </span>
-                        <span className="text-sm font-medium text-gray-700">
-                          ${(client.monthly_fee || 0).toLocaleString()}/mo
-                        </span>
+                        {isAdmin && (
+                          <span className="text-sm font-medium text-gray-700">
+                            ${(client.monthly_fee || 0).toLocaleString()}/mo
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

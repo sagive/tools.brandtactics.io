@@ -7,8 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, UserPlus, Mail, Lock, User, Trash2, Plus, FileText, RotateCw, Clock, Camera, Upload, Zap, Users, ArrowUp, ArrowDown, Globe } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Save, Mail, Lock, User, Trash2, Plus, FileText, RotateCw, Clock, Camera, Upload, Zap, ArrowUp, ArrowDown, Globe } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth-provider";
@@ -95,7 +94,7 @@ function PrewrittenTemplateRow({ template, onDelete, onUpdate }: { template: any
 function SettingsContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState(tabParam || "users");
+  const [activeTab, setActiveTab] = useState(tabParam || "profile");
 
   useEffect(() => {
     if (tabParam) {
@@ -117,10 +116,7 @@ function SettingsContent() {
 </div>`
   );
 
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("viewer");
-  const [isInviting, setIsInviting] = useState(false);
-  const [staff, setStaff] = useState<any[]>([]);
+
   const { user, profile, refreshProfile } = useAuth();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -164,12 +160,8 @@ function SettingsContent() {
     // Fetch prewritten templates
     fetchPrewrittenTemplates();
 
-    // 2. Fetch Staff
-    supabase.from('users').select('*').order('created_at', { ascending: true })
-      .then(({data, error}: {data: any, error: any}) => {
-        if (data) setStaff(data);
-        setIsLoading(false);
-      });
+    // 2. Finish Loading
+    setIsLoading(false);
 
 
 
@@ -488,90 +480,7 @@ function SettingsContent() {
     }
   };
 
-  const handleInviteUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inviteEmail) return;
-    
-    setIsInviting(true);
-    try {
-      const res = await fetch('/api/invites', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email: inviteEmail, role: inviteRole })
-      });
-      const data = await res.json();
-      
-      if (!res.ok) throw new Error(data.error || "Failed to send invite");
-      
-      toast.success(`Invite sent successfully to ${inviteEmail}.`);
-      setInviteEmail("");
-      setInviteRole("viewer");
-      
-      // Refresh staff to show the new pending invite
-      const { data: updatedStaff } = await supabase.from('users').select('*').order('created_at', { ascending: true });
-      if (updatedStaff) setStaff(updatedStaff);
-      
-    } catch (err: any) {
-      toast.error(err.message || "Failed to invite user");
-    } finally {
-      setIsInviting(false);
-    }
-  };
 
-  const handleResendInvite = async (email: string, role: string) => {
-    toast.info("Resending invite...");
-    try {
-      const res = await fetch('/api/invites', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, role })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      toast.success("Invite resent successfully.");
-      
-      const { data: updatedStaff } = await supabase.from('users').select('*').order('created_at', { ascending: true });
-      if (updatedStaff) setStaff(updatedStaff);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to resend invite");
-    }
-  };
-
-  const handleDeleteUser = async (id: string, email: string, isInvite: boolean = false) => {
-    const msg = isInvite ? "Are you sure you want to revoke this invitation?" : "Are you sure you want to remove this user from the system?";
-    if (!confirm(msg)) return;
-    
-    try {
-      const res = await fetch(`/api/invites?id=${id}&email=${email}`, {
-        method: 'DELETE'
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      
-      toast.success(isInvite ? "Invitation revoked" : "User removed");
-      setStaff(prev => prev.filter(member => member.id !== id));
-    } catch (err: any) {
-      toast.error(err.message || (isInvite ? "Failed to revoke invitation" : "Failed to remove user"));
-    }
-  };
-
-  const handleUpdateRole = async (userId: string, newRole: string) => {
-    try {
-      const { error } = await supabase
-        .from('users')
-        .update({ role: newRole })
-        .eq('id', userId);
-
-      if (error) throw error;
-      
-      toast.success("Role updated successfully");
-      setStaff(prev => prev.map(member => member.id === userId ? { ...member, role: newRole } : member));
-    } catch (err: any) {
-      toast.error("Failed to update role");
-    }
-  };
 
   // Preview content wrapper
   const previewHtml = template.replace('[content]', `
@@ -601,7 +510,6 @@ function SettingsContent() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-gray-100/50 border border-gray-200 p-1 rounded-lg">
-          <TabsTrigger value="users" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Users & Team</TabsTrigger>
           <TabsTrigger value="profile" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">My Profile</TabsTrigger>
           <TabsTrigger value="email" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Email Template</TabsTrigger>
           <TabsTrigger value="endpoints" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Article Endpoints</TabsTrigger>
@@ -642,165 +550,6 @@ function SettingsContent() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="users" className="space-y-6 mt-0 outline-none ring-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="shadow-sm border-gray-200">
-              <CardHeader>
-                <CardTitle className="flex items-center text-lg">
-                  <UserPlus className="w-5 h-5 mr-2 text-purple-600" />
-                  Invite Team Member
-                </CardTitle>
-                <CardDescription>
-                  Send an invitation link to a colleague to create a staff account.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleInviteUser} className="space-y-4">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Email Address</Label>
-                      <Input 
-                        type="email" 
-                        value={inviteEmail}
-                        onChange={(e) => setInviteEmail(e.target.value)}
-                        placeholder="teammate@brandtactics.com" 
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Role</Label>
-                      <Select value={inviteRole} onValueChange={(val) => setInviteRole(val || "viewer")}>
-                        <SelectTrigger className="w-full bg-white">
-                          <SelectValue placeholder="Select a role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="admin">Admin</SelectItem>
-                          <SelectItem value="author">Author</SelectItem>
-                          <SelectItem value="viewer">Viewer</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <Button type="submit" variant="default" className="w-full bg-purple-600 hover:bg-purple-700" disabled={isInviting}>
-                    {isInviting ? "Sending Invite..." : "Send Invite"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-sm border-gray-200">
-              <CardHeader>
-                <CardTitle className="text-lg">Staff Directory</CardTitle>
-                <CardDescription>Manage existing team members and their access roles.</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="pl-6">User</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead className="text-right pr-6">Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {staff.map((member) => (
-                      <TableRow key={member.id} className="hover:bg-gray-50/50">
-                        <TableCell className="pl-6">
-                          <div className="font-medium text-gray-900 text-sm">{member.email}</div>
-                          {member.status === 'invited' && (
-                            <div className="text-[10px] text-gray-400 mt-0.5 flex items-center">
-                              <Clock className="w-3 h-3 justify-center mr-1 inline" />
-                              Invited {member.invited_at ? new Date(member.invited_at).toLocaleDateString() : 'recently'}
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {profile?.role === 'admin' ? (
-                            <Select 
-                              value={member.role || 'viewer'} 
-                              onValueChange={(val) => handleUpdateRole(member.id, val)}
-                            >
-                              <SelectTrigger className="w-full sm:w-[130px] h-8 text-xs bg-white">
-                                <SelectValue placeholder="Select role" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="admin">Admin</SelectItem>
-                                <SelectItem value="author">Author</SelectItem>
-                                <SelectItem value="viewer">Viewer</SelectItem>
-                                <SelectItem value="staff">Staff</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <Badge className={cn(
-                              "capitalize",
-                              member.role === 'admin' ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-gray-100 text-gray-700 border-gray-200"
-                            )}>
-                              {member.role || 'Staff'}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right pr-6 min-w-[120px]">
-                          {member.status === 'invited' ? (
-                            <div className="flex items-center justify-end gap-2">
-                              {profile?.role === 'admin' && (
-                                <>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
-                                    onClick={() => handleResendInvite(member.email, member.role)}
-                                    title="Resend Invite"
-                                  >
-                                    <RotateCw className="w-4 h-4" />
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                    onClick={() => handleDeleteUser(member.id, member.email, true)}
-                                    title="Revoke Invitation"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </>
-                              )}
-                              <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200">
-                                Pending
-                              </Badge>
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-end gap-2">
-                              {profile?.role === 'admin' && member.email !== profile?.email && (
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                  onClick={() => handleDeleteUser(member.id, member.email, false)}
-                                  title="Remove User"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              )}
-                              <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 shadow-none">
-                                Active
-                              </Badge>
-                            </div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {staff.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={3} className="text-center py-4 text-gray-500 text-sm">
-                          No staff members found.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
 
         <TabsContent value="profile" className="space-y-6 mt-0 outline-none ring-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -16,9 +16,12 @@ import { format } from "date-fns";
 import ClientResources from "@/components/client-resources";
 import ClientGallery from "@/components/client-gallery";
 import ClientSocials from "@/components/client-socials";
+import { useAuth } from "@/components/auth-provider";
 
 export default function ClientOverview({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
+  const { profile } = useAuth();
+  const isAdmin = profile?.role === 'admin';
   
   // ... (rest of states)
   const [formData, setFormData] = useState({
@@ -162,6 +165,7 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
                 setFormData({ ...formData, status: value || "Active" });
                 setIsDirty(true);
               }}
+              disabled={!isAdmin}
             >
               <SelectTrigger className={cn(
                 "w-32 h-10 text-xs font-bold uppercase tracking-wider rounded-full border-none shadow-none focus:ring-0",
@@ -227,24 +231,26 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
                         </div>
                       </div>
                       
-                      <div className="flex items-center justify-between">
-                        <div className="text-gray-500 font-medium text-[11px] uppercase tracking-wider w-1/3">Fee/mo ($)</div>
-                        <div className="w-2/3 flex items-center border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors px-3 h-10">
-                          <Input 
-                            name="monthlyFee" 
-                            type="number" 
-                            min="0"
-                            value={formData.monthlyFee} 
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setFormData({ ...formData, monthlyFee: val === '' ? '0' : val });
-                              setIsDirty(true);
-                            }}
-                            className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-sm font-medium bg-transparent flex-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
-                          />
-                          <span className="text-gray-400 text-xs font-medium uppercase ml-2">usd</span>
+                      {isAdmin && (
+                        <div className="flex items-center justify-between">
+                          <div className="text-gray-500 font-medium text-[11px] uppercase tracking-wider w-1/3">Fee/mo ($)</div>
+                          <div className="w-2/3 flex items-center border border-gray-200 rounded-md bg-white hover:border-gray-300 transition-colors px-3 h-10">
+                            <Input 
+                              name="monthlyFee" 
+                              type="number" 
+                              min="0"
+                              value={formData.monthlyFee} 
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setFormData({ ...formData, monthlyFee: val === '' ? '0' : val });
+                                setIsDirty(true);
+                              }}
+                              className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-sm font-medium bg-transparent flex-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                            />
+                            <span className="text-gray-400 text-xs font-medium uppercase ml-2">usd</span>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
