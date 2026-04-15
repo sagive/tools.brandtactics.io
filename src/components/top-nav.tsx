@@ -260,12 +260,12 @@ export function TopNav() {
             </DropdownMenuItem>
             
             <DropdownMenuItem 
-              onClick={() => router.push("/settings?tab=profile")}
+              onClick={() => router.push("/my-profile")}
               className="rounded-lg h-10 px-3 cursor-pointer mb-1 group"
             >
               <div className="flex items-center gap-2 font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
                 <Settings className="w-4 h-4" />
-                <span>Profile Settings</span>
+                <span>My Profile</span>
               </div>
             </DropdownMenuItem>
 
