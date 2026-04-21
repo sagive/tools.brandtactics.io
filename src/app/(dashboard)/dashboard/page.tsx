@@ -14,6 +14,7 @@ import * as LucideIcons from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { useEffect } from "react";
+import { useAuth } from "@/components/auth-provider";
 import { EditToolDialog } from "@/components/edit-tool-dialog";
 import { EditTaskDialog } from "@/components/edit-task-dialog";
 import { Dialog, DialogTrigger, DialogContent, DialogClose } from "@/components/ui/dialog";
@@ -52,12 +53,19 @@ export default function DashboardPage() {
   const [clientSearch, setClientSearch] = useState("");
   const [tools, setTools] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const { profile, isLoading: isAuthLoading } = useAuth();
+  const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
-    fetchClients();
     fetchTools();
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    if (!isAuthLoading) {
+      fetchClients();
+    }
+  }, [isAuthLoading, profile?.id]);
 
   async function fetchClients() {
     // Fetch clients and their related tasks, articles, and emails for stats
@@ -71,7 +79,16 @@ export default function DashboardPage() {
       email_updates (id, created_at, recipient_email)
     `).order("name");
     
-    if (data) setClients(data);
+    let finalClients = data || [];
+    
+    if (profile && !isAdmin) {
+      const allowed = profile.accessible_clients || [];
+      if (!allowed.includes('all')) {
+        finalClients = finalClients.filter(c => allowed.includes(c.id));
+      }
+    }
+    
+    setClients(finalClients);
   }
 
   async function fetchTools() {
