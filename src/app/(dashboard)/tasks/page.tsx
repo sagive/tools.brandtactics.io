@@ -101,7 +101,7 @@ export default function GlobalTasksPage() {
           />
         </div>
 
-        <Select value={clientFilter} onValueChange={setClientFilter}>
+        <Select value={clientFilter} onValueChange={(val) => setClientFilter(val || "All")}>
           <SelectTrigger className="w-full sm:w-[200px] h-9 bg-white">
             <SelectValue placeholder="All Clients" />
           </SelectTrigger>
