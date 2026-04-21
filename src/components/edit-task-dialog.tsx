@@ -397,7 +397,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
 
   return (
     <DialogContent showCloseButton={false} className="max-w-[100%] sm:max-w-[95vw] md:max-w-[850px] lg:max-w-5xl xl:max-w-6xl w-full p-0 overflow-hidden bg-white">
-      <div className="flex flex-col h-[95vh] max-h-[95vh]">
+      <div className="flex flex-col h-[95vh] max-h-[95vh] min-w-0 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <DialogTitle className="text-xl font-bold">{isEditing ? "Edit Task" : "New Task"}</DialogTitle>
@@ -452,9 +452,9 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
         </div>
 
         {/* Body Content */}
-        <div className="flex flex-col md:flex-row flex-1 overflow-y-auto">
+        <div className="flex flex-col md:flex-row flex-1 overflow-y-auto min-w-0">
           {/* Left Column Component */}
-          <div className="flex-1 p-6 space-y-6 md:border-r border-gray-100">
+          <div className="flex-1 md:max-w-[65%] p-6 space-y-6 md:border-r border-gray-100 min-w-0">
             
             <div className="space-y-2">
               <Label className="text-gray-600 text-[13px] font-medium">Task title <span className="text-red-500">*</span></Label>
@@ -476,9 +476,9 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 max-w-full">
               <Label className="text-gray-600 text-[13px] font-medium">Description</Label>
-              <div id="task-description-container" className="border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[120px]">
+              <div id="task-description-container" className="border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[120px] [&_.ql-editor]:overflow-x-auto flex-1 min-w-0">
                  <ReactQuill 
                    theme="snow"
                    value={description}
@@ -574,7 +574,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
           </div>
 
           {/* Right Column Component */}
-          <div className="w-full md:w-80 bg-gray-50/30 p-6 space-y-6 flex flex-col">
+          <div className="w-full md:w-80 shrink-0 bg-gray-50/30 p-6 space-y-6 flex flex-col">
             
             {!isEditing && (
               <div className="space-y-2">
