@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useAuth } from "@/components/auth-provider";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,10 +20,15 @@ export default function GlobalTasksPage() {
   const [search, setSearch] = useState("");
   const [tasks, setTasks] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [clientFilter, setClientFilter] = useState("All");
+  const { profile, isLoading: isAuthLoading } = useAuth();
+  const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
-    fetchTasks();
-  }, []);
+    if (!isAuthLoading) {
+      fetchTasks();
+    }
+  }, [isAuthLoading, profile?.id]);
 
   const fetchTasks = async () => {
     setIsLoading(true);
@@ -39,11 +45,20 @@ export default function GlobalTasksPage() {
         
       if (error) throw error;
       
-      const formatted = data.map((t: any) => ({
+      let formatted = data.map((t: any) => ({
         ...t,
         client: t.clients?.name || "Unknown Client",
+        client_id: t.client_id, // ensure client_id is kept for filtering
         due: t.end_date ? new Date(t.end_date).toISOString().split('T')[0] : "No date"
       }));
+      
+      if (profile && !isAdmin) {
+        const allowed = profile.accessible_clients || [];
+        if (!allowed.includes('all')) {
+          formatted = formatted.filter((t: any) => allowed.includes(t.client_id));
+        }
+      }
+      
       setTasks(formatted);
     } catch (error: any) {
       toast.error(error.message || "Failed to load tasks");
@@ -52,10 +67,14 @@ export default function GlobalTasksPage() {
     }
   };
 
-  const filteredTasks = tasks.filter(t => 
-    t.title?.toLowerCase().includes(search.toLowerCase()) || 
-    t.client?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredTasks = tasks.filter(t => {
+    const matchesSearch = t.title?.toLowerCase().includes(search.toLowerCase()) || 
+                          t.client?.toLowerCase().includes(search.toLowerCase());
+    const matchesClient = clientFilter === "All" || t.client === clientFilter;
+    return matchesSearch && matchesClient;
+  });
+
+  const uniqueClients = Array.from(new Set(tasks.map(t => t.client).filter(Boolean))).sort();
 
   const pending = filteredTasks.filter(t => t.status === "Pending");
   const active = filteredTasks.filter(t => t.status === "Working on it" || t.status === "Review");
@@ -81,6 +100,18 @@ export default function GlobalTasksPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+
+        <Select value={clientFilter} onValueChange={setClientFilter}>
+          <SelectTrigger className="w-full sm:w-[200px] h-9 bg-white">
+            <SelectValue placeholder="All Clients" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="All">All Clients</SelectItem>
+            {uniqueClients.map(c => (
+              <SelectItem key={c as string} value={c as string}>{c as string}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         
         <div className="flex w-full sm:w-auto items-center gap-2 flex-col sm:flex-row">
           <Link href="/tasks/quick" className="w-full sm:w-auto">

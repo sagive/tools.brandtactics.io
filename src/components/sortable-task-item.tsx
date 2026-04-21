@@ -70,6 +70,13 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
             {/* Metadata Area (Visible on tablets and up) */}
              <div className="hidden md:flex items-center text-[11px] sm:text-xs text-gray-500 shrink-0 ml-auto gap-4 pr-1">
                
+               {/* Client Box */}
+               <div className="flex items-center mr-2">
+                  <Badge variant="outline" className="text-[10px] text-blue-600 bg-blue-50 border-blue-200 uppercase tracking-wide truncate max-w-[100px] shrink-0 font-bold px-1.5 py-0">
+                    {task.client}
+                  </Badge>
+               </div>
+
                {/* Unified Actor Flow (Requester -> Assignee) */}
                <div className="flex items-center gap-1.5">
                   <TooltipProvider delay={300}>
@@ -127,7 +134,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
                <TooltipProvider delay={300}>
                  <Tooltip>
                    <TooltipTrigger>
-                     <div className="flex items-center gap-1 cursor-default px-0.5">
+                     <div className="flex items-center gap-1 cursor-default px-0.5 min-w-[65px]">
                         <Gauge className="w-3.5 h-3.5 text-gray-400" />
                         <span className={cn(
                           "font-bold uppercase text-[9px] tracking-wider",
