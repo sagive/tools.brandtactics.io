@@ -143,26 +143,34 @@ export default function ClientDescription({ params }: { params: Promise<{ id: st
           <div className="flex-1 flex flex-col relative">
             {isRtl && (
               <style dangerouslySetInnerHTML={{__html: `
-                [dir="rtl"] .ql-editor ol li, 
-                [dir="rtl"] .ql-editor ul li {
+                [dir="rtl"] .ql-editor ol, 
+                [dir="rtl"] .ql-editor ul {
+                  margin: 0 20px 0 0 !important;
+                  padding: 0 !important;
+                }
+                [dir="rtl"] .ql-editor ol {
+                  list-style: decimal outside !important;
+                }
+                [dir="rtl"] .ql-editor ul {
+                  list-style: disc outside !important;
+                }
+                [dir="rtl"] .ql-editor li {
+                  list-style: inherit !important;
                   padding-left: 0 !important;
-                  padding-right: 1.5em !important;
+                  padding-right: 10px !important;
                 }
-                [dir="rtl"] .ql-editor ol li::before, 
-                [dir="rtl"] .ql-editor ul li::before {
-                  left: auto !important;
-                  right: -1.5em !important;
-                  text-align: right !important;
+                [dir="rtl"] .ql-editor li::before {
+                  display: none !important;
                 }
-                [dir="rtl"] .ql-editor ol li.ql-indent-1, [dir="rtl"] .ql-editor ul li.ql-indent-1 { padding-right: 3em !important; }
-                [dir="rtl"] .ql-editor ol li.ql-indent-2, [dir="rtl"] .ql-editor ul li.ql-indent-2 { padding-right: 4.5em !important; }
-                [dir="rtl"] .ql-editor ol li.ql-indent-3, [dir="rtl"] .ql-editor ul li.ql-indent-3 { padding-right: 6em !important; }
-                [dir="rtl"] .ql-editor ol li.ql-indent-4, [dir="rtl"] .ql-editor ul li.ql-indent-4 { padding-right: 7.5em !important; }
-                [dir="rtl"] .ql-editor ol li.ql-indent-5, [dir="rtl"] .ql-editor ul li.ql-indent-5 { padding-right: 9em !important; }
-                [dir="rtl"] .ql-editor ol li.ql-indent-6, [dir="rtl"] .ql-editor ul li.ql-indent-6 { padding-right: 10.5em !important; }
-                [dir="rtl"] .ql-editor ol li.ql-indent-7, [dir="rtl"] .ql-editor ul li.ql-indent-7 { padding-right: 12em !important; }
-                [dir="rtl"] .ql-editor ol li.ql-indent-8, [dir="rtl"] .ql-editor ul li.ql-indent-8 { padding-right: 13.5em !important; }
-                [dir="rtl"] .ql-editor ol li.ql-indent-9, [dir="rtl"] .ql-editor ul li.ql-indent-9 { padding-right: 15em !important; }
+                [dir="rtl"] .ql-editor li.ql-indent-1 { margin-right: 2em !important; }
+                [dir="rtl"] .ql-editor li.ql-indent-2 { margin-right: 4em !important; }
+                [dir="rtl"] .ql-editor li.ql-indent-3 { margin-right: 6em !important; }
+                [dir="rtl"] .ql-editor li.ql-indent-4 { margin-right: 8em !important; }
+                [dir="rtl"] .ql-editor li.ql-indent-5 { margin-right: 10em !important; }
+                [dir="rtl"] .ql-editor li.ql-indent-6 { margin-right: 12em !important; }
+                [dir="rtl"] .ql-editor li.ql-indent-7 { margin-right: 14em !important; }
+                [dir="rtl"] .ql-editor li.ql-indent-8 { margin-right: 16em !important; }
+                [dir="rtl"] .ql-editor li.ql-indent-9 { margin-right: 18em !important; }
               `}} />
             )}
             
