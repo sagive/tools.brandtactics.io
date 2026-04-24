@@ -145,7 +145,7 @@ export default function ClientDescription({ params }: { params: Promise<{ id: st
               <style dangerouslySetInnerHTML={{__html: `
                 [dir="rtl"] .ql-editor ol, 
                 [dir="rtl"] .ql-editor ul {
-                  margin: 0 20px 0 0 !important;
+                  margin: 32px 20px 32px 0 !important;
                   padding: 0 !important;
                 }
                 [dir="rtl"] .ql-editor ol {
