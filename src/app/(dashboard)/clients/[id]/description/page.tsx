@@ -160,7 +160,8 @@ export default function ClientDescription({ params }: { params: Promise<{ id: st
                   padding-right: 10px !important;
                   text-align: right !important;
                 }
-                [dir="rtl"] .ql-editor li::before {
+                [dir="rtl"] .ql-editor li::before,
+                [dir="rtl"] .ql-editor li .ql-ui {
                   display: none !important;
                 }
                 [dir="rtl"] .ql-editor li.ql-indent-1 { margin-right: 2em !important; }
