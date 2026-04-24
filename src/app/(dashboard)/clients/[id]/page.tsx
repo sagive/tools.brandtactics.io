@@ -127,8 +127,6 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
   const inputClasses = "h-auto px-2 py-1 -ml-2 w-full bg-transparent hover:bg-gray-50 border-transparent hover:border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-gray-900 shadow-none";
 
   return (
-    <div className="w-full">
-  return (
     <div className="w-full space-y-6">
       <div className="grid grid-cols-1 gap-6">
         {/* Socials & Resources */}
@@ -140,9 +138,6 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
         {/* Gallery */}
         <ClientGallery clientId={id} />
       </div>
-    </div>
-  );
-}
     </div>
   );
 }
