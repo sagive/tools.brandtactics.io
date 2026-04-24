@@ -34,6 +34,10 @@ export default function ClientLayout({
   const { profile } = useAuth();
   const isAdmin = profile?.role === 'admin';
 
+  const [clientName, setClientName] = useState("");
+  const [clientWebsite, setClientWebsite] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
   React.useEffect(() => {
     async function getClient() {
       const { data } = await supabase
@@ -50,8 +54,6 @@ export default function ClientLayout({
     }
     getClient();
   }, [clientId]);
-
-  const [clientWebsite, setClientWebsite] = useState("");
 
   const inputClasses = "h-auto px-2 py-1 -ml-2 w-full bg-transparent hover:bg-gray-50 border-transparent hover:border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-gray-900 shadow-none";
 
