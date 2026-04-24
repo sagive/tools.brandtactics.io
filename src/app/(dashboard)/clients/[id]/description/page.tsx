@@ -15,8 +15,10 @@ const DESCRIPTION_QUILL_MODULES = {
   toolbar: [
     [{ 'header': [1, 2, 3, false] }],
     ['bold', 'italic', 'underline', 'strike'],
-    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-    ['link', 'image'],
+    [{ 'color': [] }, { 'background': [] }],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
+    [{ 'direction': 'rtl' }, { 'align': [] }],
+    ['link', 'image', 'code-block'],
     ['clean']
   ],
 };
