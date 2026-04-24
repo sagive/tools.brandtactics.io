@@ -1,32 +1,87 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, Users, FileText, CheckCircle2, ArrowUpRight, ArrowDownRight, Loader2, BarChart3, PieChart, Activity } from "lucide-react";
+import { TrendingUp, Users, FileText, CheckCircle2, ArrowUpRight, ArrowDownRight, Loader2, BarChart3, PieChart, Activity, Briefcase } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/lib/supabase";
 
 function ReportsContent() {
   const searchParams = useSearchParams();
   const clientId = searchParams.get("clientId");
   const { profile, isLoading } = useAuth();
 
-  if (isLoading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
+  const [statsData, setStatsData] = useState({
+    tasksThisMonth: 0,
+    tasksLastMonth: 0,
+    activeClients: 0,
+    retainerClients: [] as any[],
+  });
+  const [isDataLoading, setIsDataLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      const now = new Date();
+      const firstDayThisMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+      
+      const { count: tasksThisMonth } = await supabase
+        .from('tasks')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', firstDayThisMonth);
+        
+      const { count: tasksLastMonth } = await supabase
+        .from('tasks')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', firstDayLastMonth)
+        .lt('created_at', firstDayThisMonth);
+        
+      const { count: activeClients } = await supabase
+        .from('clients')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Active');
+        
+      const { data: retainerClients } = await supabase
+        .from('clients')
+        .select('name, type, monthly_fee')
+        .eq('type', 'Retainer');
+        
+      setStatsData({
+        tasksThisMonth: tasksThisMonth || 0,
+        tasksLastMonth: tasksLastMonth || 0,
+        activeClients: activeClients || 0,
+        retainerClients: retainerClients || [],
+      });
+      setIsDataLoading(false);
+    }
+    
+    if (profile?.role === 'admin') {
+      fetchData();
+    }
+  }, [profile]);
+
+  if (isLoading || isDataLoading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
   if (!profile || profile.role !== 'admin') {
     redirect("/dashboard");
   }
 
+  const tasksChange = statsData.tasksLastMonth === 0 
+    ? "+100%" 
+    : `${((statsData.tasksThisMonth - statsData.tasksLastMonth) / statsData.tasksLastMonth * 100).toFixed(1)}%`;
+  const tasksTrendingUp = statsData.tasksThisMonth >= statsData.tasksLastMonth;
+
   const STATS = [
-    { label: "Total SEO Updates", value: "1,284", change: "+12.5%", trendingUp: true, icon: FileText, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Active Clients", value: "48", change: "+4", trendingUp: true, icon: Users, color: "text-purple-600", bg: "bg-purple-50" },
+    { label: "Tasks This Month", value: statsData.tasksThisMonth.toString(), change: tasksChange, trendingUp: tasksTrendingUp, icon: FileText, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Active Clients", value: statsData.activeClients.toString(), change: "Total", trendingUp: true, icon: Users, color: "text-purple-600", bg: "bg-purple-50" },
     { label: "Completed Tasks", value: "856", change: "+18%", trendingUp: true, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
     { label: "Avg. Response Rate", value: "92%", change: "-2.4%", trendingUp: false, icon: Activity, color: "text-orange-600", bg: "bg-orange-50" },
   ];
 
   return (
-    <div className="p-8 space-y-8 max-w-7xl mx-auto">
+    <div className="p-8 space-y-8 w-full mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 flex items-center gap-3">
@@ -66,31 +121,50 @@ function ReportsContent() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Performance Chart Placeholder */}
-        <Card className="border-gray-100 shadow-sm overflow-hidden">
+        {/* Retainer Clients Table */}
+        <Card className="border-gray-100 shadow-sm overflow-hidden flex flex-col">
           <CardHeader className="bg-gray-50/50 border-b border-gray-100 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-blue-600" />
-              SEO Update Velocity
+              <Briefcase className="w-4 h-4 text-blue-600" />
+              Retainer Clients
             </CardTitle>
-            <span className="text-[10px] uppercase font-bold text-gray-400">Last 30 Days</span>
+            <span className="text-[10px] uppercase font-bold text-gray-400">Current</span>
           </CardHeader>
-          <CardContent className="p-8">
-            <div className="h-64 flex items-end gap-3 px-4">
-               {[40, 65, 45, 90, 55, 75, 60, 85, 95, 70, 50, 80].map((h, i) => (
-                 <div key={i} className="flex-1 bg-blue-100 rounded-t-sm hover:bg-blue-600 transition-colors cursor-pointer relative group" style={{ height: `${h}%` }}>
-                   <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                     {h} updates
-                   </div>
-                 </div>
-               ))}
-            </div>
-            <div className="flex justify-between mt-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4">
-              <span>Week 1</span>
-              <span>Week 2</span>
-              <span>Week 3</span>
-              <span>Week 4</span>
-            </div>
+          <CardContent className="p-0 flex-1 overflow-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-gray-50 text-xs uppercase font-bold text-gray-500 sticky top-0">
+                <tr>
+                  <th className="px-6 py-4 whitespace-nowrap">Client Name</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Agreement Type</th>
+                  <th className="px-6 py-4 whitespace-nowrap text-right">Monthly Fee ($)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {statsData.retainerClients.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="px-6 py-8 text-center text-gray-500 italic">No retainer clients found.</td>
+                  </tr>
+                ) : (
+                  statsData.retainerClients.map((client, i) => (
+                    <tr key={i} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4 font-bold text-gray-900">{client.name || 'Unnamed Client'}</td>
+                      <td className="px-6 py-4 text-gray-500">
+                        <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-none font-bold">
+                          {client.type}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 text-right font-medium text-gray-900">${client.monthly_fee?.toLocaleString() || 0}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+              <tfoot className="bg-gray-50 font-bold text-gray-900 sticky bottom-0 border-t border-gray-200">
+                <tr>
+                  <td className="px-6 py-4 uppercase text-xs tracking-wider" colSpan={2}>Total Monthly Retainer</td>
+                  <td className="px-6 py-4 text-right text-blue-700">${statsData.retainerClients.reduce((sum, c) => sum + (Number(c.monthly_fee) || 0), 0).toLocaleString()}</td>
+                </tr>
+              </tfoot>
+            </table>
           </CardContent>
         </Card>
 
