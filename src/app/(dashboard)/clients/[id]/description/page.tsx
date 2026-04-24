@@ -158,6 +158,7 @@ export default function ClientDescription({ params }: { params: Promise<{ id: st
                   list-style: inherit !important;
                   padding-left: 0 !important;
                   padding-right: 10px !important;
+                  text-align: right !important;
                 }
                 [dir="rtl"] .ql-editor li::before {
                   display: none !important;
