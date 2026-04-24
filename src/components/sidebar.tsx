@@ -49,7 +49,7 @@ export function Sidebar() {
     <aside 
       className={cn(
         "border-r bg-white h-screen flex flex-col shadow-sm z-20 hidden md:flex transition-all duration-300 relative",
-        isExpanded ? "w-64" : "w-16"
+        isExpanded ? "w-52" : "w-16"
       )}
     >
       {/* Toggle Button */}
@@ -63,8 +63,8 @@ export function Sidebar() {
       </Button>
 
       {/* Header / Logo */}
-      <div className={cn("h-16 flex items-center border-b overflow-hidden", isExpanded ? "px-6" : "justify-center")}>
-        <Link href="/dashboard" className="flex items-center gap-2 font-bold text-xl tracking-tight text-blue-600 shrink-0">
+      <div className={cn("h-16 flex items-center border-b overflow-hidden", isExpanded ? "px-4" : "justify-center")}>
+        <Link href="/dashboard" className="flex items-center gap-2 font-bold text-lg tracking-tight text-blue-600 shrink-0">
           <div className="bg-blue-600 text-white w-8 h-8 rounded shrink-0 flex items-center justify-center">
             BT
           </div>
@@ -74,7 +74,7 @@ export function Sidebar() {
 
       <div className="flex-1 overflow-y-auto py-4 overflow-x-hidden flex flex-col">
         {/* Main Navigation */}
-        <div className={cn("mb-6", isExpanded ? "px-4" : "px-2")}>
+        <div className={cn("mb-6", isExpanded ? "px-2" : "px-2")}>
           <ul className="space-y-2">
             {NAV_ITEMS.filter(i => {
                if (i.href === '/users' || i.href === '/settings') return isAdmin;
@@ -88,7 +88,7 @@ export function Sidebar() {
                     title={!isExpanded ? item.label : undefined}
                     className={cn(
                       "flex items-center rounded-md transition-colors text-sm font-medium",
-                      isExpanded ? "gap-3 px-3 py-2" : "justify-center p-2 mx-auto w-10 h-10",
+                      isExpanded ? "gap-2.5 px-2.5 py-2" : "justify-center p-2 mx-auto w-10 h-10",
                       isActive
                         ? "bg-blue-50 text-blue-700"
                         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
