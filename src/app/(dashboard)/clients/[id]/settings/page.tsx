@@ -221,7 +221,6 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
                   {isSaving ? "Saving..." : "Save Settings"}
               </Button>
             </div>
-          </div>
         </CardContent>
       </Card>
     </div>
