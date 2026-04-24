@@ -118,8 +118,8 @@ function ReportsContent() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div className="lg:col-span-1">
           {/* Retainer Clients Table */}
           <Card className="border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
           <CardHeader className="bg-gray-50/50 border-b border-gray-100 flex flex-row items-center justify-between">
@@ -168,27 +168,29 @@ function ReportsContent() {
         </Card>
         </div>
 
-        <div className="lg:col-span-1 space-y-6">
+        <div className="lg:col-span-1">
           {/* Stats Overview */}
-          {STATS.map((stat, i) => (
-            <Card key={i} className="border-none shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group bg-white">
-              <CardContent className="p-6 relative">
-                <div className={stat.bg + " w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"}>
-                  <stat.icon className={"w-6 h-6 " + stat.color} />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-gray-500">{stat.label}</p>
-                  <div className="flex items-baseline gap-2">
-                    <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
-                    <span className={stat.trendingUp ? "text-green-600 flex items-center text-xs font-bold" : "text-red-600 flex items-center text-xs font-bold"}>
-                      {stat.trendingUp ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
-                      {stat.change}
-                    </span>
+          <div className="grid grid-cols-1 2xl:grid-cols-3 gap-6">
+            {STATS.map((stat, i) => (
+              <Card key={i} className="border-none shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group bg-white">
+                <CardContent className="p-6 relative">
+                  <div className={stat.bg + " w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"}>
+                    <stat.icon className={"w-6 h-6 " + stat.color} />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-gray-500">{stat.label}</p>
+                    <div className="flex items-baseline gap-2">
+                      <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
+                      <span className={stat.trendingUp ? "text-green-600 flex items-center text-xs font-bold" : "text-red-600 flex items-center text-xs font-bold"}>
+                        {stat.trendingUp ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
+                        {stat.change}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     </div>
