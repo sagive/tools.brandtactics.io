@@ -18,6 +18,8 @@ function ReportsContent() {
     tasksThisMonth: 0,
     tasksLastMonth: 0,
     activeClients: 0,
+    completedTasksThisMonth: 0,
+    completedTasksLastMonth: 0,
     retainerClients: [] as any[],
   });
   const [isDataLoading, setIsDataLoading] = useState(true);
@@ -49,10 +51,25 @@ function ReportsContent() {
         .select('name, type, monthly_fee')
         .eq('type', 'Retainer');
         
+      const { count: completedTasksThisMonth } = await supabase
+        .from('tasks')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Completed')
+        .gte('created_at', firstDayThisMonth);
+        
+      const { count: completedTasksLastMonth } = await supabase
+        .from('tasks')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Completed')
+        .gte('created_at', firstDayLastMonth)
+        .lt('created_at', firstDayThisMonth);
+        
       setStatsData({
         tasksThisMonth: tasksThisMonth || 0,
         tasksLastMonth: tasksLastMonth || 0,
         activeClients: activeClients || 0,
+        completedTasksThisMonth: completedTasksThisMonth || 0,
+        completedTasksLastMonth: completedTasksLastMonth || 0,
         retainerClients: retainerClients || [],
       });
       setIsDataLoading(false);
@@ -73,11 +90,15 @@ function ReportsContent() {
     : `${((statsData.tasksThisMonth - statsData.tasksLastMonth) / statsData.tasksLastMonth * 100).toFixed(1)}%`;
   const tasksTrendingUp = statsData.tasksThisMonth >= statsData.tasksLastMonth;
 
+  const completedChange = statsData.completedTasksLastMonth === 0 
+    ? "+100%" 
+    : `${((statsData.completedTasksThisMonth - statsData.completedTasksLastMonth) / statsData.completedTasksLastMonth * 100).toFixed(1)}%`;
+  const completedTrendingUp = statsData.completedTasksThisMonth >= statsData.completedTasksLastMonth;
+
   const STATS = [
     { label: "Tasks This Month", value: statsData.tasksThisMonth.toString(), change: tasksChange, trendingUp: tasksTrendingUp, icon: FileText, color: "text-blue-600", bg: "bg-blue-50" },
     { label: "Active Clients", value: statsData.activeClients.toString(), change: "Total", trendingUp: true, icon: Users, color: "text-purple-600", bg: "bg-purple-50" },
-    { label: "Completed Tasks", value: "856", change: "+18%", trendingUp: true, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
-    { label: "Avg. Response Rate", value: "92%", change: "-2.4%", trendingUp: false, icon: Activity, color: "text-orange-600", bg: "bg-orange-50" },
+    { label: "Completed This Month", value: statsData.completedTasksThisMonth.toString(), change: completedChange, trendingUp: completedTrendingUp, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
   ];
 
   return (
@@ -97,32 +118,10 @@ function ReportsContent() {
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {STATS.map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
-            <CardContent className="p-6 relative">
-              <div className={stat.bg + " w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"}>
-                <stat.icon className={"w-6 h-6 " + stat.color} />
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-500">{stat.label}</p>
-                <div className="flex items-baseline gap-2">
-                  <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
-                  <span className={stat.trendingUp ? "text-green-600 flex items-center text-xs font-bold" : "text-red-600 flex items-center text-xs font-bold"}>
-                    {stat.trendingUp ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
-                    {stat.change}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Retainer Clients Table */}
-        <Card className="border-gray-100 shadow-sm overflow-hidden flex flex-col">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <div className="lg:col-span-2">
+          {/* Retainer Clients Table */}
+          <Card className="border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
           <CardHeader className="bg-gray-50/50 border-b border-gray-100 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
               <Briefcase className="w-4 h-4 text-blue-600" />
@@ -167,46 +166,30 @@ function ReportsContent() {
             </table>
           </CardContent>
         </Card>
+        </div>
 
-        {/* Client Distribution Placeholder */}
-        <Card className="border-gray-100 shadow-sm overflow-hidden">
-          <CardHeader className="bg-gray-50/50 border-b border-gray-100 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <PieChart className="w-4 h-4 text-purple-600" />
-              Client Retention by Industry
-            </CardTitle>
-            <span className="text-[10px] uppercase font-bold text-gray-400">YTD 2026</span>
-          </CardHeader>
-          <CardContent className="p-10 flex flex-col items-center">
-            <div className="w-48 h-48 rounded-full border-[12px] border-blue-500 relative flex items-center justify-center">
-               <div className="absolute inset-0 rounded-full border-[12px] border-purple-400 rotate-90" style={{ clipPath: 'polygon(50% 50%, 100% 0, 100% 100%)' }}></div>
-               <div className="absolute inset-0 rounded-full border-[12px] border-green-400 rotate-180" style={{ clipPath: 'polygon(50% 50%, 0 50%, 0 100%)' }}></div>
-               <div className="text-center">
-                 <p className="text-3xl font-black text-gray-900">48</p>
-                 <p className="text-[10px] font-bold text-gray-400 uppercase">Active</p>
-               </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-x-12 gap-y-4 mt-10">
-               <div className="flex items-center gap-2">
-                 <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                 <span className="text-xs font-bold text-gray-700">Technology (45%)</span>
-               </div>
-               <div className="flex items-center gap-2">
-                 <div className="w-3 h-3 rounded-full bg-purple-400"></div>
-                 <span className="text-xs font-bold text-gray-700">E-commerce (25%)</span>
-               </div>
-               <div className="flex items-center gap-2">
-                 <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                 <span className="text-xs font-bold text-gray-700">Real Estate (15%)</span>
-               </div>
-               <div className="flex items-center gap-2">
-                 <div className="w-3 h-3 rounded-full bg-gray-200"></div>
-                 <span className="text-xs font-bold text-gray-700">Other (15%)</span>
-               </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="lg:col-span-1 space-y-6">
+          {/* Stats Overview */}
+          {STATS.map((stat, i) => (
+            <Card key={i} className="border-none shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group bg-white">
+              <CardContent className="p-6 relative">
+                <div className={stat.bg + " w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"}>
+                  <stat.icon className={"w-6 h-6 " + stat.color} />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-gray-500">{stat.label}</p>
+                  <div className="flex items-baseline gap-2">
+                    <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
+                    <span className={stat.trendingUp ? "text-green-600 flex items-center text-xs font-bold" : "text-red-600 flex items-center text-xs font-bold"}>
+                      {stat.trendingUp ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
+                      {stat.change}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );
