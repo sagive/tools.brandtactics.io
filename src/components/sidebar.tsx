@@ -30,8 +30,18 @@ export function Sidebar() {
   const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
+    const saved = localStorage.getItem("bt_sidebar_expanded");
+    if (saved !== null) {
+      setIsExpanded(saved === "true");
+    }
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem("bt_sidebar_expanded", String(isExpanded));
+    }
+  }, [isExpanded, mounted]);
 
   if (!mounted) return <aside className="w-16 border-r bg-white h-screen hidden md:flex" />;
 
