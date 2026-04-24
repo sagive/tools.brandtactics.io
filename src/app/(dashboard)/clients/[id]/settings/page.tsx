@@ -138,84 +138,76 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
             </Select>
           </div>
 
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* General Info */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">General Information</h3>
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Client Name</label>
-                    <Input name="name" value={formData.name} onChange={handleChange} className="h-10" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Website URL</label>
-                    <Input name="website" value={formData.website} onChange={handleChange} placeholder="www.example.com" className="h-10" />
-                  </div>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Field: Client Name */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Client Name</label>
+              <Input name="name" value={formData.name} onChange={handleChange} className="h-10" />
+            </div>
 
-              {/* Agreement */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Agreement Details</h3>
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Agreement Type</label>
-                    <Select 
-                      value={formData.type || ""} 
-                      onValueChange={(value) => {
-                        setFormData({ ...formData, type: value || "" });
-                        setIsDirty(true);
-                      }}
-                    >
-                      <SelectTrigger className="h-10">
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Retainer">Retainer</SelectItem>
-                        <SelectItem value="Prepaid hours">Prepaid hours</SelectItem>
-                        <SelectItem value="Our site">Our site</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Monthly Fee ($)</label>
-                    <div className="relative">
-                      <Input 
-                        name="monthlyFee" 
-                        type="number" 
-                        value={formData.monthlyFee} 
-                        onChange={handleChange} 
-                        className="h-10 pr-12" 
-                      />
-                      <span className="absolute right-3 top-2.5 text-xs font-bold text-gray-400">USD</span>
-                    </div>
-                  </div>
-                </div>
+            {/* Field: Website URL */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Website URL</label>
+              <Input name="website" value={formData.website} onChange={handleChange} placeholder="www.example.com" className="h-10" />
+            </div>
+
+            {/* Field: Agreement Type */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Agreement Type</label>
+              <Select 
+                value={formData.type || ""} 
+                onValueChange={(value) => {
+                  setFormData({ ...formData, type: value || "" });
+                  setIsDirty(true);
+                }}
+              >
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Retainer">Retainer</SelectItem>
+                  <SelectItem value="Prepaid hours">Prepaid hours</SelectItem>
+                  <SelectItem value="Our site">Our site</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Field: Monthly Fee */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Monthly Fee ($)</label>
+              <div className="relative">
+                <Input 
+                  name="monthlyFee" 
+                  type="number" 
+                  value={formData.monthlyFee} 
+                  onChange={handleChange} 
+                  className="h-10 pr-12" 
+                />
+                <span className="absolute right-3 top-2.5 text-xs font-bold text-gray-400">USD</span>
               </div>
             </div>
 
-            {/* Contact Details */}
-            <div className="pt-8 border-t border-gray-100 space-y-6">
-              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Primary Contact</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact Name</label>
-                  <Input name="contactName" value={formData.contactName} onChange={handleChange} className="h-10" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact Phone</label>
-                  <Input name="contactPhone" value={formData.contactPhone} onChange={handleChange} className="h-10" />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Notification Emails</label>
-                <p className="text-[11px] text-gray-400 mb-2">Comma separated list of emails for SEO updates</p>
-                <Input name="contactEmail" value={formData.contactEmail} onChange={handleChange} className="h-10" />
-              </div>
+            {/* Field: Contact Name */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Contact Name</label>
+              <Input name="contactName" value={formData.contactName} onChange={handleChange} className="h-10" />
             </div>
 
-            <div className="flex items-center justify-between pt-8 border-t border-gray-100">
+            {/* Field: Contact Phone */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Contact Phone</label>
+              <Input name="contactPhone" value={formData.contactPhone} onChange={handleChange} className="h-10" />
+            </div>
+
+            {/* Field: Notification Emails (Spans full row or just 1 col?) */}
+            <div className="space-y-1 lg:col-span-3">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Notification Emails</label>
+              <p className="text-[11px] text-gray-400 mb-1.5">Comma separated list of emails for SEO updates</p>
+              <Input name="contactEmail" value={formData.contactEmail} onChange={handleChange} className="h-10" />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-8 border-t border-gray-100 mt-8">
               <div className="text-xs text-gray-400 italic">
                 {joinDate ? `Client since ${joinDate}` : ""}
               </div>
