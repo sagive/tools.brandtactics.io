@@ -30,7 +30,15 @@ export default function ClientDescription({ params }: { params: Promise<{ id: st
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [isRtl, setIsRtl] = useState(false);
+
   useEffect(() => {
+    // Load RTL preference for this specific client from local storage
+    const savedRtl = localStorage.getItem(`rtl-pref-${id}`);
+    if (savedRtl) {
+      setIsRtl(savedRtl === 'true');
+    }
+
     async function fetchData() {
       try {
         const { data: clientData } = await supabase
@@ -68,6 +76,11 @@ export default function ClientDescription({ params }: { params: Promise<{ id: st
     toast.success("Description updated successfully.");
   };
 
+  const handleRtlToggle = (checked: boolean) => {
+    setIsRtl(checked);
+    localStorage.setItem(`rtl-pref-${id}`, String(checked));
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -82,42 +95,57 @@ export default function ClientDescription({ params }: { params: Promise<{ id: st
         <CardContent className="p-8 flex-1 flex flex-col">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-lg font-bold text-gray-900">Client Description</h2>
-            {!isEditing ? (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setIsEditing(true)}
-                className="text-blue-600 border-blue-200 hover:bg-blue-50"
-              >
-                <Pencil className="w-4 h-4 mr-2" />
-                Edit Description
-              </Button>
-            ) : (
-              <div className="flex gap-2">
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-600 cursor-pointer hover:text-gray-900 transition-colors">
+                <input 
+                  type="checkbox" 
+                  checked={isRtl}
+                  onChange={(e) => handleRtlToggle(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
+                />
+                RTL Mode (Hebrew)
+              </label>
+
+              {!isEditing ? (
                 <Button 
-                  variant="ghost" 
+                  variant="outline" 
                   size="sm" 
-                  onClick={() => setIsEditing(false)}
+                  onClick={() => setIsEditing(true)}
+                  className="text-blue-600 border-blue-200 hover:bg-blue-50"
                 >
-                  <X className="w-4 h-4 mr-2" />
-                  Cancel
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Edit Description
                 </Button>
-                <Button 
-                  size="sm" 
-                  onClick={handleSave} 
-                  disabled={isSaving}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {isSaving ? "Saving..." : "Save Changes"}
-                </Button>
-              </div>
-            )}
+              ) : (
+                <div className="flex gap-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setIsEditing(false)}
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    onClick={handleSave} 
+                    disabled={isSaving}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {isSaving ? "Saving..." : "Save Changes"}
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex-1 flex flex-col">
             {isEditing ? (
-              <div className="flex-1 border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[400px] [&_.ql-editor]:text-base">
+              <div 
+                dir={isRtl ? "rtl" : "ltr"}
+                className="flex-1 border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[400px] [&_.ql-editor]:text-base"
+              >
                 <ReactQuill 
                   theme="snow"
                   value={description}
@@ -128,9 +156,14 @@ export default function ClientDescription({ params }: { params: Promise<{ id: st
               </div>
             ) : (
               <div 
-                className="flex-1 prose prose-blue max-w-none text-gray-700 p-2 min-h-[400px] text-lg leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: description || "<p class='text-gray-400 italic font-normal'>No description provided yet.</p>" }} 
-              />
+                dir={isRtl ? "rtl" : "ltr"}
+                className="flex-1 min-h-[400px] ql-snow"
+              >
+                <div 
+                  className="ql-editor p-2 text-lg text-gray-700 leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: description || "<p class='text-gray-400 italic font-normal'>No description provided yet.</p>" }} 
+                />
+              </div>
             )}
           </div>
         </CardContent>
