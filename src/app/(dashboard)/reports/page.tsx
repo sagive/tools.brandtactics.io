@@ -11,9 +11,9 @@ import { Badge } from "@/components/ui/badge";
 function ReportsContent() {
   const searchParams = useSearchParams();
   const clientId = searchParams.get("clientId");
-  const { profile, loading } = useAuth();
+  const { profile, isLoading } = useAuth();
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
+  if (isLoading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
   if (!profile || profile.role !== 'admin') {
     redirect("/dashboard");
   }
