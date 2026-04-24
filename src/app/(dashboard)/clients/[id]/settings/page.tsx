@@ -161,7 +161,7 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
                   setIsDirty(true);
                 }}
               >
-                <SelectTrigger className="h-10">
+                <SelectTrigger className="h-10 w-full">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
