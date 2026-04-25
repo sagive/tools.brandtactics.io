@@ -176,15 +176,32 @@ function SettingsContent() {
     }
   };
 
-  const [articleEndpoints, setArticleEndpoints] = useState<any[]>([]);
-  const [isAddingEndpoint, setIsAddingEndpoint] = useState(false);
+  const [articleAiSettings, setArticleAiSettings] = useState({
+    url: "",
+    testUrl: "",
+    useTest: false
+  });
 
-  const fetchArticleEndpoints = async () => {
+  const [articleTypes, setArticleTypes] = useState<any[]>([]);
+  const [isAddingType, setIsAddingType] = useState(false);
+
+  const fetchArticleSettings = async () => {
     try {
-      const { data, error } = await supabase.from('article_endpoints').select('*').order('created_at', { ascending: true });
-      if (data) setArticleEndpoints(data);
+      // Fetch Types
+      const { data: typesData } = await supabase.from('article_types').select('*').order('rank', { ascending: true });
+      if (typesData) setArticleTypes(typesData);
+
+      // Fetch AI Global Settings from app_settings
+      const { data: aiData } = await supabase.from('app_settings').select('article_ai_webhook_url, article_ai_webhook_url_test, article_ai_use_test').eq('id', 'global').single();
+      if (aiData) {
+        setArticleAiSettings({
+          url: aiData.article_ai_webhook_url || "",
+          testUrl: aiData.article_ai_webhook_url_test || "",
+          useTest: aiData.article_ai_use_test || false
+        });
+      }
     } catch (err) {
-      // Handle if table doesn't exist
+      console.error("Error fetching article settings:", err);
     }
   };
 
@@ -199,7 +216,7 @@ function SettingsContent() {
   };
 
   useEffect(() => {
-    fetchArticleEndpoints();
+    fetchArticleSettings();
     fetchProfileSites();
   }, []);
 
@@ -261,48 +278,53 @@ function SettingsContent() {
     }
   };
 
-  const handleCreateEndpoint = async () => {
-    setIsAddingEndpoint(true);
-    const newEndpoint = { 
-      name: "New Endpoint", 
-      endpoint_url: "https://hook.n8n.example.com/live...", 
-      endpoint_url_test: "https://hook.n8n.example.com/test...",
-      use_test_endpoint: true 
-    };
+  const handleCreateType = async () => {
+    setIsAddingType(true);
+    const maxRank = articleTypes.reduce((max, t) => Math.max(max, t.rank || 0), 0);
     try {
-      const { data, error } = await supabase.from('article_endpoints').insert(newEndpoint).select().single();
+      const { data, error } = await supabase.from('article_types').insert({ name: "New Category", rank: maxRank + 1 }).select().single();
       if (error) throw error;
-      if (data) {
-        setArticleEndpoints([...articleEndpoints, data]);
-        toast.success("New endpoint added");
-      }
+      if (data) setArticleTypes([...articleTypes, data]);
     } catch (err: any) {
-      toast.error(err.message || "Failed to add endpoint");
+      toast.error(err.message || "Failed to add type. Make sure you ran the SQL migration.");
     } finally {
-      setIsAddingEndpoint(false);
+      setIsAddingType(false);
     }
   };
 
-  const handleUpdateEndpoint = async (id: string, updates: any) => {
+  const handleUpdateType = async (id: string, updates: any) => {
     try {
-      const { error } = await supabase.from('article_endpoints').update(updates).eq('id', id);
+      const { error } = await supabase.from('article_types').update(updates).eq('id', id);
       if (error) throw error;
-      setArticleEndpoints(prev => prev.map(ep => ep.id === id ? { ...ep, ...updates } : ep));
-      toast.success("Endpoint saved successfully.");
+      setArticleTypes(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
     } catch (err: any) {
-      toast.error("Failed to save endpoint");
+      toast.error("Failed to save type");
     }
   };
 
-  const handleDeleteEndpoint = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this endpoint? Articles using this type will lose their AI capabilities.")) return;
+  const handleDeleteType = async (id: string) => {
+    if (!confirm("Are you sure?")) return;
     try {
-      const { error } = await supabase.from('article_endpoints').delete().eq('id', id);
+      const { error } = await supabase.from('article_types').delete().eq('id', id);
       if (error) throw error;
-      setArticleEndpoints(prev => prev.filter(ep => ep.id !== id));
-      toast.success("Endpoint deleted");
+      setArticleTypes(prev => prev.filter(t => t.id !== id));
+      toast.success("Category removed");
     } catch (err: any) {
-      toast.error("Failed to delete endpoint");
+      toast.error("Failed to delete category");
+    }
+  };
+
+  const handleSaveArticleAiSettings = async () => {
+    try {
+      const { error } = await supabase.from('app_settings').update({
+        article_ai_webhook_url: articleAiSettings.url,
+        article_ai_webhook_url_test: articleAiSettings.testUrl,
+        article_ai_use_test: articleAiSettings.useTest
+      }).eq('id', 'global');
+      if (error) throw error;
+      toast.success("AI Generation settings saved.");
+    } catch (err: any) {
+      toast.error("Failed to save AI settings");
     }
   };
 
@@ -376,7 +398,7 @@ function SettingsContent() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-gray-100/50 border border-gray-200 p-1 rounded-lg">
           <TabsTrigger value="email" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Email Template</TabsTrigger>
-          <TabsTrigger value="endpoints" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Article Endpoints</TabsTrigger>
+          <TabsTrigger value="endpoints" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Article Settings</TabsTrigger>
           <TabsTrigger value="profiles" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Profiles</TabsTrigger>
           <TabsTrigger value="ai" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">AI Integrations</TabsTrigger>
         </TabsList>
@@ -506,41 +528,149 @@ function SettingsContent() {
           </div>
         </TabsContent>
 
-        <TabsContent value="endpoints" className="space-y-6 mt-0 outline-none ring-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 flex items-center">
-                <Plus className="w-5 h-5 mr-2 text-yellow-500" />
-                AI Article Endpoints
-              </h3>
-              <p className="text-xs text-gray-500 mt-1 max-w-2xl">
-                Configure the n8n webhook URLs corresponding to each article type (e.g., Guest post, PR). 
-                When a user clicks "Generate with AI" on an article of that type, these endpoints will be called to generate the HTML content.
-              </p>
+        <TabsContent value="endpoints" className="space-y-8 mt-0 outline-none ring-0">
+          {/* Article Categories Section */}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                  <FileText className="w-5 h-5 mr-2 text-blue-600" />
+                  Article Categories
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  Manage the available types/categories for client articles. These will appear in the dropdown when creating or editing articles.
+                </p>
+              </div>
+              <Button onClick={handleCreateType} disabled={isAddingType} className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-2">
+                <Plus className="w-4 h-4" /> {isAddingType ? "Adding..." : "Add Category"}
+              </Button>
             </div>
-            <Button onClick={handleCreateEndpoint} disabled={isAddingEndpoint} className="bg-yellow-500 hover:bg-yellow-600 text-white shadow-sm gap-2">
-              <Plus className="w-4 h-4" /> {isAddingEndpoint ? "Adding..." : "Add Endpoint"}
-            </Button>
+
+            {articleTypes.length === 0 ? (
+              <div className="p-8 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+                <p className="text-sm text-gray-400">No custom categories added. Default types will be used.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {articleTypes.map(type => (
+                  <div key={type.id} className="p-3 bg-white border border-gray-200 rounded-xl shadow-sm flex items-center gap-3">
+                    <div className="flex-1">
+                      <Input 
+                        value={type.name} 
+                        onChange={(e) => handleUpdateType(type.id, { name: e.target.value })}
+                        className="h-8 text-sm font-medium border-transparent hover:border-gray-100 focus:border-blue-200 px-2"
+                      />
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7 text-gray-400 hover:text-red-600"
+                      onClick={() => handleDeleteType(type.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {articleEndpoints.length === 0 ? (
-            <div className="p-12 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
-              <Plus className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-              <h4 className="font-semibold text-gray-700">No endpoints configured</h4>
-              <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">Add an endpoint to enable AI generation for client articles.</p>
+          <div className="h-px bg-gray-200" />
+
+          {/* AI Generation Widget */}
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                <Zap className="w-5 h-5 mr-2 text-yellow-500" />
+                AI Generation Configuration
+              </h3>
+              <p className="text-xs text-gray-500 mt-1 max-w-2xl">
+                Configure the n8n webhook URLs used when "Generate with AI" is checked. This endpoint is called to generate the HTML content for any article category.
+              </p>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-6">
-              {articleEndpoints.map(ep => (
-                <EndpointRow 
-                  key={ep.id} 
-                  endpoint={ep} 
-                  onDelete={handleDeleteEndpoint} 
-                  onUpdate={handleUpdateEndpoint} 
-                />
-              ))}
-            </div>
-          )}
+
+            <Card className={cn(
+              "border-2 transition-all shadow-md overflow-hidden",
+              articleAiSettings.useTest ? "border-amber-200 bg-amber-50/10" : "border-blue-100 bg-white"
+            )}>
+              <CardHeader className={cn(
+                "pb-4 border-b",
+                articleAiSettings.useTest ? "bg-amber-50/50" : "bg-blue-50/30"
+              )}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "p-2 rounded-lg",
+                      articleAiSettings.useTest ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
+                    )}>
+                      <Bot className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-sm font-bold uppercase tracking-wide">Main AI Webhook</CardTitle>
+                      <CardDescription className="text-[10px] font-medium">This endpoint processes all AI generation requests.</CardDescription>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-gray-200 shadow-sm">
+                      <input 
+                        type="checkbox" 
+                        id="global-ai-test-mode"
+                        checked={articleAiSettings.useTest} 
+                        onChange={(e) => setArticleAiSettings(prev => ({ ...prev, useTest: e.target.checked }))} 
+                        className="w-4 h-4 text-amber-500 border-gray-300 rounded focus:ring-amber-500"
+                      />
+                      <Label htmlFor="global-ai-test-mode" className="text-xs font-bold text-gray-700 cursor-pointer">
+                        Use Test Endpoint
+                      </Label>
+                    </div>
+                    <Button onClick={handleSaveArticleAiSettings} className="bg-blue-600 hover:bg-blue-700 shadow-lg">
+                      <Save className="w-4 h-4 mr-2" /> Save Config
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className={cn(
+                        "text-[11px] font-bold uppercase tracking-wider",
+                        !articleAiSettings.useTest ? "text-blue-600" : "text-gray-400"
+                      )}>Live Webhook URL</Label>
+                      {!articleAiSettings.useTest && <Badge className="bg-green-500 hover:bg-green-500 text-white text-[9px] h-4 py-0 px-2 font-bold ring-2 ring-white">ACTIVE</Badge>}
+                    </div>
+                    <Input 
+                      value={articleAiSettings.url} 
+                      onChange={(e) => setArticleAiSettings(prev => ({ ...prev, url: e.target.value }))} 
+                      className={cn(
+                        "font-mono text-xs h-10",
+                        !articleAiSettings.useTest ? "border-blue-300 bg-white shadow-sm ring-1 ring-blue-50" : "border-gray-200 bg-gray-50 text-gray-400"
+                      )}
+                      placeholder="https://n8n.your-domain.com/webhook/..." 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className={cn(
+                        "text-[11px] font-bold uppercase tracking-wider",
+                        articleAiSettings.useTest ? "text-amber-600" : "text-gray-400"
+                      )}>Test Webhook URL</Label>
+                      {articleAiSettings.useTest && <Badge className="bg-amber-500 hover:bg-amber-500 text-white text-[9px] h-4 py-0 px-2 font-bold ring-2 ring-white">ACTIVE</Badge>}
+                    </div>
+                    <Input 
+                      value={articleAiSettings.testUrl} 
+                      onChange={(e) => setArticleAiSettings(prev => ({ ...prev, testUrl: e.target.value }))} 
+                      className={cn(
+                        "font-mono text-xs h-10",
+                        articleAiSettings.useTest ? "border-amber-300 bg-white shadow-sm ring-1 ring-amber-50" : "border-gray-200 bg-gray-50 text-gray-400"
+                      )}
+                      placeholder="https://n8n.your-domain.com/webhook-test/..." 
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="profiles" className="space-y-6 mt-0 outline-none ring-0">
@@ -626,90 +756,6 @@ function SettingsContent() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
-  );
-}
-
-function EndpointRow({ endpoint, onDelete, onUpdate }: { endpoint: any, onDelete: (id: string) => void, onUpdate: (id: string, updates: any) => Promise<void> }) {
-  const [name, setName] = useState(endpoint.name);
-  const [url, setUrl] = useState(endpoint.endpoint_url || "");
-  const [testUrl, setTestUrl] = useState(endpoint.endpoint_url_test || "");
-  const [useTest, setUseTest] = useState(endpoint.use_test_endpoint || false);
-  const [isSaving, setIsSaving] = useState(false);
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    await onUpdate(endpoint.id, { 
-      name, 
-      endpoint_url: url,
-      endpoint_url_test: testUrl,
-      use_test_endpoint: useTest
-    });
-    setIsSaving(false);
-  };
-
-  return (
-    <div className={`p-6 border rounded-xl shadow-sm space-y-4 transition-colors ${useTest ? "bg-amber-50/30 border-amber-200" : "bg-white border-gray-200"}`}>
-      <div className="flex items-start gap-4 flex-col md:flex-row">
-        {/* Left Col: Type and Toggle */}
-        <div className="w-full md:w-1/4 space-y-4">
-          <div className="space-y-1">
-            <Label className="text-xs font-semibold text-gray-500 uppercase">Article Type</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} className="font-bold text-gray-900 border-gray-200 bg-white" placeholder="e.g., Guest Post" />
-          </div>
-          
-          <div className="flex items-center gap-2 pt-2 bg-white p-2 rounded-md border border-gray-100 shadow-sm w-fit">
-            <input 
-              type="checkbox" 
-              id={`toggle-${endpoint.id}`}
-              checked={useTest} 
-              onChange={(e) => setUseTest(e.target.checked)} 
-              className="w-4 h-4 text-amber-500 border-gray-300 rounded focus:ring-amber-500"
-            />
-            <Label htmlFor={`toggle-${endpoint.id}`} className="text-xs font-bold text-gray-700 cursor-pointer">
-              Use Test Endpoint
-            </Label>
-          </div>
-        </div>
-
-        {/* Middle Col: URLs */}
-        <div className="w-full md:w-2/4 space-y-3">
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <Label className={`text-[11px] font-bold uppercase tracking-wider ${!useTest ? 'text-green-600' : 'text-gray-400'}`}>Live Webhook URL</Label>
-              {!useTest && <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[9px] h-4 py-0 px-1.5">ACTIVE</Badge>}
-            </div>
-            <Input 
-              value={url} 
-              onChange={(e) => setUrl(e.target.value)} 
-              className={`font-mono text-xs ${!useTest ? 'border-green-300 bg-green-50/30 focus-visible:ring-green-500 text-gray-900' : 'border-gray-200 bg-gray-50 text-gray-500'}`}
-              placeholder="https://..." 
-            />
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <Label className={`text-[11px] font-bold uppercase tracking-wider ${useTest ? 'text-amber-600' : 'text-gray-400'}`}>Test Webhook URL</Label>
-              {useTest && <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300 text-[9px] h-4 py-0 px-1.5">ACTIVE</Badge>}
-            </div>
-            <Input 
-              value={testUrl} 
-              onChange={(e) => setTestUrl(e.target.value)} 
-              className={`font-mono text-xs ${useTest ? 'border-amber-300 bg-amber-50/50 focus-visible:ring-amber-500 text-gray-900' : 'border-gray-200 bg-gray-50 text-gray-500'}`}
-              placeholder="https://..." 
-            />
-          </div>
-        </div>
-
-        {/* Right Col: Actions */}
-        <div className="flex items-start gap-2 w-full md:w-1/4 md:pt-5 justify-end h-full">
-          <Button variant="outline" onClick={handleSave} disabled={isSaving} className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 shrink-0">
-            {isSaving ? "Saving..." : <><Save className="w-4 h-4 mr-2" /> Save</>}
-          </Button>
-          <Button variant="ghost" className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0" onClick={() => onDelete(endpoint.id)}>
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }

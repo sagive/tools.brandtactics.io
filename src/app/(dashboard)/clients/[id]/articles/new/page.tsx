@@ -30,7 +30,8 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
   const [content, setContent] = useState("");
   const [status, setStatus] = useState("Draft");
   
-  const [endpoints, setEndpoints] = useState<any[]>([]);
+  const [articleTypes, setArticleTypes] = useState<any[]>([]);
+  const [aiSettings, setAiSettings] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   
@@ -60,14 +61,29 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
   }, [content]);
 
   useEffect(() => {
-    async function fetchEndpoints() {
-      const { data } = await supabase.from('article_endpoints').select('*').order('name');
-      if (data) setEndpoints(data);
+    async function fetchData() {
+      // Fetch Custom Types
+      const { data: typesData } = await supabase.from('article_types').select('*').order('rank', { ascending: true });
+      if (typesData && typesData.length > 0) {
+        setArticleTypes(typesData);
+      } else {
+        // Fallback defaults
+        setArticleTypes([
+          { id: '1', name: 'Blog Post' },
+          { id: '2', name: 'Guest Post' },
+          { id: '3', name: 'PR' },
+          { id: '4', name: 'AI Generated' }
+        ]);
+      }
+
+      // Fetch AI Global Settings
+      const { data: aiData } = await supabase.from('app_settings').select('article_ai_webhook_url, article_ai_webhook_url_test, article_ai_use_test').eq('id', 'global').single();
+      if (aiData) setAiSettings(aiData);
 
       const { data: cData } = await supabase.from('clients').select('name, description').eq('id', clientId).single();
       if (cData) setClientData(cData);
     }
-    fetchEndpoints();
+    fetchData();
   }, []);
 
   const handleGenerateAI = async () => {
@@ -75,25 +91,21 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
       toast.error("Please enter a title before generating with AI.");
       return;
     }
-    if (!type) {
-      toast.error("Please select an article type to determine the AI endpoint.");
+    
+    if (!aiSettings || (!aiSettings.article_ai_webhook_url && !aiSettings.article_ai_webhook_url_test)) {
+      toast.error("AI Webhook URL is not configured in Settings > Article Settings.");
       return;
     }
 
-    const endpoint = endpoints.find(e => e.name === type);
-    if (!endpoint) {
-      toast.error("No valid webhook configured for this article type in Settings.");
-      return;
-    }
-
-    const targetUrl = endpoint.use_test_endpoint ? endpoint.endpoint_url_test : endpoint.endpoint_url;
+    const targetUrl = aiSettings.article_ai_use_test ? aiSettings.article_ai_webhook_url_test : aiSettings.article_ai_webhook_url;
+    
     if (!targetUrl) {
-      toast.error(`The ${endpoint.use_test_endpoint ? "test" : "live"} webhook URL is missing in Settings.`);
+      toast.error(`The ${aiSettings.article_ai_use_test ? "test" : "live"} webhook URL is missing in Settings.`);
       return;
     }
 
     setIsGenerating(true);
-    toast.info(`Generating article via ${endpoint.use_test_endpoint ? "test" : "live"} AI endpoint...`);
+    toast.info(`Generating article via ${aiSettings.article_ai_use_test ? "test" : "live"} global AI endpoint...`);
     try {
       // We use a local proxy API route to bypass CORS issues with the external webhook
       const res = await fetch("/api/proxy", {
@@ -364,12 +376,9 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
                     <SelectValue placeholder="Select type..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {endpoints.map(ep => (
-                      <SelectItem key={ep.id} value={ep.name}>{ep.name}</SelectItem>
+                    {articleTypes.map(t => (
+                      <SelectItem key={t.id || t.name} value={t.name}>{t.name}</SelectItem>
                     ))}
-                    {endpoints.length === 0 && (
-                      <SelectItem value="empty" disabled>No endpoints configured</SelectItem>
-                    )}
                   </SelectContent>
                 </Select>
               </div>

@@ -35,6 +35,8 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
   const [isSaving, setIsSaving] = useState(false);
   const [wordCount, setWordCount] = useState(0);
 
+  const [articleTypes, setArticleTypes] = useState<any[]>([]);
+
   useEffect(() => {
     if (content) {
       // Auto word count
@@ -51,8 +53,21 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
   }, [content]);
   
   useEffect(() => {
-    async function fetchArticle() {
+    async function fetchInitialData() {
       try {
+        // Fetch Custom Types
+        const { data: typesData } = await supabase.from('article_types').select('*').order('rank', { ascending: true });
+        if (typesData && typesData.length > 0) {
+          setArticleTypes(typesData);
+        } else {
+          setArticleTypes([
+            { id: '1', name: 'Blog Post' },
+            { id: '2', name: 'Guest Post' },
+            { id: '3', name: 'PR' },
+            { id: '4', name: 'AI Generated' }
+          ]);
+        }
+
         const { data, error } = await supabase
           .from('articles')
           .select('*')
@@ -76,7 +91,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
         setIsLoading(false);
       }
     }
-    fetchArticle();
+    fetchInitialData();
   }, [articleId]);
 
   const calculateLength = (htmlString: string) => {
@@ -242,12 +257,16 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-gray-600">Article Type</Label>
                 {isEditing ? (
-                  <Input 
-                    value={type} 
-                    onChange={(e) => setType(e.target.value)} 
-                    placeholder="Guest post, Blog, etc."
-                    className="bg-gray-50/50 text-sm"
-                  />
+                  <Select value={type} onValueChange={setType}>
+                    <SelectTrigger className="w-full bg-gray-50/50">
+                      <SelectValue placeholder="Select type..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {articleTypes.map(t => (
+                        <SelectItem key={t.id || t.name} value={t.name}>{t.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 ) : (
                   <div className="text-sm font-medium text-gray-900">{type || "-"}</div>
                 )}
