@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,11 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Strategy Data
   const [repeaterData, setRepeaterData] = useState<LinkGroup[]>([]);
@@ -296,8 +302,8 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
             </CardContent>
           </Card>
 
-          {/* Expanded View Overlay */}
-          {isFullScreen && sheetUrl && (
+          {/* Expanded View Overlay using Portal */}
+          {isFullScreen && sheetUrl && mounted && createPortal(
             <div className="fixed inset-0 z-[99999] bg-white flex flex-col animate-in fade-in zoom-in duration-300">
               <div className="p-3 border-b bg-gray-50 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -323,7 +329,8 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                   title="Google Sheet Full"
                 />
               </div>
-            </div>
+            </div>,
+            document.body
           )}
         </TabsContent>
 
