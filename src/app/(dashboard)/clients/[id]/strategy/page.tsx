@@ -257,7 +257,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                           />
                         </div>
                         
-                        <div className="flex items-center gap-1.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1.5">
                           {/* Render existing links */}
                           {(item.urls || []).map((url, idx) => {
                             const favicon = getFavicon(url);
