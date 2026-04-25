@@ -319,7 +319,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
 
                           {/* Add Link Button */}
                           <Tooltip>
-                            <TooltipTrigger asChild>
+                            <TooltipTrigger>
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
@@ -336,7 +336,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
 
                           {/* Delete Item */}
                           <Tooltip>
-                            <TooltipTrigger asChild>
+                            <TooltipTrigger>
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
