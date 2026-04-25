@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -252,16 +252,17 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                           {item.url && (
                             <Tooltip>
                               <TooltipTrigger>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  asChild 
-                                  className="h-8 w-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50"
+                                <a 
+                                  href={item.url.startsWith('http') ? item.url : `https://${item.url}`} 
+                                  target="_blank" 
+                                  rel="noreferrer"
+                                  className={cn(
+                                    buttonVariants({ variant: 'ghost', size: 'icon' }),
+                                    "h-8 w-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center"
+                                  )}
                                 >
-                                  <a href={item.url.startsWith('http') ? item.url : `https://${item.url}`} target="_blank" rel="noreferrer">
-                                    <ExternalLink className="w-4 h-4" />
-                                  </a>
-                                </Button>
+                                  <ExternalLink className="w-4 h-4" />
+                                </a>
                               </TooltipTrigger>
                               <TooltipContent side="top">Visit Link</TooltipContent>
                             </Tooltip>
