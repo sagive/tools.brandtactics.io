@@ -22,6 +22,7 @@ export default function ClientLayout({
 
   const NAV_LINKS = [
     { href: `/clients/${clientId}`, label: "Overview" },
+    { href: `/clients/${clientId}/strategy`, label: "Strategy" },
     { href: `/clients/${clientId}/tasks`, label: "Tasks" },
     { href: `/clients/${clientId}/keywords`, label: "SEO Data" },
     { href: `/clients/${clientId}/articles`, label: "Articles" },
