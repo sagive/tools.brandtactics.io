@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Save, Loader2, ExternalLink, GripVertical, FileText, Layout, Table as TableIcon } from "lucide-react";
+import { Plus, Trash2, Save, Loader2, ExternalLink, GripVertical, FileText, Layout, Table as TableIcon, Maximize2, Minimize2, X as CloseIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import dynamic from "next/dynamic";
@@ -30,6 +30,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
   const { id: clientId } = React.use(params);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   // Strategy Data
   const [repeaterData, setRepeaterData] = useState<LinkGroup[]>([]);
@@ -248,9 +249,22 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
         {/* Google Sheets Tab */}
         <TabsContent value="sheets" className="animate-in fade-in-50 duration-300">
           <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg">Google Sheets Embed</CardTitle>
-              <CardDescription>Paste a public Google Sheets URL to embed it here for quick access.</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">Google Sheets Embed</CardTitle>
+                <CardDescription>Paste a public Google Sheets URL to embed it here for quick access.</CardDescription>
+              </div>
+              {sheetUrl && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setIsFullScreen(true)}
+                  className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                >
+                  <Maximize2 className="w-4 h-4 mr-2" />
+                  Full Screen
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex gap-3">
@@ -281,6 +295,36 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
               )}
             </CardContent>
           </Card>
+
+          {/* Full Screen Overlay */}
+          {isFullScreen && sheetUrl && (
+            <div className="fixed inset-0 z-[9999] bg-white flex flex-col animate-in fade-in zoom-in duration-300">
+              <div className="p-3 border-b bg-gray-50 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center text-white">
+                    <TableIcon className="w-5 h-5" />
+                  </div>
+                  <h2 className="font-bold text-gray-900">Google Sheet - Full Screen Mode</h2>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setIsFullScreen(false)}
+                  className="bg-white border-gray-200 shadow-sm"
+                >
+                  <Minimize2 className="w-4 h-4 mr-2" />
+                  Minimize
+                </Button>
+              </div>
+              <div className="flex-1 w-full h-full">
+                <iframe 
+                  src={sheetUrl.includes('/edit') ? sheetUrl.replace('/edit', '/preview') : sheetUrl} 
+                  className="w-full h-full border-none"
+                  title="Google Sheet Full"
+                />
+              </div>
+            </div>
+          )}
         </TabsContent>
 
         {/* Notes Tab */}
