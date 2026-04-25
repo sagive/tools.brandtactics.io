@@ -172,8 +172,8 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        <div className="flex-1 min-w-0 space-y-6">
           <Card className="shadow-sm">
             <CardContent className="p-6 space-y-4">
               {isEditing ? (
@@ -212,7 +212,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
           </Card>
         </div>
 
-        <div className="space-y-6 lg:max-w-[320px] w-full">
+        <div className="space-y-6 lg:w-[320px] w-full shrink-0">
           <Card className="shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm uppercase tracking-wider text-gray-500 font-bold">Metadata</CardTitle>
