@@ -157,7 +157,9 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
                     </Badge>
                   </TableCell>
                   <TableCell className="text-gray-500 text-sm">
-                    {format(new Date(article.updated_at), "MMM d, yyyy")}
+                    {article.updated_at 
+                      ? format(new Date(article.updated_at), "MMM d, yyyy") 
+                      : "Recently Added"}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
