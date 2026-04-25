@@ -297,16 +297,17 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                                           autoFocus
                                         />
                                         {url && (
-                                          <Button 
-                                            variant="outline" 
-                                            size="icon" 
-                                            className="h-8 w-8 shrink-0" 
-                                            asChild
+                                          <a 
+                                            href={url.startsWith('http') ? url : `https://${url}`} 
+                                            target="_blank" 
+                                            rel="noreferrer"
+                                            className={cn(
+                                              buttonVariants({ variant: 'outline', size: 'icon' }),
+                                              "h-8 w-8 shrink-0"
+                                            )}
                                           >
-                                            <a href={url.startsWith('http') ? url : `https://${url}`} target="_blank" rel="noreferrer">
-                                              <ExternalLink className="w-3.5 h-3.5" />
-                                            </a>
-                                          </Button>
+                                            <ExternalLink className="w-3.5 h-3.5" />
+                                          </a>
                                         )}
                                       </div>
                                     </div>
