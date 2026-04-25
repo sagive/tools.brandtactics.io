@@ -145,7 +145,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
   }
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-6 relative min-h-[800px]">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">Client Strategy</h1>
@@ -296,15 +296,15 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
             </CardContent>
           </Card>
 
-          {/* Full Screen Overlay */}
+          {/* Expanded View Overlay */}
           {isFullScreen && sheetUrl && (
-            <div className="fixed inset-0 z-[9999] bg-white flex flex-col animate-in fade-in zoom-in duration-300">
+            <div className="absolute inset-0 z-50 bg-white flex flex-col animate-in fade-in zoom-in duration-300">
               <div className="p-3 border-b bg-gray-50 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center text-white">
                     <TableIcon className="w-5 h-5" />
                   </div>
-                  <h2 className="font-bold text-gray-900">Google Sheet - Full Screen Mode</h2>
+                  <h2 className="font-bold text-gray-900">Google Sheet - Expanded View</h2>
                 </div>
                 <Button 
                   variant="outline" 
@@ -313,14 +313,14 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                   className="bg-white border-gray-200 shadow-sm"
                 >
                   <Minimize2 className="w-4 h-4 mr-2" />
-                  Minimize
+                  Close Expanded View
                 </Button>
               </div>
               <div className="flex-1 w-full h-full">
                 <iframe 
                   src={sheetUrl.includes('/edit') ? sheetUrl.replace('/edit', '/preview') : sheetUrl} 
                   className="w-full h-full border-none"
-                  title="Google Sheet Full"
+                  title="Google Sheet Expanded"
                 />
               </div>
             </div>
