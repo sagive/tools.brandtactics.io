@@ -56,7 +56,15 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
           .single();
 
         if (data) {
-          setRepeaterData(data.repeater_data || []);
+          // Migrate old data (url -> urls)
+          const migratedData = (data.repeater_data || []).map((group: any) => ({
+            ...group,
+            items: (group.items || []).map((item: any) => ({
+              ...item,
+              urls: item.urls || (item.url ? [item.url] : [""])
+            }))
+          }));
+          setRepeaterData(migratedData);
           setSheetUrl(data.google_sheet_url || "");
           setNotes(data.notes || "");
         }
@@ -136,7 +144,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
   const addLinkToItem = (groupId: string, itemId: string) => {
     setRepeaterData(prev => prev.map(g => 
       g.id === groupId 
-        ? { ...g, items: g.items.map(i => i.id === itemId ? { ...i, urls: [...i.urls, ""] } : i) }
+        ? { ...g, items: g.items.map(i => i.id === itemId ? { ...i, urls: [...(i.urls || []), ""] } : i) }
         : g
     ));
   };
@@ -146,7 +154,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
       g.id === groupId 
         ? { ...g, items: g.items.map(i => i.id === itemId ? { 
             ...i, 
-            urls: i.urls.map((u, idx) => idx === linkIndex ? value : u) 
+            urls: (i.urls || []).map((u, idx) => idx === linkIndex ? value : u) 
           } : i) }
         : g
     ));
@@ -157,7 +165,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
       g.id === groupId 
         ? { ...g, items: g.items.map(i => i.id === itemId ? { 
             ...i, 
-            urls: i.urls.filter((_, idx) => idx !== linkIndex) 
+            urls: (i.urls || []).filter((_, idx) => idx !== linkIndex) 
           } : i) }
         : g
     ));
