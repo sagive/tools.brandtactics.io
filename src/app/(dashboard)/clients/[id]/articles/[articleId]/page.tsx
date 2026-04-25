@@ -33,6 +33,22 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [wordCount, setWordCount] = useState(0);
+
+  useEffect(() => {
+    if (content) {
+      // Auto word count
+      const tmp = document.createElement("DIV");
+      tmp.innerHTML = content;
+      const text = tmp.textContent || tmp.innerText || "";
+      const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+      setWordCount(words.length);
+
+      // Auto link count
+      const links = tmp.querySelectorAll("a");
+      setLinksCount(String(links.length));
+    }
+  }, [content]);
   
   useEffect(() => {
     async function fetchArticle() {
@@ -156,7 +172,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6">
           <Card className="shadow-sm">
             <CardContent className="p-6 space-y-4">
@@ -196,7 +212,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
           </Card>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-6 lg:max-w-[320px] w-full">
           <Card className="shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm uppercase tracking-wider text-gray-500 font-bold">Metadata</CardTitle>
@@ -272,18 +288,17 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
               </div>
 
               <div className="space-y-2 pt-2">
-                <Label className="text-xs font-semibold text-gray-600">Links Count</Label>
-                {isEditing ? (
-                  <Input 
-                    type="number"
-                    min="0"
-                    value={linksCount} 
-                    onChange={(e) => setLinksCount(e.target.value)} 
-                    className="bg-gray-50/50 text-sm w-24"
-                  />
-                ) : (
-                  <div className="text-sm font-medium text-gray-900">{linksCount} links</div>
-                )}
+                <Label className="text-xs font-semibold text-gray-600">Links Count (Auto)</Label>
+                <div className="text-sm font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md inline-block">
+                  {linksCount} links
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <Label className="text-xs font-semibold text-gray-600">Word Count</Label>
+                <div className="text-sm font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded-md inline-block">
+                  {wordCount} words
+                </div>
               </div>
             </CardContent>
           </Card>
