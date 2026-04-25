@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Plus, Trash2, Save, Loader2, ExternalLink, GripVertical, FileText, Layout, Table as TableIcon, Maximize2, Minimize2, X as CloseIcon, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 
