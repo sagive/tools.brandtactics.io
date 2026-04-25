@@ -96,7 +96,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
     const newGroup: LinkGroup = {
       id: crypto.randomUUID(),
       title: "New Group",
-      items: [{ id: crypto.randomUUID(), label: "", url: "" }]
+      items: [{ id: crypto.randomUUID(), label: "", urls: [""] }]
     };
     setRepeaterData([...repeaterData, newGroup]);
   };
