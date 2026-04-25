@@ -162,6 +162,18 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
 
   return (
     <div className="w-full px-4 lg:px-8 pb-10">
+      <style dangerouslySetInnerHTML={{ __html: `
+        .article-content p { margin-bottom: 1.5rem !important; }
+        .article-content h1, 
+        .article-content h2, 
+        .article-content h3, 
+        .article-content h4, 
+        .article-content h5, 
+        .article-content h6 { margin-top: 2rem !important; margin-bottom: 1rem !important; font-weight: 700 !important; }
+        .article-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 2rem 0; }
+        .article-content ul, .article-content ol { margin-bottom: 1.5rem !important; padding-right: 2rem !important; }
+        .article-content li { margin-bottom: 0.5rem !important; }
+      `}} />
       <div className="flex items-center gap-4 mb-6">
         <Link href={`/clients/${clientId}/articles`}>
           <Button variant="ghost" size="icon" className="hover:bg-gray-100">
@@ -309,11 +321,9 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
                     <div className="space-y-2 pt-6 border-t border-gray-100">
                       <Label className="text-sm font-semibold text-gray-700">Generated Content Preview</Label>
                       <div className="border border-indigo-100 rounded-md overflow-hidden bg-white shadow-sm ring-1 ring-indigo-50">
-                        <ReactQuill 
-                          theme="snow" 
-                          value={content} 
-                          onChange={setContent} 
-                          className="[&_.ql-editor]:min-h-[300px] [&_.ql-editor]:text-base [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" 
+                        <div 
+                          dangerouslySetInnerHTML={{ __html: content }} 
+                          className="p-6 text-gray-800 leading-relaxed article-content" 
                         />
                       </div>
                     </div>

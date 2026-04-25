@@ -113,6 +113,18 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
 
   return (
     <div className="w-full px-4 lg:px-8 pb-10">
+      <style dangerouslySetInnerHTML={{ __html: `
+        .article-content p { margin-bottom: 1.5rem !important; }
+        .article-content h1, 
+        .article-content h2, 
+        .article-content h3, 
+        .article-content h4, 
+        .article-content h5, 
+        .article-content h6 { margin-top: 2rem !important; margin-bottom: 1rem !important; font-weight: 700 !important; }
+        .article-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 2rem 0; }
+        .article-content ul, .article-content ol { margin-bottom: 1.5rem !important; padding-right: 2rem !important; }
+        .article-content li { margin-bottom: 0.5rem !important; }
+      `}} />
       <div className="flex items-center gap-4 mb-6">
         <Link href={`/clients/${clientId}/articles`}>
           <Button variant="ghost" size="icon" className="hover:bg-gray-100">
@@ -173,7 +185,10 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
               ) : (
                 <div className="space-y-6">
                   <div className="prose prose-blue max-w-none">
-                    <div dangerouslySetInnerHTML={{ __html: content }} className="text-gray-800 leading-relaxed ql-editor px-0" />
+                    <div 
+                      dangerouslySetInnerHTML={{ __html: content }} 
+                      className="text-gray-800 leading-relaxed ql-editor article-content px-0" 
+                    />
                   </div>
                 </div>
               )}
