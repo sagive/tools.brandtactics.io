@@ -21,7 +21,7 @@ const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 interface GroupItem {
   id: string;
   label: string;
-  url: string;
+  urls: string[]; // Supports multiple links
 }
 
 interface LinkGroup {
@@ -110,39 +110,69 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
   };
 
   const addItem = (groupId: string) => {
-    setRepeaterData(repeaterData.map(g => {
-      if (g.id === groupId) {
-        return {
-          ...g,
-          items: [...g.items, { id: crypto.randomUUID(), label: "", url: "" }]
-        };
-      }
-      return g;
-    }));
+    setRepeaterData(prev => prev.map(g => 
+      g.id === groupId 
+        ? { ...g, items: [...g.items, { id: crypto.randomUUID(), label: "", urls: [""] }] }
+        : g
+    ));
   };
 
   const removeItem = (groupId: string, itemId: string) => {
-    setRepeaterData(repeaterData.map(g => {
-      if (g.id === groupId) {
-        return {
-          ...g,
-          items: g.items.filter(i => i.id !== itemId)
-        };
-      }
-      return g;
-    }));
+    setRepeaterData(prev => prev.map(g => 
+      g.id === groupId 
+        ? { ...g, items: g.items.filter(i => i.id !== itemId) }
+        : g
+    ));
   };
 
-  const updateItem = (groupId: string, itemId: string, field: 'label' | 'url', value: string) => {
-    setRepeaterData(repeaterData.map(g => {
-      if (g.id === groupId) {
-        return {
-          ...g,
-          items: g.items.map(i => i.id === itemId ? { ...i, [field]: value } : i)
-        };
-      }
-      return g;
-    }));
+  const updateItem = (groupId: string, itemId: string, field: string, value: any) => {
+    setRepeaterData(prev => prev.map(g => 
+      g.id === groupId 
+        ? { ...g, items: g.items.map(i => i.id === itemId ? { ...i, [field]: value } : i) }
+        : g
+    ));
+  };
+
+  const addLinkToItem = (groupId: string, itemId: string) => {
+    setRepeaterData(prev => prev.map(g => 
+      g.id === groupId 
+        ? { ...g, items: g.items.map(i => i.id === itemId ? { ...i, urls: [...i.urls, ""] } : i) }
+        : g
+    ));
+  };
+
+  const updateLinkInItem = (groupId: string, itemId: string, linkIndex: number, value: string) => {
+    setRepeaterData(prev => prev.map(g => 
+      g.id === groupId 
+        ? { ...g, items: g.items.map(i => i.id === itemId ? { 
+            ...i, 
+            urls: i.urls.map((u, idx) => idx === linkIndex ? value : u) 
+          } : i) }
+        : g
+    ));
+  };
+
+  const removeLinkFromItem = (groupId: string, itemId: string, linkIndex: number) => {
+    setRepeaterData(prev => prev.map(g => 
+      g.id === groupId 
+        ? { ...g, items: g.items.map(i => i.id === itemId ? { 
+            ...i, 
+            urls: i.urls.filter((_, idx) => idx !== linkIndex) 
+          } : i) }
+        : g
+    ));
+  };
+
+  const getFavicon = (url: string) => {
+    if (!url) return null;
+    try {
+      let cleanUrl = url.trim();
+      if (!cleanUrl.startsWith('http')) cleanUrl = `https://${cleanUrl}`;
+      const hostname = new URL(cleanUrl).hostname;
+      return `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
+    } catch {
+      return null;
+    }
   };
 
   if (isLoading) {
@@ -206,78 +236,113 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </CardHeader>
-                <CardContent className="pt-6 space-y-3">
+                <CardContent className="pt-6 space-y-2">
                   <TooltipProvider>
                     {group.items.map((item) => (
-                      <div key={item.id} className="flex items-center gap-3 group/item bg-white p-1 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-                        <div className="flex-1">
+                      <div key={item.id} className="flex items-center gap-3 group/item py-1.5 px-3 rounded-lg hover:bg-gray-50/80 transition-all border border-transparent hover:border-gray-100">
+                        <div className="flex-1 min-w-0">
                           <Input 
-                            placeholder="Link Label" 
+                            placeholder="Link Label (e.g. Facebook Page)" 
                             value={item.label}
                             onChange={(e) => updateItem(group.id, item.id, 'label', e.target.value)}
-                            className="text-sm h-9 border-none bg-transparent focus:ring-0 shadow-none px-2 font-medium"
+                            className="text-sm h-8 border-none bg-transparent focus:ring-0 shadow-none px-0 font-medium text-gray-700 placeholder:text-gray-300"
                           />
                         </div>
                         
-                        <div className="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity pr-2">
-                          {/* Edit URL Popover */}
-                          <Popover>
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <PopoverTrigger>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50">
-                                    <LinkIcon className={cn("w-4 h-4", item.url ? "text-blue-500" : "")} />
-                                  </Button>
-                                </PopoverTrigger>
-                              </TooltipTrigger>
-                              <TooltipContent side="top">Edit URL</TooltipContent>
-                            </Tooltip>
-                            <PopoverContent className="w-80 p-3 shadow-xl border-gray-100 rounded-xl" side="bottom" align="end">
-                              <div className="space-y-2">
-                                <Label className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Destination URL</Label>
-                                <div className="flex gap-2">
-                                  <Input 
-                                    placeholder="https://..." 
-                                    value={item.url}
-                                    onChange={(e) => updateItem(group.id, item.id, 'url', e.target.value)}
-                                    className="text-xs h-8"
-                                    autoFocus
-                                  />
-                                </div>
+                        <div className="flex items-center gap-1.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                          {/* Render existing links */}
+                          {(item.urls || []).map((url, idx) => {
+                            const favicon = getFavicon(url);
+                            return (
+                              <div key={idx} className="flex items-center gap-1">
+                                <Popover>
+                                  <Tooltip>
+                                    <TooltipTrigger>
+                                      <PopoverTrigger>
+                                        <button className={cn(
+                                          "w-7 h-7 rounded-md border flex items-center justify-center transition-all shadow-sm",
+                                          url ? "bg-white border-gray-200 hover:border-blue-400" : "bg-gray-50 border-dashed border-gray-300 text-gray-400 hover:text-blue-500 hover:border-blue-300"
+                                        )}>
+                                          {favicon ? (
+                                            <img src={favicon} alt="icon" className="w-4 h-4 rounded-sm" />
+                                          ) : (
+                                            <LinkIcon className="w-3.5 h-3.5" />
+                                          )}
+                                        </button>
+                                      </PopoverTrigger>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="text-[10px]">
+                                      {url || "Add URL"}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  <PopoverContent className="w-80 p-3 shadow-xl border-gray-100 rounded-xl" side="bottom" align="end">
+                                    <div className="space-y-3">
+                                      <div className="flex items-center justify-between">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Edit Link {idx + 1}</Label>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="icon" 
+                                          className="h-6 w-6 text-red-400 hover:text-red-600"
+                                          onClick={() => removeLinkFromItem(group.id, item.id, idx)}
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </Button>
+                                      </div>
+                                      <div className="flex gap-2">
+                                        <Input 
+                                          placeholder="https://..." 
+                                          value={url}
+                                          onChange={(e) => updateLinkInItem(group.id, item.id, idx, e.target.value)}
+                                          className="text-xs h-8"
+                                          autoFocus
+                                        />
+                                        {url && (
+                                          <Button 
+                                            variant="outline" 
+                                            size="icon" 
+                                            className="h-8 w-8 shrink-0" 
+                                            asChild
+                                          >
+                                            <a href={url.startsWith('http') ? url : `https://${url}`} target="_blank" rel="noreferrer">
+                                              <ExternalLink className="w-3.5 h-3.5" />
+                                            </a>
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </PopoverContent>
+                                </Popover>
                               </div>
-                            </PopoverContent>
-                          </Popover>
+                            );
+                          })}
 
-                          {/* Open Link */}
-                          {item.url && (
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <a 
-                                  href={item.url.startsWith('http') ? item.url : `https://${item.url}`} 
-                                  target="_blank" 
-                                  rel="noreferrer"
-                                  className={cn(
-                                    buttonVariants({ variant: 'ghost', size: 'icon' }),
-                                    "h-8 w-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center"
-                                  )}
-                                >
-                                  <ExternalLink className="w-4 h-4" />
-                                </a>
-                              </TooltipTrigger>
-                              <TooltipContent side="top">Visit Link</TooltipContent>
-                            </Tooltip>
-                          )}
+                          {/* Add Link Button */}
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => addLinkToItem(group.id, item.id)} 
+                                className="h-7 w-7 text-blue-400 hover:text-blue-600 hover:bg-blue-50 border border-dashed border-blue-200"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">Add another link</TooltipContent>
+                          </Tooltip>
+
+                          <div className="w-px h-4 bg-gray-200 mx-1" />
 
                           {/* Delete Item */}
                           <Tooltip>
-                            <TooltipTrigger>
+                            <TooltipTrigger asChild>
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
                                 onClick={() => removeItem(group.id, item.id)} 
-                                className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                                className="h-7 w-7 text-gray-300 hover:text-red-500 hover:bg-red-50"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-3.5 h-3.5" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent side="top">Delete Item</TooltipContent>
@@ -287,7 +352,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                     ))}
                   </TooltipProvider>
                   
-                  <Button variant="ghost" size="sm" onClick={() => addItem(group.id)} className="w-full mt-2 text-blue-600 hover:bg-blue-50 hover:text-blue-700 text-[11px] font-bold border border-dashed border-blue-100">
+                  <Button variant="ghost" size="sm" onClick={() => addItem(group.id)} className="w-full mt-3 text-blue-600 hover:bg-blue-50 hover:text-blue-700 text-[11px] font-bold border border-dashed border-blue-100 rounded-lg py-4">
                     <Plus className="w-3 h-3 mr-1" /> Add New Item
                   </Button>
                 </CardContent>
