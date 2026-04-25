@@ -257,7 +257,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-gray-600">Article Type</Label>
                 {isEditing ? (
-                  <Select value={type} onValueChange={setType}>
+                  <Select value={type} onValueChange={(val) => setType(val || "")}>
                     <SelectTrigger className="w-full bg-gray-50/50">
                       <SelectValue placeholder="Select type..." />
                     </SelectTrigger>
