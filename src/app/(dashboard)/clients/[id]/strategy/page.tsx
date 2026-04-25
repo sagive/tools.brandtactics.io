@@ -222,8 +222,8 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                           {/* Edit URL Popover */}
                           <Popover>
                             <Tooltip>
-                              <TooltipTrigger asChild>
-                                <PopoverTrigger asChild>
+                              <TooltipTrigger>
+                                <PopoverTrigger>
                                   <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50">
                                     <LinkIcon className={cn("w-4 h-4", item.url ? "text-blue-500" : "")} />
                                   </Button>
@@ -250,7 +250,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                           {/* Open Link */}
                           {item.url && (
                             <Tooltip>
-                              <TooltipTrigger asChild>
+                              <TooltipTrigger>
                                 <Button 
                                   variant="ghost" 
                                   size="icon" 
@@ -268,7 +268,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
 
                           {/* Delete Item */}
                           <Tooltip>
-                            <TooltipTrigger asChild>
+                            <TooltipTrigger>
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
