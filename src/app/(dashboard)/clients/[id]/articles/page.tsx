@@ -132,9 +132,11 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
             ) : (
               filteredArticles.map((article) => (
                 <TableRow key={article.id} className="hover:bg-gray-50/50">
-                  <TableCell className="font-medium text-gray-900">
+                  <TableCell className="font-medium text-gray-900 hover:text-blue-600 transition-colors">
                     <div className="flex flex-col">
-                      <span>{article.title}</span>
+                      <Link href={`/clients/${clientId}/articles/${article.id}`}>
+                        <span className="cursor-pointer">{article.title}</span>
+                      </Link>
                       {article.live_url && (
                         <a href={article.live_url} target="_blank" rel="noreferrer" className="text-[10px] text-blue-500 hover:underline mt-0.5 inline-block truncate max-w-[250px]">
                           {article.live_url}
