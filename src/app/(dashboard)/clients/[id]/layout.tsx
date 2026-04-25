@@ -140,7 +140,7 @@ export default function ClientLayout({
         </div>
 
         {/* Right Sidebar: Quick Actions (Moved up) */}
-        <div className="w-full xl:w-80 shrink-0 space-y-4">
+        <div className="w-full xl:w-64 shrink-0 space-y-4">
           <QuickActionsSidebar clientId={clientId as string} />
         </div>
       </div>

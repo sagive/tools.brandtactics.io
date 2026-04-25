@@ -23,13 +23,12 @@ export function QuickActionsSidebar({ onAction, clientId }: QuickActionsSidebarP
       {/* Create New Task Action */}
       <Dialog>
         <DialogTrigger className="w-full text-left">
-          <div className="w-full p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group flex items-center gap-4 cursor-pointer">
-            <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center group-hover:bg-orange-500 transition-colors duration-300">
-              <FileText className="w-6 h-6 text-orange-500 group-hover:text-white transition-colors duration-300" />
+          <div className="w-full p-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group flex items-center gap-3 cursor-pointer">
+            <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center group-hover:bg-orange-500 transition-colors duration-300">
+              <FileText className="w-5 h-5 text-orange-500 group-hover:text-white transition-colors duration-300" />
             </div>
             <div>
-              <h3 className="font-bold text-gray-900">Create New Task</h3>
-              <p className="text-xs text-gray-500">NEW TASK POPUP</p>
+              <h3 className="font-bold text-sm text-gray-900 leading-tight">Create New Task</h3>
             </div>
           </div>
         </DialogTrigger>
@@ -48,13 +47,12 @@ export function QuickActionsSidebar({ onAction, clientId }: QuickActionsSidebarP
             onAction?.();
           }}
           trigger={
-            <div className="w-full p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group flex items-center gap-4 cursor-pointer">
-              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-600 transition-colors duration-300">
-                <Send className="w-6 h-6 text-blue-600 group-hover:text-white transition-colors duration-300" />
+            <div className="w-full p-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group flex items-center gap-3 cursor-pointer">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-600 transition-colors duration-300">
+                <Send className="w-5 h-5 text-blue-600 group-hover:text-white transition-colors duration-300" />
               </div>
               <div>
-                <h3 className="font-bold text-gray-900">+ Seo Update</h3>
-                <p className="text-xs text-gray-500">NEW UPDATE POPUP</p>
+                <h3 className="font-bold text-sm text-gray-900 leading-tight">+ Seo Update</h3>
               </div>
             </div>
           }
@@ -70,13 +68,12 @@ export function QuickActionsSidebar({ onAction, clientId }: QuickActionsSidebarP
             onAction?.();
           }}
           trigger={
-            <div className="w-full p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group flex items-center gap-4 cursor-pointer">
-              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-600 transition-colors duration-300">
-                <Mails className="w-6 h-6 text-blue-600 group-hover:text-white transition-colors duration-300" />
+            <div className="w-full p-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group flex items-center gap-3 cursor-pointer">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-600 transition-colors duration-300">
+                <Mails className="w-5 h-5 text-blue-600 group-hover:text-white transition-colors duration-300" />
               </div>
               <div>
-                <h3 className="font-bold text-gray-900">Schedule Seo Updates</h3>
-                <p className="text-xs text-gray-500 uppercase">set and forget multiple seo update</p>
+                <h3 className="font-bold text-sm text-gray-900 leading-tight">Schedule Seo Updates</h3>
               </div>
             </div>
           }
@@ -86,27 +83,25 @@ export function QuickActionsSidebar({ onAction, clientId }: QuickActionsSidebarP
       {/* Reports Hub Action */}
       {isAdmin ? (
         <Link href={`/reports${clientId ? `?clientId=${clientId}` : ''}`} className="w-full">
-          <div className="w-full p-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group flex items-center gap-4 cursor-pointer">
-            <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center group-hover:bg-purple-600 transition-colors duration-300">
-              <TrendingUp className="w-6 h-6 text-purple-600 group-hover:text-white transition-colors duration-300" />
+          <div className="w-full p-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group flex items-center gap-3 cursor-pointer">
+            <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center group-hover:bg-purple-600 transition-colors duration-300">
+              <TrendingUp className="w-5 h-5 text-purple-600 group-hover:text-white transition-colors duration-300" />
             </div>
             <div>
-              <h3 className="font-bold text-gray-900">Reports Hub</h3>
-              <p className="text-xs text-gray-500 uppercase tracking-tight">View analytics & insights</p>
+              <h3 className="font-bold text-sm text-gray-900 leading-tight">Reports Hub</h3>
             </div>
           </div>
         </Link>
       ) : (
-        <div className="w-full p-6 bg-gray-50 border border-gray-100 rounded-xl shadow-sm opacity-60 flex items-center gap-4 cursor-not-allowed relative overflow-hidden group">
-          <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center">
-            <TrendingUp className="w-6 h-6 text-gray-400" />
+        <div className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl shadow-sm opacity-60 flex items-center gap-3 cursor-not-allowed relative overflow-hidden group">
+          <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
+            <TrendingUp className="w-5 h-5 text-gray-400" />
           </div>
           <div>
-            <h3 className="font-bold text-gray-400 flex items-center gap-2">
+            <h3 className="font-bold text-sm text-gray-400 flex items-center gap-2 leading-tight">
               Reports Hub
               <Lock className="w-3 h-3" />
             </h3>
-            <p className="text-[10px] text-gray-300 italic">Admin access required</p>
           </div>
         </div>
       )}
