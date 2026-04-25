@@ -141,7 +141,7 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
         client_id: clientId,
         title,
         live_url: liveUrl,
-        // internal_url: internalUrl, // TODO: Add 'internal_url' column to 'articles' table in Supabase
+        internal_url: internalUrl,
         links_count: parseInt(linksCount) || 0,
         type,
         length: wordCount,
