@@ -116,8 +116,11 @@ export default function ClientsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredClients.map((client) => (
-            <Card key={client.id} className="hover:shadow-md transition-shadow relative group">
-              <div className="absolute top-4 right-4 z-10">
+            <Card key={client.id} className="hover:shadow-md transition-shadow relative group border-gray-200">
+              <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+                <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20">
+                  Active
+                </span>
                 <DropdownMenu>
                   <DropdownMenuTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-8 w-8 text-gray-400 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <MoreHorizontal className="w-4 h-4" />
@@ -131,26 +134,16 @@ export default function ClientsPage() {
               </div>
               
               <Link href={`/clients/${client.id}`} className="block">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-lg shrink-0">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0 border border-blue-100">
                       {(client.name || "UN").substring(0, 2).toUpperCase()}
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-lg text-gray-900 leading-tight">
+                    <div className="min-w-0 pr-16">
+                      <h3 className="font-bold text-base text-gray-900 leading-tight truncate">
                         {client.name || "Unnamed Client"}
                       </h3>
-                      <p className="text-sm text-gray-500 mt-1">{client.contact_email || "No email"}</p>
-                      <div className="mt-4 flex items-center gap-3">
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20`}>
-                          Active
-                        </span>
-                        {isAdmin && (
-                          <span className="text-sm font-medium text-gray-700">
-                            ${(client.monthly_fee || 0).toLocaleString()}/mo
-                          </span>
-                        )}
-                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5 truncate">{client.contact_email || "No email"}</p>
                     </div>
                   </div>
                 </CardContent>
