@@ -19,20 +19,25 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: false,
-        emailRedirectTo: `${window.location.origin}/dashboard`
-      },
-    });
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
 
-    if (error) {
-      console.error("Login attempt note:", error.message);
+      const result = await response.json();
+
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("If email exists, we sent you a magic link.");
+      }
+    } catch (err) {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    toast.success("If email exists, we sent you a magic link.");
-    setLoading(false);
   };
 
   return (
