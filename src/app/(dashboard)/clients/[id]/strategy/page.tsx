@@ -249,8 +249,8 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
         <TabsContent value="links" className="space-y-6 animate-in fade-in-50 duration-300" dir={direction}>
           {/* Fixed Add Group Button */}
           <div className="fixed bottom-8 right-8 z-50">
-            <Button onClick={addGroup} className="bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-xl h-14 px-6 flex items-center gap-2">
-              <Plus className="w-5 h-5" /> <span className="font-semibold text-base">Add Group</span>
+            <Button onClick={addGroup} variant="outline" className="bg-white hover:bg-gray-50 text-gray-600 border-gray-200 rounded-lg shadow-sm h-10 px-4 flex items-center gap-2">
+              <Plus className="w-4 h-4" /> <span className="font-medium text-sm">Add Group</span>
             </Button>
           </div>
 
