@@ -47,6 +47,8 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
   const [sheetUrl, setSheetUrl] = useState("");
   const [notes, setNotes] = useState("");
   const [direction, setDirection] = useState<'ltr' | 'rtl'>('ltr');
+  const [lastAddedItemId, setLastAddedItemId] = useState<string | null>(null);
+  const [lastAddedGroupId, setLastAddedGroupId] = useState<string | null>(null);
 
   useEffect(() => {
     const savedDirection = localStorage.getItem(`strategy-direction-${clientId}`);
@@ -115,11 +117,14 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
 
   // Repeater Logic
   const addGroup = () => {
+    const newGroupId = crypto.randomUUID();
     const newGroup: LinkGroup = {
-      id: crypto.randomUUID(),
+      id: newGroupId,
       title: "New Group",
       items: [{ id: crypto.randomUUID(), label: "", urls: [""] }]
     };
+    setLastAddedGroupId(newGroupId);
+    setLastAddedItemId(null);
     setRepeaterData([...repeaterData, newGroup]);
   };
 
@@ -132,9 +137,12 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
   };
 
   const addItem = (groupId: string) => {
+    const newItemId = crypto.randomUUID();
+    setLastAddedItemId(newItemId);
+    setLastAddedGroupId(null);
     setRepeaterData(prev => prev.map(g => 
       g.id === groupId 
-        ? { ...g, items: [...g.items, { id: crypto.randomUUID(), label: "", urls: [""] }] }
+        ? { ...g, items: [...g.items, { id: newItemId, label: "", urls: [""] }] }
         : g
     ));
   };
@@ -265,6 +273,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                       className="font-bold border-none bg-transparent hover:bg-white focus:bg-white focus:ring-1 p-0 h-8 text-base"
                       placeholder="Group Title"
                       dir="auto"
+                      autoFocus={group.id === lastAddedGroupId}
                     />
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => removeGroup(group.id)} className="text-red-400 hover:text-red-600 hover:bg-red-50">
@@ -280,8 +289,15 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                             placeholder="Link Label (e.g. Facebook Page)" 
                             value={item.label}
                             onChange={(e) => updateItem(group.id, item.id, 'label', e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                addItem(group.id);
+                              }
+                            }}
                             className="text-sm h-8 border-none bg-transparent focus:ring-0 shadow-none px-0 font-medium text-gray-700 placeholder:text-gray-300"
                             dir="auto"
+                            autoFocus={item.id === lastAddedItemId}
                           />
                         </div>
                         
