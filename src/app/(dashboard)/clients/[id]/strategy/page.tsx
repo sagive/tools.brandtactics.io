@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Save, Loader2, ExternalLink, GripVertical, FileText, Layout, Table as TableIcon, Maximize2, Minimize2, X as CloseIcon, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
@@ -45,6 +46,19 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
   const [repeaterData, setRepeaterData] = useState<LinkGroup[]>([]);
   const [sheetUrl, setSheetUrl] = useState("");
   const [notes, setNotes] = useState("");
+  const [direction, setDirection] = useState<'ltr' | 'rtl'>('ltr');
+
+  useEffect(() => {
+    const savedDirection = localStorage.getItem(`strategy-direction-${clientId}`);
+    if (savedDirection === 'rtl' || savedDirection === 'ltr') {
+      setDirection(savedDirection);
+    }
+  }, [clientId]);
+
+  const handleDirectionChange = (newDir: 'ltr' | 'rtl') => {
+    setDirection(newDir);
+    localStorage.setItem(`strategy-direction-${clientId}`, newDir);
+  };
 
   useEffect(() => {
     async function fetchStrategy() {
@@ -198,10 +212,21 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">Client Strategy</h1>
           <p className="text-sm text-gray-500">Plan and organize the long-term SEO roadmap.</p>
         </div>
-        <Button onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700">
-          {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-          Save Strategy
-        </Button>
+        <div className="flex items-center gap-3">
+          <Select value={direction} onValueChange={(val: 'ltr' | 'rtl') => handleDirectionChange(val)}>
+            <SelectTrigger className="w-[140px] bg-white">
+              <SelectValue placeholder="Direction" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ltr">Left to Right</SelectItem>
+              <SelectItem value="rtl">Right to Left</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700">
+            {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+            Save Strategy
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="links" className="w-full">
@@ -221,23 +246,25 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
         </TabsList>
 
         {/* Grouped Links Tab */}
-        <TabsContent value="links" className="space-y-6 animate-in fade-in-50 duration-300">
-          <div className="flex justify-end">
-            <Button onClick={addGroup} variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50">
-              <Plus className="w-4 h-4 mr-2" /> Add Group
+        <TabsContent value="links" className="space-y-6 animate-in fade-in-50 duration-300" dir={direction}>
+          {/* Fixed Add Group Button */}
+          <div className="fixed bottom-8 right-8 z-50">
+            <Button onClick={addGroup} className="bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-xl h-14 px-6 flex items-center gap-2">
+              <Plus className="w-5 h-5" /> <span className="font-semibold text-base">Add Group</span>
             </Button>
           </div>
 
           <div className="grid grid-cols-1 gap-6">
             {repeaterData.map((group) => (
               <Card key={group.id} className="shadow-sm border-gray-200">
-                <CardHeader className="pb-3 flex flex-row items-center justify-between bg-gray-50/50">
-                  <div className="flex-1 mr-4">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between bg-gray-50/50 gap-4">
+                  <div className="flex-1">
                     <Input 
                       value={group.title} 
                       onChange={(e) => updateGroupTitle(group.id, e.target.value)}
                       className="font-bold border-none bg-transparent hover:bg-white focus:bg-white focus:ring-1 p-0 h-8 text-base"
                       placeholder="Group Title"
+                      dir="auto"
                     />
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => removeGroup(group.id)} className="text-red-400 hover:text-red-600 hover:bg-red-50">
@@ -254,6 +281,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                             value={item.label}
                             onChange={(e) => updateItem(group.id, item.id, 'label', e.target.value)}
                             className="text-sm h-8 border-none bg-transparent focus:ring-0 shadow-none px-0 font-medium text-gray-700 placeholder:text-gray-300"
+                            dir="auto"
                           />
                         </div>
                         
