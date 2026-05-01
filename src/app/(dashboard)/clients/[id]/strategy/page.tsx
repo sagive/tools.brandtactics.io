@@ -213,7 +213,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
           <p className="text-sm text-gray-500">Plan and organize the long-term SEO roadmap.</p>
         </div>
         <div className="flex items-center gap-3">
-          <Select value={direction} onValueChange={(val: 'ltr' | 'rtl') => handleDirectionChange(val)}>
+          <Select value={direction} onValueChange={(val: any) => val && handleDirectionChange(val)}>
             <SelectTrigger className="w-[140px] bg-white">
               <SelectValue placeholder="Direction" />
             </SelectTrigger>
