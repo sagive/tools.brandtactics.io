@@ -10,6 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Plus, Trash2, Save, Loader2, ExternalLink, GripVertical, FileText, Layout, Table as TableIcon, Maximize2, Minimize2, X as CloseIcon, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
@@ -18,6 +21,34 @@ import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
+
+function SortableItemWrapper({ id, children }: { id: string, children: React.ReactNode }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : 0,
+    position: 'relative' as const,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-3 group/item py-1.5 px-3 rounded-lg hover:bg-gray-50/80 transition-all border border-transparent hover:border-gray-100 bg-white">
+      <div {...attributes} {...listeners} className="cursor-grab text-gray-300 hover:text-gray-500 touch-none flex items-center justify-center p-1 -ml-2 rtl:-mr-2 rtl:-ml-0">
+        <GripVertical className="w-4 h-4" />
+      </div>
+      {children}
+    </div>
+  );
+}
 
 interface GroupItem {
   id: string;
@@ -37,6 +68,28 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
   const [isSaving, setIsSaving] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (groupId: string, event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    setRepeaterData(prev => prev.map(g => {
+      if (g.id === groupId) {
+        const oldIndex = g.items.findIndex(i => i.id === active.id);
+        const newIndex = g.items.findIndex(i => i.id === over.id);
+        return {
+          ...g,
+          items: arrayMove(g.items, oldIndex, newIndex)
+        };
+      }
+      return g;
+    }));
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -281,10 +334,19 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                   </Button>
                 </CardHeader>
                 <CardContent className="pt-6 space-y-2">
-                  <TooltipProvider>
-                    {group.items.map((item) => (
-                      <div key={item.id} className="flex items-center gap-3 group/item py-1.5 px-3 rounded-lg hover:bg-gray-50/80 transition-all border border-transparent hover:border-gray-100">
-                        <div className="flex-1 min-w-0">
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={(e) => handleDragEnd(group.id, e)}
+                  >
+                    <SortableContext 
+                      items={group.items.map(i => i.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <TooltipProvider>
+                        {group.items.map((item) => (
+                          <SortableItemWrapper key={item.id} id={item.id}>
+                            <div className="flex-1 min-w-0">
                           <Input 
                             placeholder="Link Label (e.g. Facebook Page)" 
                             value={item.label}
@@ -401,9 +463,11 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                             <TooltipContent side="top">Delete Item</TooltipContent>
                           </Tooltip>
                         </div>
-                      </div>
+                      </SortableItemWrapper>
                     ))}
                   </TooltipProvider>
+                    </SortableContext>
+                  </DndContext>
                   
                   <Button variant="ghost" size="sm" onClick={() => addItem(group.id)} className="w-full mt-3 text-blue-600 hover:bg-blue-50 hover:text-blue-700 text-[11px] font-bold border border-dashed border-blue-100 rounded-lg py-4">
                     <Plus className="w-3 h-3 mr-1" /> Add New Item
