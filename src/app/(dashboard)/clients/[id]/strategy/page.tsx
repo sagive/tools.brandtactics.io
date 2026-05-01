@@ -335,12 +335,12 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
           <div className="grid grid-cols-1 gap-6">
             {repeaterData.map((group) => (
               <Card key={group.id} className="shadow-sm border-gray-200">
-                <CardHeader className="pb-3 flex flex-row items-center justify-between bg-gray-50/50 gap-4">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between bg-gray-50/50 gap-4 border-b border-gray-100">
                   <div className="flex-1">
                     <Input 
                       value={group.title} 
                       onChange={(e) => updateGroupTitle(group.id, e.target.value)}
-                      className="font-bold border-none bg-transparent hover:bg-white focus:bg-white focus:ring-1 p-0 h-8 text-base"
+                      className="font-bold border-none bg-transparent hover:bg-white focus:bg-white focus:ring-1 p-0 h-9 text-lg"
                       placeholder="Group Title"
                       dir="auto"
                       autoFocus={group.id === lastAddedGroupId}
