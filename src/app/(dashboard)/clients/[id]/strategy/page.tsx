@@ -372,7 +372,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                         {group.items.map((item) => (
                           <SortableItemWrapper key={item.id} id={item.id}>
                             <Tooltip>
-                              <TooltipTrigger asChild>
+                              <TooltipTrigger>
                                 <div className="flex items-center justify-center shrink-0">
                                   <Checkbox 
                                     checked={item.checked} 
@@ -406,7 +406,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                         <div className="flex items-center gap-1.5">
                           {/* Comment Info Icon */}
                           <Popover>
-                            <PopoverTrigger asChild>
+                            <PopoverTrigger>
                               <Button variant="ghost" size="icon" className={cn("h-7 w-7", item.comment ? "text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100" : "text-gray-300 hover:text-gray-500")}>
                                 <Info className="w-4 h-4" />
                               </Button>
