@@ -10,10 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, Trash2, Save, Loader2, ExternalLink, GripVertical, FileText, Layout, Table as TableIcon, Maximize2, Minimize2, X as CloseIcon, Link as LinkIcon } from "lucide-react";
+import { Plus, Trash2, Save, Loader2, ExternalLink, GripVertical, FileText, Layout, Table as TableIcon, Maximize2, Minimize2, X as CloseIcon, Link as LinkIcon, Info } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
@@ -54,6 +56,9 @@ interface GroupItem {
   id: string;
   label: string;
   urls: string[]; // Supports multiple links
+  checked?: boolean;
+  checkedBy?: string;
+  comment?: string;
 }
 
 interface LinkGroup {
@@ -113,6 +118,26 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
   const handleDirectionChange = (newDir: 'ltr' | 'rtl') => {
     setDirection(newDir);
     localStorage.setItem(`strategy-direction-${clientId}`, newDir);
+  };
+
+  const [currentUser, setCurrentUser] = useState<string>("Unknown");
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      const name = data.session?.user?.user_metadata?.full_name || 
+                   data.session?.user?.user_metadata?.name || 
+                   data.session?.user?.email?.split('@')[0] || 
+                   "Unknown User";
+      setCurrentUser(name);
+    });
+  }, []);
+
+  const toggleItemCheck = (groupId: string, itemId: string, checked: boolean) => {
+    setRepeaterData(prev => prev.map(g => 
+      g.id === groupId 
+        ? { ...g, items: g.items.map(i => i.id === itemId ? { ...i, checked, checkedBy: checked ? currentUser : undefined } : i) }
+        : g
+    ));
   };
 
   useEffect(() => {
@@ -346,6 +371,21 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                       <TooltipProvider>
                         {group.items.map((item) => (
                           <SortableItemWrapper key={item.id} id={item.id}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center justify-center shrink-0">
+                                  <Checkbox 
+                                    checked={item.checked} 
+                                    onCheckedChange={(c) => toggleItemCheck(group.id, item.id, c === true)}
+                                    className="data-[state=checked]:bg-green-500 data-[state=checked]:text-white data-[state=checked]:border-green-500 border-gray-300 w-5 h-5 rounded"
+                                  />
+                                </div>
+                              </TooltipTrigger>
+                              {item.checked && item.checkedBy && (
+                                <TooltipContent side="top">Checked by {item.checkedBy}</TooltipContent>
+                              )}
+                            </Tooltip>
+
                             <div className="flex-1 min-w-0">
                           <Input 
                             placeholder="Link Label (e.g. Facebook Page)" 
@@ -364,6 +404,28 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                         </div>
                         
                         <div className="flex items-center gap-1.5">
+                          {/* Comment Info Icon */}
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="ghost" size="icon" className={cn("h-7 w-7", item.comment ? "text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100" : "text-gray-300 hover:text-gray-500")}>
+                                <Info className="w-4 h-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80 p-3 shadow-xl border-gray-100 rounded-xl" side="bottom" align="end" dir={direction}>
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Item Comment</Label>
+                                <Textarea 
+                                  value={item.comment || ""} 
+                                  onChange={(e) => updateItem(group.id, item.id, 'comment', e.target.value)}
+                                  className="min-h-[100px] text-sm bg-white"
+                                  placeholder="Add a comment or note about this item..."
+                                />
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+
+                          <div className="w-px h-4 bg-gray-200 mx-1" />
+
                           {/* Render existing links */}
                           {(item.urls || []).map((url, idx) => {
                             const favicon = getFavicon(url);
