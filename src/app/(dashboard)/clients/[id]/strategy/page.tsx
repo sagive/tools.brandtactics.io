@@ -478,6 +478,8 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                             <TooltipContent side="top">Add another link</TooltipContent>
                           </Tooltip>
 
+                          <div className="w-px h-4 bg-gray-200 mx-1" />
+
                           {/* Comment Info Icon */}
                           <Popover>
                             <PopoverTrigger>
