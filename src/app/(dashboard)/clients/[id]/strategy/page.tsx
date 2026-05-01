@@ -396,31 +396,6 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                         </div>
                         
                         <div className="flex items-center gap-1.5">
-                          {/* Separator before Info Icon */}
-                          <div className="w-px h-4 bg-gray-200 mx-1" />
-
-                          {/* Comment Info Icon */}
-                          <Popover>
-                            <PopoverTrigger>
-                              <Button variant="ghost" size="icon" className={cn("h-7 w-7", item.comment ? "text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100" : "text-gray-300 hover:text-gray-500")}>
-                                <Info className="w-4 h-4" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-80 p-3 shadow-xl border-gray-100 rounded-xl" side="bottom" align="end" dir={direction}>
-                              <div className="space-y-2">
-                                <Label className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Item Comment</Label>
-                                <Textarea 
-                                  value={item.comment || ""} 
-                                  onChange={(e) => updateItem(group.id, item.id, 'comment', e.target.value)}
-                                  className="min-h-[100px] text-sm bg-white"
-                                  placeholder="Add a comment or note about this item..."
-                                />
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-
-                          <div className="w-px h-4 bg-gray-200 mx-1" />
-
                           {/* Render existing links */}
                           {(item.urls || []).map((url, idx) => {
                             const favicon = getFavicon(url);
@@ -502,6 +477,26 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                             </TooltipTrigger>
                             <TooltipContent side="top">Add another link</TooltipContent>
                           </Tooltip>
+
+                          {/* Comment Info Icon */}
+                          <Popover>
+                            <PopoverTrigger>
+                              <Button variant="ghost" size="icon" className={cn("h-7 w-7", item.comment ? "text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100" : "text-gray-300 hover:text-gray-500")}>
+                                <Info className="w-4 h-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80 p-3 shadow-xl border-gray-100 rounded-xl" side="bottom" align="end" dir={direction}>
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Item Comment</Label>
+                                <Textarea 
+                                  value={item.comment || ""} 
+                                  onChange={(e) => updateItem(group.id, item.id, 'comment', e.target.value)}
+                                  className="min-h-[100px] text-sm bg-white"
+                                  placeholder="Add a comment or note about this item..."
+                                />
+                              </div>
+                            </PopoverContent>
+                          </Popover>
 
                           <div className="w-px h-4 bg-gray-200 mx-1" />
 
