@@ -396,6 +396,9 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                         </div>
                         
                         <div className="flex items-center gap-1.5">
+                          {/* Separator before Info Icon */}
+                          <div className="w-px h-4 bg-gray-200 mx-1" />
+
                           {/* Comment Info Icon */}
                           <Popover>
                             <PopoverTrigger>
