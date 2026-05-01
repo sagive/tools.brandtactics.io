@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
+import { useAuth } from "@/components/auth-provider";
 import "react-quill-new/dist/quill.snow.css";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
@@ -120,17 +121,8 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
     localStorage.setItem(`strategy-direction-${clientId}`, newDir);
   };
 
-  const [currentUser, setCurrentUser] = useState<string>("Unknown");
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      const name = data.session?.user?.user_metadata?.full_name || 
-                   data.session?.user?.user_metadata?.name || 
-                   data.session?.user?.email?.split('@')[0] || 
-                   "Unknown User";
-      setCurrentUser(name);
-    });
-  }, []);
+  const { profile, user } = useAuth();
+  const currentUser = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Unknown User";
 
   const toggleItemCheck = (groupId: string, itemId: string, checked: boolean) => {
     setRepeaterData(prev => prev.map(g => 
