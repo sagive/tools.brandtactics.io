@@ -23,6 +23,14 @@ const quillModules = {
   ]
 };
 
+function stripHtml(html: string) {
+  if (typeof document === 'undefined') return html;
+  const tmp = document.createElement("DIV");
+  tmp.innerHTML = html;
+  const text = tmp.textContent || tmp.innerText || "";
+  return text.trim();
+}
+
 export default function QuickTaskPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -122,16 +130,19 @@ export default function QuickTaskPage() {
   };
 
   const handleSave = async () => {
-    if (!title || !clientId) {
-      toast.error("Please provide a title and select a client.");
+    const plainText = stripHtml(description);
+    if (!plainText || !clientId) {
+      toast.error("Please provide a description and select a client.");
       return;
     }
+
+    const generatedTitle = plainText.substring(0, 100);
 
     setIsSaving(true);
     try {
       const { error } = await supabase.from("tasks").insert([{
         client_id: clientId,
-        title,
+        title: generatedTitle,
         description,
         status: "Pending"
       }]);
@@ -183,7 +194,8 @@ export default function QuickTaskPage() {
             )}
           </div>
 
-          <div className="space-y-2">
+          {/* Task Title hidden per user request - auto-generated from description */}
+          <div className="hidden">
             <Label className="text-xs font-bold uppercase text-gray-500">Task Title</Label>
             <div className="relative">
               <Input 
@@ -192,21 +204,12 @@ export default function QuickTaskPage() {
                 placeholder="e.g. Update homepage banner" 
                 className="h-14 sm:h-12 bg-white text-base pr-12"
               />
-              <Button 
-                type="button"
-                variant="ghost" 
-                size="icon"
-                onClick={() => toggleListening("title")}
-                className={`absolute right-1 top-2.5 sm:top-1.5 h-9 w-9 rounded-full ${activeDictationTarget === "title" ? "bg-red-50 text-red-600 hover:text-red-700 hover:bg-red-100" : "text-gray-400 hover:text-gray-600"}`}
-              >
-                 {activeDictationTarget === "title" ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-              </Button>
             </div>
           </div>
 
           <div className="space-y-2">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <Label className="text-xs font-bold uppercase text-gray-500 w-full sm:w-auto">Task Description</Label>
+              <Label className="text-xs font-bold uppercase text-gray-900 w-full sm:w-auto">Task Description <span className="text-red-500">*</span></Label>
               <div className="flex gap-2 w-full sm:w-auto">
                 <Button
                   type="button"

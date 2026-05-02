@@ -27,6 +27,14 @@ const TASK_QUILL_MODULES = {
   ],
 };
 
+function stripHtml(html: string) {
+  if (typeof document === 'undefined') return html;
+  const tmp = document.createElement("DIV");
+  tmp.innerHTML = html;
+  const text = tmp.textContent || tmp.innerText || "";
+  return text.trim();
+}
+
 const STORAGE_KEY = 'last_task_choices';
 
 export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?: any, defaultClientId?: string, onTaskCreated?: () => void }) {
@@ -154,19 +162,25 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
     ? new Date(task.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
     : "Unknown date";
 
-  // Debounced auto-save for text fields
+  // Debounced auto-save for description field
   useEffect(() => {
     if (!isEditing) return;
     const timeoutId = setTimeout(() => {
-      if (title !== task.title || description !== task.description) {
-        supabase.from('tasks').update({ title, description }).eq('id', task.id)
+      const plainText = stripHtml(description);
+      const generatedTitle = plainText.substring(0, 100) || "Untitled Task";
+      
+      if (description !== task.description) {
+        supabase.from('tasks').update({ 
+          title: generatedTitle,
+          description 
+        }).eq('id', task.id)
           .then(({error}) => { 
              if (error) toast.error("Failed to auto-save task"); 
           });
       }
     }, 1000);
     return () => clearTimeout(timeoutId);
-  }, [title, description, isEditing, task?.id, task?.title, task?.description]);
+  }, [description, isEditing, task?.id, task?.description]);
 
   const updateField = async (field: string, value: any) => {
     if (!isEditing) return;
@@ -181,12 +195,15 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
 
   const handleUpdateTask = async () => {
     if (!isEditing) return;
-    if (!title.trim()) { toast.error("Title is required"); return; }
+    const plainText = stripHtml(description);
+    if (!plainText) { toast.error("Description is required"); return; }
+    
+    const generatedTitle = plainText.substring(0, 100);
     
     setIsUpdating(true);
     try {
       const { error } = await supabase.from('tasks').update({
-        title,
+        title: generatedTitle,
         description,
         status,
         priority,
@@ -348,13 +365,16 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
   };
 
   const handleCreateTask = async () => {
-    if (!title.trim()) { toast.error("Title is required"); return; }
+    const plainText = stripHtml(description);
+    if (!plainText) { toast.error("Description is required"); return; }
     if (!clientId) { toast.error("Client is required"); return; }
     
+    const generatedTitle = plainText.substring(0, 100);
+
     setIsCreating(true);
     try {
       const { data, error } = await supabase.from('tasks').insert([{
-        title,
+        title: generatedTitle,
         description,
         status,
         priority,
@@ -456,28 +476,19 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
           {/* Left Column Component */}
           <div className="flex-1 md:max-w-[65%] p-6 space-y-6 md:border-r border-gray-100 min-w-0">
             
-            <div className="space-y-2">
+            {/* Title field hidden per user request - summary generated from description */}
+            <div className="hidden">
               <Label className="text-gray-600 text-[13px] font-medium">Task title <span className="text-red-500">*</span></Label>
               <Input 
                 value={title} 
                 onChange={(e) => setTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Tab' && !e.shiftKey) {
-                    e.preventDefault();
-                    // setTimeout is needed if ReactQuill hasn't finished rendering the internal divs yet, but since it's already there we can just focus it
-                    const editor = document.querySelector('#task-description-container .ql-editor') as HTMLElement;
-                    if (editor) {
-                      editor.focus();
-                    }
-                  }
-                }}
-                placeholder="Design new website homepage" 
+                placeholder="Title (auto-generated)" 
                 className="font-medium text-base h-11" 
               />
             </div>
 
             <div className="space-y-2 max-w-full">
-              <Label className="text-gray-600 text-[13px] font-medium">Description</Label>
+              <Label className="text-gray-900 font-bold text-lg">Description <span className="text-red-500">*</span></Label>
               <div id="task-description-container" className="border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[120px] [&_.ql-editor]:overflow-x-auto flex-1 min-w-0">
                  <ReactQuill 
                    theme="snow"
@@ -728,7 +739,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
             ) : (
               <Button 
                 onClick={handleCreateTask} 
-                disabled={isCreating || !title.trim() || !clientId}
+                disabled={isCreating || !stripHtml(description) || !clientId}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm mt-4 font-semibold"
               >
                 {isCreating ? "Creating..." : "Create Task"}
