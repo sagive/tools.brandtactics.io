@@ -418,20 +418,10 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                         autoFocus
                       />
                     ) : (
-                      <div 
-                        className="flex-1 flex items-center gap-2 group/title cursor-pointer"
-                        onClick={() => setEditingGroupId(group.id)}
-                      >
+                      <div className="flex-1 flex items-center gap-2">
                         <h3 className="font-bold text-xl text-gray-900 truncate">
                           {group.title || "Untitled Group"}
                         </h3>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6 text-gray-300 group-hover/title:text-blue-500 opacity-0 group-hover/title:opacity-100 transition-all"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </Button>
                       </div>
                     )}
                   </div>
@@ -451,6 +441,14 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                         className="w-7 text-center text-xs font-bold border-none bg-transparent focus:ring-0 p-0"
                       />
                     </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => setEditingGroupId(group.id)}
+                      className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 h-8 w-8"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => removeGroup(group.id)} className="text-red-400 hover:text-red-600 hover:bg-red-50 h-8 w-8">
                       <Trash2 className="w-4 h-4" />
                     </Button>
