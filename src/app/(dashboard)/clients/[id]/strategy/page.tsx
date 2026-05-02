@@ -18,6 +18,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Plus, Trash2, Save, Loader2, ExternalLink, GripVertical, FileText, Layout, Table as TableIcon, Maximize2, Minimize2, X as CloseIcon, Link as LinkIcon, Info } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/components/auth-provider";
@@ -303,20 +304,32 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">Client Strategy</h1>
           <p className="text-sm text-gray-500">Plan and organize the long-term SEO roadmap.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Select value={direction} onValueChange={(val: any) => val && handleDirectionChange(val)}>
-            <SelectTrigger className="w-[140px] bg-white">
-              <SelectValue placeholder="Direction" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ltr">Left to Right</SelectItem>
-              <SelectItem value="rtl">Right to Left</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700">
-            {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-            Save Strategy
-          </Button>
+        <div className="flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg shadow-sm">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Stats</span>
+            <span className="text-xs font-bold text-blue-600">
+              {repeaterData.reduce((acc, g) => acc + g.items.length, 0)} Items
+            </span>
+            <span className="text-gray-300">/</span>
+            <span className="text-xs font-bold text-gray-600">
+              {repeaterData.length} Groups
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Select value={direction} onValueChange={(val: any) => val && handleDirectionChange(val)}>
+              <SelectTrigger className="w-[140px] bg-white">
+                <SelectValue placeholder="Direction" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ltr">Left to Right</SelectItem>
+                <SelectItem value="rtl">Right to Left</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700 shadow-sm">
+              {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              Save Strategy
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -360,6 +373,9 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                     />
                   </div>
                   <div className="flex items-center gap-3">
+                    <Badge variant="secondary" className="bg-white border-gray-200 text-gray-500 font-bold text-[10px] px-2 py-0.5 shadow-xs">
+                      {group.items.length} Items
+                    </Badge>
                     <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md px-2 py-1 shadow-sm group-hover:border-blue-300 transition-colors">
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Order</span>
                       <input 
