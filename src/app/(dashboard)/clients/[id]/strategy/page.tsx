@@ -590,7 +590,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                                   className="h-7 px-2 text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg border border-blue-100"
                                   onClick={() => {
                                     if (!item.checked) {
-                                      toggleItemCheck(group.id, item.id);
+                                      toggleItemCheck(group.id, item.id, true);
                                     }
                                   }}
                                 />
