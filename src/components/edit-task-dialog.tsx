@@ -37,7 +37,7 @@ function stripHtml(html: string) {
 
 const STORAGE_KEY = 'last_task_choices';
 
-export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?: any, defaultClientId?: string, onTaskCreated?: () => void }) {
+export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTaskCreated }: { task?: any, defaultClientId?: string, defaultDescription?: string, onTaskCreated?: () => void }) {
   const isEditing = !!task;
   const [isOpen, setIsOpen] = useState(true); // Internal state for Dialog if needed, but we typically use DialogClose or parent state.
   // Actually, the dialog is controlled by the parent <Dialog> in sortable-task-item and client-tasks.
@@ -50,7 +50,7 @@ export function EditTaskDialog({ task, defaultClientId, onTaskCreated }: { task?
   const { profile } = useAuth();
   
   const [title, setTitle] = useState(task?.title || "");
-  const [description, setDescription] = useState(task?.description || "");
+  const [description, setDescription] = useState(task?.description || (defaultDescription ? `<p>${defaultDescription}</p>` : ""));
   const [status, setStatus] = useState(task?.status || "Pending");
   const [priority, setPriority] = useState(task?.priority || "Medium");
   const [assignee, setAssignee] = useState(task?.assignee || "");

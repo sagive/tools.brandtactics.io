@@ -21,6 +21,7 @@ import { supabase } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/components/auth-provider";
 import "react-quill-new/dist/quill.snow.css";
 
@@ -524,7 +525,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                           {/* Comment Info Icon */}
                           <Popover>
                             <PopoverTrigger>
-                              <Button variant="ghost" size="icon" className={cn("h-7 w-7", item.comment ? "text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100" : "text-gray-300 hover:text-gray-500")}>
+                              <Button variant="ghost" size="icon" className={cn("h-7 w-7 rounded-lg", item.comment ? "text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100" : "text-gray-300 hover:text-gray-500")}>
                                 <Info className="w-4 h-4" />
                               </Button>
                             </PopoverTrigger>
@@ -540,6 +541,30 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                               </div>
                             </PopoverContent>
                           </Popover>
+
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-7 px-2 text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg border border-blue-100"
+                                onClick={() => {
+                                  if (!item.checked) {
+                                    toggleItemCheck(group.id, item.id);
+                                  }
+                                }}
+                              >
+                                Task it
+                              </Button>
+                            </DialogTrigger>
+                            <EditTaskDialog 
+                              defaultClientId={clientId} 
+                              defaultDescription={item.label}
+                              onTaskCreated={() => {
+                                window.dispatchEvent(new Event("taskCreated"));
+                              }} 
+                            />
+                          </Dialog>
 
                           <div className="w-px h-4 bg-gray-200 mx-1" />
 
