@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { EditTaskDialog } from "@/components/edit-task-dialog";
 import { useAuth } from "@/components/auth-provider";
 import "react-quill-new/dist/quill.snow.css";
 
