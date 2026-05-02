@@ -415,14 +415,14 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                           if (e.key === 'Enter') setEditingGroupId(null);
                         }}
                         onClick={(e) => e.stopPropagation()}
-                        className="font-bold border-gray-300 bg-white focus:ring-1 p-2 h-9 text-xl flex-1 cursor-text"
+                        className="font-bold border-gray-300 bg-white focus:ring-1 p-2 h-9 text-base flex-1 cursor-text"
                         placeholder="Group Title"
                         dir="auto"
                         autoFocus
                       />
                     ) : (
                       <div className="flex-1">
-                        <h3 className="font-bold text-xl text-gray-900 truncate">
+                        <h3 className="font-bold text-base text-gray-900 truncate">
                           {group.title || "Untitled Group"}
                         </h3>
                       </div>
