@@ -66,6 +66,7 @@ interface LinkGroup {
   id: string;
   title: string;
   items: GroupItem[];
+  order?: number;
 }
 
 export default function StrategyPage({ params }: { params: Promise<{ id: string }> }) {
@@ -166,18 +167,26 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // Sort groups by order before saving
+      const sortedData = [...repeaterData].sort((a, b) => {
+        const orderA = a.order ?? (repeaterData.indexOf(a) + 1);
+        const orderB = b.order ?? (repeaterData.indexOf(b) + 1);
+        return orderA - orderB;
+      });
+
       const { error } = await supabase
-        .from('client_strategies')
+        .from("client_strategies")
         .upsert({
           client_id: clientId,
-          repeater_data: repeaterData,
+          repeater_data: sortedData,
           google_sheet_url: sheetUrl,
           notes: notes,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         }, { onConflict: 'client_id' });
 
       if (error) throw error;
-      toast.success("Strategy updated successfully!");
+      setRepeaterData(sortedData);
+      toast.success("Strategy saved successfully!");
     } catch (err: any) {
       toast.error("Failed to save strategy: " + err.message);
     } finally {
@@ -202,8 +211,12 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
     setRepeaterData(repeaterData.filter(g => g.id !== groupId));
   };
 
-  const updateGroupTitle = (groupId: string, title: string) => {
-    setRepeaterData(repeaterData.map(g => g.id === groupId ? { ...g, title } : g));
+  const updateGroupTitle = (id: string, title: string) => {
+    setRepeaterData(prev => prev.map(g => g.id === id ? { ...g, title } : g));
+  };
+
+  const updateGroupOrder = (id: string, order: number) => {
+    setRepeaterData(prev => prev.map(g => g.id === id ? { ...g, order } : g));
   };
 
   const addItem = (groupId: string) => {
@@ -346,9 +359,20 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                       autoFocus={group.id === lastAddedGroupId}
                     />
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => removeGroup(group.id)} className="text-red-400 hover:text-red-600 hover:bg-red-50">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md px-2 py-1 shadow-sm group-hover:border-blue-300 transition-colors">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Order</span>
+                      <input 
+                        type="number" 
+                        value={group.order ?? (repeaterData.indexOf(group) + 1)}
+                        onChange={(e) => updateGroupOrder(group.id, parseInt(e.target.value))}
+                        className="w-7 text-center text-xs font-bold border-none bg-transparent focus:ring-0 p-0"
+                      />
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => removeGroup(group.id)} className="text-red-400 hover:text-red-600 hover:bg-red-50 h-8 w-8">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="pt-6 space-y-2">
                   <DndContext
