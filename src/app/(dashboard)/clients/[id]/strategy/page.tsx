@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, Trash2, Save, Loader2, ExternalLink, GripVertical, FileText, Layout, Table as TableIcon, Maximize2, Minimize2, X as CloseIcon, Link as LinkIcon, Info } from "lucide-react";
+import { Plus, Trash2, Save, Loader2, ExternalLink, GripVertical, FileText, Layout, Table as TableIcon, Maximize2, Minimize2, X as CloseIcon, Link as LinkIcon, Info, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
@@ -73,10 +73,28 @@ interface LinkGroup {
 
 export default function StrategyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: clientId } = React.use(params);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('strategy_collapsed_groups');
+      try {
+        return saved ? JSON.parse(saved) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+    return {};
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('strategy_collapsed_groups', JSON.stringify(collapsedGroups));
+    }
+  }, [collapsedGroups]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -240,6 +258,13 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
     ));
   };
 
+  const toggleGroupCollapse = (groupId: string) => {
+    setCollapsedGroups(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
+  };
+
   const updateItem = (groupId: string, itemId: string, field: string, value: any) => {
     setRepeaterData(prev => prev.map(g => 
       g.id === groupId 
@@ -363,7 +388,19 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
             {repeaterData.map((group) => (
               <Card key={group.id} className="shadow-sm border-gray-200">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between bg-gray-50 gap-4 border-b border-gray-300">
-                  <div className="flex-1">
+                  <div className="flex-1 flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => toggleGroupCollapse(group.id)}
+                      className="h-8 w-8 text-gray-500 hover:bg-gray-100 rounded-md"
+                    >
+                      {collapsedGroups[group.id] ? (
+                        <ChevronRight className="w-5 h-5" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5" />
+                      )}
+                    </Button>
                     <Input 
                       value={group.title} 
                       onChange={(e) => updateGroupTitle(group.id, e.target.value)}
@@ -375,8 +412,10 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md px-2 py-1 shadow-sm transition-colors">
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Items</span>
-                      <span className="text-xs font-bold text-gray-600">{group.items.length}</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Progress</span>
+                      <span className="text-xs font-bold text-blue-600">
+                        {group.items.filter(i => i.checked).length}/{group.items.length}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md px-2 py-1 shadow-sm group-hover:border-blue-300 transition-colors">
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Order</span>
@@ -392,7 +431,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-6 space-y-2">
+                <CardContent className={cn("pt-6 space-y-2", collapsedGroups[group.id] && "hidden")}>
                   <DndContext
                     sensors={sensors}
                     collisionDetection={closestCenter}
@@ -543,19 +582,21 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                           </Popover>
 
                           <Dialog>
-                            <DialogTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="h-7 px-2 text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg border border-blue-100"
-                                onClick={() => {
-                                  if (!item.checked) {
-                                    toggleItemCheck(group.id, item.id);
-                                  }
-                                }}
-                              >
-                                Task it
-                              </Button>
+                            <DialogTrigger 
+                              render={
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-7 px-2 text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg border border-blue-100"
+                                  onClick={() => {
+                                    if (!item.checked) {
+                                      toggleItemCheck(group.id, item.id);
+                                    }
+                                  }}
+                                />
+                              }
+                            >
+                              Task it
                             </DialogTrigger>
                             <EditTaskDialog 
                               defaultClientId={clientId} 
