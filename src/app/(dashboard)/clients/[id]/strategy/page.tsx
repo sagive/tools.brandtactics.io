@@ -334,14 +334,13 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
           <p className="text-sm text-gray-500">Plan and organize the long-term SEO roadmap.</p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-white border border-gray-200 rounded-lg">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Stats</span>
+          <div className="hidden md:flex items-center gap-3 px-4 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Items</span>
             <span className="text-xs font-bold text-blue-600">
-              {repeaterData.reduce((acc, g) => acc + g.items.length, 0)} Items
+              {repeaterData.reduce((acc, g) => acc + g.items.filter(i => i.checked).length, 0)}/{repeaterData.reduce((acc, g) => acc + g.items.length, 0)}
             </span>
-            <span className="text-gray-300">/</span>
-            <span className="text-xs font-bold text-gray-600">
-              {repeaterData.length} Groups
+            <span className="text-[10px] font-medium text-gray-400 -ml-1">
+              ({repeaterData.length} groups)
             </span>
           </div>
           <div className="flex items-center gap-3">
@@ -389,8 +388,11 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
 
           <div className="grid grid-cols-1 gap-6">
             {repeaterData.map((group) => (
-              <Card key={group.id} className="shadow-sm border-gray-200">
-                <CardHeader className="pb-3 flex flex-row items-center justify-between bg-gray-50 gap-4 border-b border-gray-300">
+              <Card key={group.id} className="shadow-sm border-gray-200 overflow-hidden">
+                <CardHeader className={cn(
+                  "flex flex-row items-center justify-between bg-gray-50 gap-4 transition-all duration-200",
+                  collapsedGroups[group.id] ? "py-2 border-b-0" : "pb-3 border-b border-gray-300"
+                )}>
                   <div 
                     className="flex-1 flex items-center gap-2 cursor-pointer"
                     onClick={() => toggleGroupCollapse(group.id)}
