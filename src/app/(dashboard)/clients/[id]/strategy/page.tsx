@@ -79,6 +79,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
   const [isSaving, setIsSaving] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('strategy_collapsed_groups');
@@ -225,6 +226,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
     };
     setLastAddedGroupId(newGroupId);
     setLastAddedItemId(null);
+    setEditingGroupId(newGroupId);
     setRepeaterData([...repeaterData, newGroup]);
   };
 
@@ -402,14 +404,36 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                         <ChevronDown className="w-5 h-5" />
                       )}
                     </Button>
-                    <Input 
-                      value={group.title} 
-                      onChange={(e) => updateGroupTitle(group.id, e.target.value)}
-                      className="font-bold border-none bg-transparent hover:bg-white focus:bg-white focus:ring-1 p-0 h-9 text-xl"
-                      placeholder="Group Title"
-                      dir="auto"
-                      autoFocus={group.id === lastAddedGroupId}
-                    />
+                    {editingGroupId === group.id ? (
+                      <Input 
+                        value={group.title} 
+                        onChange={(e) => updateGroupTitle(group.id, e.target.value)}
+                        onBlur={() => setEditingGroupId(null)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') setEditingGroupId(null);
+                        }}
+                        className="font-bold border-gray-300 bg-white focus:ring-1 p-2 h-9 text-xl flex-1"
+                        placeholder="Group Title"
+                        dir="auto"
+                        autoFocus
+                      />
+                    ) : (
+                      <div 
+                        className="flex-1 flex items-center gap-2 group/title cursor-pointer"
+                        onClick={() => setEditingGroupId(group.id)}
+                      >
+                        <h3 className="font-bold text-xl text-gray-900 truncate">
+                          {group.title || "Untitled Group"}
+                        </h3>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6 text-gray-300 group-hover/title:text-blue-500 opacity-0 group-hover/title:opacity-100 transition-all"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md px-2 py-1 shadow-sm transition-colors">
