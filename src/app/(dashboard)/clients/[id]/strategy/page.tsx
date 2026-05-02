@@ -334,7 +334,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
           <p className="text-sm text-gray-500">Plan and organize the long-term SEO roadmap.</p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-white border border-gray-100 rounded-lg shadow-xl ring-1 ring-black/5">
+          <div className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-white border border-gray-200 rounded-lg">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Stats</span>
             <span className="text-xs font-bold text-blue-600">
               {repeaterData.reduce((acc, g) => acc + g.items.length, 0)} Items
