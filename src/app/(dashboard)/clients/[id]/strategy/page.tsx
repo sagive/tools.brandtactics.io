@@ -334,7 +334,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
           <p className="text-sm text-gray-500">Plan and organize the long-term SEO roadmap.</p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg shadow-md">
+          <div className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-white border border-gray-100 rounded-lg shadow-xl ring-1 ring-black/5">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Stats</span>
             <span className="text-xs font-bold text-blue-600">
               {repeaterData.reduce((acc, g) => acc + g.items.length, 0)} Items
@@ -391,11 +391,13 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
             {repeaterData.map((group) => (
               <Card key={group.id} className="shadow-sm border-gray-200">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between bg-gray-50 gap-4 border-b border-gray-300">
-                  <div className="flex-1 flex items-center gap-2">
+                  <div 
+                    className="flex-1 flex items-center gap-2 cursor-pointer"
+                    onClick={() => toggleGroupCollapse(group.id)}
+                  >
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => toggleGroupCollapse(group.id)}
                       className="h-8 w-8 text-gray-500 hover:bg-gray-100 rounded-md"
                     >
                       {collapsedGroups[group.id] ? (
@@ -412,13 +414,14 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') setEditingGroupId(null);
                         }}
-                        className="font-bold border-gray-300 bg-white focus:ring-1 p-2 h-9 text-xl flex-1"
+                        onClick={(e) => e.stopPropagation()}
+                        className="font-bold border-gray-300 bg-white focus:ring-1 p-2 h-9 text-xl flex-1 cursor-text"
                         placeholder="Group Title"
                         dir="auto"
                         autoFocus
                       />
                     ) : (
-                      <div className="flex-1 flex items-center gap-2">
+                      <div className="flex-1">
                         <h3 className="font-bold text-xl text-gray-900 truncate">
                           {group.title || "Untitled Group"}
                         </h3>
