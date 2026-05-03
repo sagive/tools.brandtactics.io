@@ -14,7 +14,8 @@ import { supabase } from "@/lib/supabase";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
-import { Editor } from "@tinymce/tinymce-react";
+import dynamic from "next/dynamic";
+const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
 export default function ArticleDetail({ params }: { params: Promise<{ id: string, articleId: string }> }) {
   const { id: clientId, articleId } = React.use(params);
@@ -226,27 +227,29 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                   <div className="space-y-2 pt-2">
                     <Label className="text-sm font-semibold text-gray-700">Content</Label>
                     <div className="border border-gray-200 rounded-md overflow-hidden bg-white min-h-[500px]">
-                      <Editor
-                        apiKey='no-api-key'
+                      <JoditEditor
                         value={content}
-                        onEditorChange={(newContent) => setContent(newContent)}
-                        init={{
+                        config={{
+                          readonly: false,
                           height: 500,
-                          menubar: true,
-                          directionality: direction as any,
-                          plugins: [
-                            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                            'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
-                          ],
-                          toolbar: 'undo redo | blocks | ' +
-                            'bold italic forecolor | alignleft aligncenter ' +
-                            'alignright alignjustify | bullist numlist outdent indent | ' +
-                            'removeformat | code help',
-                          content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
-                          branding: false,
-                          promotion: false
+                          direction: direction as any,
+                          uploader: {
+                            insertImageAsBase64URI: true
+                          },
+                          placeholder: 'Start writing your article...',
+                          buttons: [
+                            'source', '|',
+                            'bold', 'italic', 'underline', 'strikethrough', '|',
+                            'superscript', 'subscript', '|',
+                            'ul', 'ol', '|',
+                            'outdent', 'indent', '|',
+                            'font', 'fontsize', 'brush', 'paragraph', '|',
+                            'image', 'table', 'link', '|',
+                            'align', 'undo', 'redo', '|',
+                            'hr', 'eraser', 'fullsize', 'print'
+                          ]
                         }}
+                        onBlur={(newContent) => setContent(newContent)}
                       />
                     </div>
                   </div>
