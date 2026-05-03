@@ -282,6 +282,23 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                 </div>
               ) : (
                 <div className="space-y-6">
+                  <style dangerouslySetInnerHTML={{ __html: `
+                    .article-preview-content {
+                      font-family: Inter, sans-serif;
+                      line-height: 1.6;
+                      color: #374151;
+                    }
+                    .article-preview-content p { margin-bottom: 24px; }
+                    .article-preview-content h1 { font-size: 32px; margin-top: 40px; margin-bottom: 20px; font-weight: 800; }
+                    .article-preview-content h2 { font-size: 28px; margin-top: 36px; margin-bottom: 18px; font-weight: 700; }
+                    .article-preview-content h3 { font-size: 24px; margin-top: 32px; margin-bottom: 16px; font-weight: 700; }
+                    .article-preview-content h4 { font-size: 20px; margin-top: 28px; margin-bottom: 14px; font-weight: 600; }
+                    .article-preview-content img { max-width: 100%; border-radius: 8px; margin: 20px 0; }
+                    .article-preview-content ul, .article-preview-content ol { margin-bottom: 24px; padding-inline-start: 40px; }
+                    .article-preview-content li { margin-bottom: 8px; }
+                    .article-preview-content table { border-collapse: collapse; width: 100%; margin-bottom: 24px; border: 1px solid #e5e7eb; }
+                    .article-preview-content table td, .article-preview-content table th { border: 1px solid #e5e7eb; padding: 12px; }
+                  `}} />
                   <div className="article-preview-content">
                     <div 
                       dangerouslySetInnerHTML={{ __html: content }} 
