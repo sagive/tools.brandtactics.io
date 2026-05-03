@@ -12,10 +12,8 @@ import { ArrowLeft, Save, Bot, Loader2, Pencil, X, Share2, Globe, Lock } from "l
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { Editor } from "@tinymce/tinymce-react";
 
 export default function ArticleDetail({ params }: { params: Promise<{ id: string, articleId: string }> }) {
@@ -32,7 +30,6 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
   const [direction, setDirection] = useState("ltr");
   const [isApproved, setIsApproved] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
-  const [editorMode, setEditorMode] = useState("visual");
   
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);

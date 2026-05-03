@@ -12,10 +12,8 @@ import { ArrowLeft, Save, Bot, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { Editor } from "@tinymce/tinymce-react";
 
 export default function NewClientArticle({ params }: { params: Promise<{ id: string }> }) {
@@ -32,7 +30,6 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
   const [direction, setDirection] = useState("ltr");
   const [isApproved, setIsApproved] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
-  const [editorMode, setEditorMode] = useState("visual");
   
   const [articleTypes, setArticleTypes] = useState<any[]>([]);
   const [aiSettings, setAiSettings] = useState<any>(null);
@@ -297,11 +294,11 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold text-gray-700">Prompt / Instructions</Label>
                     <div className="border border-gray-200 rounded-md overflow-hidden bg-white">
-                      <ReactQuill 
-                        theme="snow" 
+                      <Textarea 
                         value={prompt} 
-                        onChange={setPrompt} 
-                        className="[&_.ql-editor]:min-h-[150px] [&_.ql-editor]:text-base [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" 
+                        onChange={(e) => setPrompt(e.target.value)} 
+                        placeholder="Enter your prompt or specific instructions for the AI..."
+                        className="min-h-[150px] text-base border-none focus-visible:ring-0 resize-y"
                       />
                     </div>
                   </div>
