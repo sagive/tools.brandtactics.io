@@ -12,6 +12,8 @@ import { ArrowLeft, Save, Bot, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
@@ -29,6 +31,10 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
   const [type, setType] = useState("");
   const [content, setContent] = useState("");
   const [status, setStatus] = useState("Draft");
+  const [direction, setDirection] = useState("ltr");
+  const [isApproved, setIsApproved] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
+  const [editorMode, setEditorMode] = useState("visual");
   
   const [articleTypes, setArticleTypes] = useState<any[]>([]);
   const [aiSettings, setAiSettings] = useState<any>(null);
@@ -175,7 +181,10 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
         length: wordCount,
         is_ai_generated: content.length > 0 && isGenerating, // simplistic flag for now
         content,
-        status
+        status,
+        direction,
+        client_approved: isApproved,
+        is_public: isPublic
       });
 
       if (error) throw error;
@@ -191,6 +200,7 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
   return (
     <div className="w-full px-4 lg:px-8 pb-10">
       <style dangerouslySetInnerHTML={{ __html: `
+        .article-content { direction: ${direction}; text-align: ${direction === 'rtl' ? 'right' : 'left'}; }
         .article-content p { margin-bottom: 1.5rem !important; }
         .article-content h1, 
         .article-content h2, 
@@ -199,7 +209,7 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
         .article-content h5, 
         .article-content h6 { margin-top: 2rem !important; margin-bottom: 1rem !important; font-weight: 700 !important; }
         .article-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 2rem 0; }
-        .article-content ul, .article-content ol { margin-bottom: 1.5rem !important; padding-right: 2rem !important; }
+        .article-content ul, .article-content ol { margin-bottom: 1.5rem !important; padding-${direction === 'rtl' ? 'left' : 'right'}: 2rem !important; }
         .article-content li { margin-bottom: 0.5rem !important; }
       `}} />
       <div className="flex items-center gap-4 mb-6">
@@ -258,14 +268,33 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
 
               {!isAiMode ? (
                 <div className="space-y-2 pt-2">
-                  <Label className="text-sm font-semibold text-gray-700">Content</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold text-gray-700">Content</Label>
+                    <Tabs value={editorMode} onValueChange={setEditorMode} className="w-auto">
+                      <TabsList className="grid w-full grid-cols-2 h-8">
+                        <TabsTrigger value="visual" className="text-xs">Visual</TabsTrigger>
+                        <TabsTrigger value="code" className="text-xs">Code (HTML)</TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  </div>
                   <div className="border border-gray-200 rounded-md overflow-hidden bg-white">
-                    <ReactQuill 
-                      theme="snow" 
-                      value={content} 
-                      onChange={setContent} 
-                      className="[&_.ql-editor]:min-h-[400px] [&_.ql-editor]:text-base [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" 
-                    />
+                    {editorMode === "visual" ? (
+                      <ReactQuill 
+                        theme="snow" 
+                        value={content} 
+                        onChange={setContent} 
+                        className="[&_.ql-editor]:min-h-[400px] [&_.ql-editor]:text-base [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" 
+                        style={{ direction: direction as any }}
+                      />
+                    ) : (
+                      <Textarea 
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        placeholder="Paste your HTML here..."
+                        className="min-h-[400px] font-mono text-sm border-none focus-visible:ring-0 resize-y"
+                        style={{ direction: 'ltr' }}
+                      />
+                    )}
                   </div>
                 </div>
               ) : (
@@ -381,6 +410,41 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <Label className="text-xs font-semibold text-gray-600">Content Direction</Label>
+                <Select value={direction} onValueChange={setDirection}>
+                  <SelectTrigger className="w-full bg-gray-50/50">
+                    <SelectValue placeholder="Direction" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ltr">Left to Right (LTR)</SelectItem>
+                    <SelectItem value="rtl">Right to Left (RTL)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-4">
+                <Checkbox 
+                  id="client-approved" 
+                  checked={isApproved} 
+                  onCheckedChange={(checked) => setIsApproved(!!checked)} 
+                />
+                <Label htmlFor="client-approved" className="text-xs font-semibold text-gray-700 cursor-pointer">
+                  Approved by Client
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-2">
+                <Checkbox 
+                  id="is-public" 
+                  checked={isPublic} 
+                  onCheckedChange={(checked) => setIsPublic(!!checked)} 
+                />
+                <Label htmlFor="is-public" className="text-xs font-semibold text-gray-700 cursor-pointer">
+                  Allow Public Share Link
+                </Label>
               </div>
 
               <div className="space-y-2 pt-2">

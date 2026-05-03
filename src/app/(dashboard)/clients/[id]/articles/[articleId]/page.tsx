@@ -8,10 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, Bot, Loader2, Pencil, X } from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Share2, Globe, Lock } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
@@ -29,6 +29,10 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
   const [type, setType] = useState("");
   const [content, setContent] = useState("");
   const [status, setStatus] = useState("Draft");
+  const [direction, setDirection] = useState("ltr");
+  const [isApproved, setIsApproved] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
+  const [editorMode, setEditorMode] = useState("visual");
   
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -83,6 +87,9 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
           setType(data.type || "");
           setContent(data.content || "");
           setStatus(data.status || "Draft");
+          setDirection(data.direction || "ltr");
+          setIsApproved(data.client_approved || false);
+          setIsPublic(data.is_public || false);
         }
       } catch (err: any) {
         toast.error("Failed to load article");
@@ -121,6 +128,9 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
         length: wordCount,
         content,
         status,
+        direction,
+        client_approved: isApproved,
+        is_public: isPublic,
         updated_at: new Date().toISOString()
       }).eq('id', articleId);
 
@@ -145,6 +155,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
   return (
     <div className="w-full px-4 lg:px-8 pb-10">
       <style dangerouslySetInnerHTML={{ __html: `
+        .article-content { direction: ${direction}; text-align: ${direction === 'rtl' ? 'right' : 'left'}; }
         .article-content p { margin-bottom: 1.5rem !important; }
         .article-content h1, 
         .article-content h2, 
@@ -153,7 +164,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
         .article-content h5, 
         .article-content h6 { margin-top: 2rem !important; margin-bottom: 1rem !important; font-weight: 700 !important; }
         .article-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 2rem 0; }
-        .article-content ul, .article-content ol { margin-bottom: 1.5rem !important; padding-right: 2rem !important; }
+        .article-content ul, .article-content ol { margin-bottom: 1.5rem !important; padding-${direction === 'rtl' ? 'left' : 'right'}: 2rem !important; }
         .article-content li { margin-bottom: 0.5rem !important; }
       `}} />
       <div className="flex items-center gap-4 mb-6">
@@ -167,6 +178,20 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
           <p className="text-sm text-gray-500">View or edit article details.</p>
         </div>
         <div className="flex items-center gap-3">
+          {isPublic && (
+            <Button 
+              variant="outline" 
+              className="text-indigo-600 border-indigo-200"
+              onClick={() => {
+                const url = `${window.location.origin}/public/articles/${articleId}`;
+                navigator.clipboard.writeText(url);
+                toast.success("Share link copied to clipboard!");
+              }}
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              Copy Share Link
+            </Button>
+          )}
           {!isEditing ? (
             <Button onClick={() => setIsEditing(true)} variant="outline" className="text-blue-600 border-blue-200">
               <Pencil className="w-4 h-4 mr-2" />
@@ -202,14 +227,33 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                     />
                   </div>
                   <div className="space-y-2 pt-2">
-                    <Label className="text-sm font-semibold text-gray-700">Content</Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-semibold text-gray-700">Content</Label>
+                      <Tabs value={editorMode} onValueChange={setEditorMode} className="w-auto">
+                        <TabsList className="grid w-full grid-cols-2 h-8">
+                          <TabsTrigger value="visual" className="text-xs">Visual</TabsTrigger>
+                          <TabsTrigger value="code" className="text-xs">Code (HTML)</TabsTrigger>
+                        </TabsList>
+                      </Tabs>
+                    </div>
                     <div className="border border-gray-200 rounded-md overflow-hidden bg-white">
-                      <ReactQuill 
-                        theme="snow" 
-                        value={content} 
-                        onChange={setContent} 
-                        className="[&_.ql-editor]:min-h-[400px] [&_.ql-editor]:text-base [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" 
-                      />
+                      {editorMode === "visual" ? (
+                        <ReactQuill 
+                          theme="snow" 
+                          value={content} 
+                          onChange={setContent} 
+                          className="[&_.ql-editor]:min-h-[400px] [&_.ql-editor]:text-base [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" 
+                          style={{ direction: direction as any }}
+                        />
+                      ) : (
+                        <Textarea 
+                          value={content}
+                          onChange={(e) => setContent(e.target.value)}
+                          placeholder="Paste your HTML here..."
+                          className="min-h-[400px] font-mono text-sm border-none focus-visible:ring-0 resize-y"
+                          style={{ direction: 'ltr' }}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -269,6 +313,77 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                   </Select>
                 ) : (
                   <div className="text-sm font-medium text-gray-900">{type || "-"}</div>
+                )}
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <Label className="text-xs font-semibold text-gray-600">Content Direction</Label>
+                {isEditing ? (
+                  <Select value={direction} onValueChange={setDirection}>
+                    <SelectTrigger className="w-full bg-gray-50/50">
+                      <SelectValue placeholder="Direction" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ltr">Left to Right (LTR)</SelectItem>
+                      <SelectItem value="rtl">Right to Left (RTL)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="text-sm font-medium text-gray-900 capitalize">{direction}</div>
+                )}
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <Label className="text-xs font-semibold text-gray-600">Client Approval</Label>
+                {isEditing ? (
+                  <div className="flex items-center space-x-2 pt-1">
+                    <Checkbox 
+                      id="client-approved" 
+                      checked={isApproved} 
+                      onCheckedChange={(checked) => setIsApproved(!!checked)} 
+                    />
+                    <Label htmlFor="client-approved" className="text-xs font-semibold text-gray-700 cursor-pointer">
+                      Approved by Client
+                    </Label>
+                  </div>
+                ) : (
+                  <div>
+                    {isApproved ? (
+                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none">Approved</Badge>
+                    ) : (
+                      <Badge variant="secondary" className="bg-yellow-50 text-yellow-700 border-none">Pending Approval</Badge>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <Label className="text-xs font-semibold text-gray-600">Public Access</Label>
+                {isEditing ? (
+                  <div className="flex items-center space-x-2 pt-1">
+                    <Checkbox 
+                      id="is-public" 
+                      checked={isPublic} 
+                      onCheckedChange={(checked) => setIsPublic(!!checked)} 
+                    />
+                    <Label htmlFor="is-public" className="text-xs font-semibold text-gray-700 cursor-pointer">
+                      Allow Public Share Link
+                    </Label>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    {isPublic ? (
+                      <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 flex items-center gap-1">
+                        <Globe className="w-3 h-3" />
+                        Public
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-gray-500 border-gray-200 flex items-center gap-1">
+                        <Lock className="w-3 h-3" />
+                        Private
+                      </Badge>
+                    )}
+                  </div>
                 )}
               </div>
 
