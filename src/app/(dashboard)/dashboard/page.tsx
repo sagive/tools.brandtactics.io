@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { SendSeoUpdateDialog } from "@/components/send-seo-update-dialog";
 import { QuickActionsSidebar } from "@/components/quick-actions-sidebar";
+import { ActivityWidget } from "@/components/activity-widget";
 
 const IconRenderer = ({ name, className }: { name: string, className?: string }) => {
   const Icon = (LucideIcons as any)[name] || Blocks;
@@ -278,8 +279,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions Sidebar (Right - 25%) */}
-        <div className="lg:col-span-3 space-y-4">
+        <div className="lg:col-span-3 space-y-6">
           <QuickActionsSidebar onAction={handleSendUpdate} />
+          <ActivityWidget />
         </div>
       </div>
     </div>

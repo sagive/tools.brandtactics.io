@@ -10,6 +10,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Check, ChevronsUpDown, FileText, AlertCircle, Send, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/components/auth-provider";
+import { logActivity } from "@/lib/activity-logger";
 import { cn } from "@/lib/utils";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import dynamic from "next/dynamic";
@@ -34,6 +36,7 @@ interface VariantItem {
 export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSuccess, open: externalOpen, onOpenChange: externalOnOpenChange }: SendMultipleSeoUpdatesDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
+  const { profile } = useAuth();
   
   const setIsOpen = (newOpen: boolean) => {
     if (externalOnOpenChange) externalOnOpenChange(newOpen);
@@ -184,6 +187,14 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
       
       if (successCount > 0) {
         toast.success(`Successfully scheduled ${successCount} SEO updates!`);
+
+        logActivity({
+          userName: profile?.full_name || profile?.email || "Someone",
+          clientId: clientId,
+          actionType: 'seo_update_sent',
+          content: `scheduled <b>${successCount}</b> SEO updates for <b>${selectedClient?.name || "Client"}</b>`
+        });
+
         setIsOpen(false);
         setVariants([]);
         setBaseBody("");

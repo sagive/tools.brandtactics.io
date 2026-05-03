@@ -4,11 +4,7 @@
         {
             "label": "Git Pull and Overwrite",
             "type": "shell",
-            "command": "powershell",
-            "args": [
-                "-Command",
-                "git fetch origin; git reset --hard origin/main"
-            ],
+            "command": "git fetch origin && git reset --hard origin/main",
             "problemMatcher": [],
             "runOptions": {
                 "runOn": "folderOpen"
@@ -17,11 +13,7 @@
         {
             "label": "Git Push with Commit Message",
             "type": "shell",
-            "command": "powershell",
-            "args": [
-                "-Command",
-                "$commitMessage = Read-Host 'Enter commit message'; git add .; git commit -m \"$commitMessage\"; git push origin main; $commitMessage | Set-Clipboard"
-            ],
+            "command": "read -p 'Enter commit message: ' msg && git add . && git commit -m \"$msg\" && git push",
             "problemMatcher": [],
             "group": {
                 "kind": "build",

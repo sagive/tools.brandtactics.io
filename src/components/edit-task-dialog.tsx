@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/lib/supabase";
+import { logActivity } from "@/lib/activity-logger";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
@@ -188,6 +189,16 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
       const { error } = await supabase.from('tasks').update({ [field]: value }).eq('id', task.id);
       if (error) throw error;
       toast.success(`${FIELD_LABELS[field] || field} saved`);
+
+      if (field === 'status') {
+        const clientName = clients.find(c => c.id === task.client_id)?.name || "Client";
+        logActivity({
+          userName: profile?.full_name || profile?.email || "Someone",
+          clientId: task.client_id,
+          actionType: 'task_status_changed',
+          content: `changed status of task <b>"${task.title}"</b> to <b>${value}</b> for <b>${clientName}</b>`
+        });
+      }
     } catch (err: any) {
       toast.error(`Failed to save ${FIELD_LABELS[field] || field}: ${err.message}`);
     }
@@ -388,6 +399,14 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
       if (error) throw error;
       toast.success("Task created successfully");
       onTaskCreated?.();
+
+      const clientName = clients.find(c => c.id === clientId)?.name || "Client";
+      logActivity({
+        userName: profile?.full_name || profile?.email || "Someone",
+        clientId: clientId,
+        actionType: 'task_created',
+        content: `created task <b>"${generatedTitle}"</b> for <b>${clientName}</b>`
+      });
       
       // Check if there is an assignee to notify
       if (assignee) {

@@ -10,6 +10,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Check, ChevronsUpDown, FileText, AlertCircle, Plus, Send } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/components/auth-provider";
+import { logActivity } from "@/lib/activity-logger";
 import { cn } from "@/lib/utils";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import dynamic from "next/dynamic";
@@ -28,6 +30,7 @@ interface SendSeoUpdateDialogProps {
 export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open: externalOpen, onOpenChange: externalOnOpenChange }: SendSeoUpdateDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
+  const { profile } = useAuth();
   
   const setIsOpen = (newOpen: boolean) => {
     if (externalOnOpenChange) externalOnOpenChange(newOpen);
@@ -96,6 +99,14 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
       } else {
         toast.success(`Update sent successfully!`);
       }
+
+      logActivity({
+        userName: profile?.full_name || profile?.email || "Someone",
+        clientId: clientId,
+        actionType: 'seo_update_sent',
+        content: `sent SEO update <b>"${subject}"</b> to <b>${selectedClient?.name || "Client"}</b>`
+      });
+
       setBody("");
       setIsOpen(false);
       onSuccess?.();
