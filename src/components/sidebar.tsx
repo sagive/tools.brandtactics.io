@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, Users, FileText, Mail, Settings, Briefcase, PlusCircle, ChevronRight, ChevronLeft, Menu, LayoutGrid, Command, Link2, Contact } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Mail, Settings, Briefcase, PlusCircle, ChevronRight, ChevronLeft, Menu, LayoutGrid, Command, Link2, Contact, Activity } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { href: "/backlinks", label: "Backlinks", icon: Link2 },
   { href: "/tools", label: "Tools", icon: LayoutGrid },
   { href: "/email-updates", label: "Email Updates", icon: Mail },
+  { href: "/activity", label: "Activity", icon: Activity },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -77,7 +78,7 @@ export function Sidebar() {
         <div className={cn("mb-6", isExpanded ? "px-2" : "px-2")}>
           <ul className="space-y-2">
             {NAV_ITEMS.filter(i => {
-               if (i.href === '/users' || i.href === '/settings') return isAdmin;
+               if (i.href === '/users' || i.href === '/settings' || i.href === '/activity') return isAdmin;
                return true;
             }).map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);

@@ -22,7 +22,7 @@ export function ActivityWidget() {
         schema: 'public', 
         table: 'activity_logs' 
       }, (payload) => {
-        setLogs(prev => [payload.new, ...prev.slice(0, 9)]);
+        setLogs(prev => [payload.new, ...prev.slice(0, 19)]);
       })
       .subscribe();
 
@@ -37,7 +37,7 @@ export function ActivityWidget() {
         .from('activity_logs')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(20);
 
       if (error) throw error;
       setLogs(data || []);
@@ -77,16 +77,30 @@ export function ActivityWidget() {
           <CardDescription>Track latest workspace actions</CardDescription>
         </div>
       </CardHeader>
-      <CardContent className="p-0 flex-1 overflow-hidden">
-        <div className="h-full overflow-y-auto custom-scrollbar">
+      <CardContent className="p-0 flex-1 overflow-hidden relative">
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes marquee-up {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-50%); }
+          }
+          .marquee-container {
+            animation: marquee-up 40s linear infinite;
+          }
+          .marquee-container:hover {
+            animation-play-state: paused;
+          }
+        `}} />
+        
+        <div className="h-[400px] overflow-hidden relative">
           {loading ? (
             <div className="p-8 text-center text-sm text-gray-500">Loading activity...</div>
           ) : logs.length === 0 ? (
             <div className="p-8 text-center text-sm text-gray-500 italic">No activity recorded yet.</div>
           ) : (
-            <div className="divide-y divide-gray-100">
-              {logs.map((log) => (
-                <div key={log.id} className="p-4 hover:bg-gray-50/50 transition-colors group">
+            <div className="marquee-container">
+              {/* Duplicate the list to create a seamless loop */}
+              {[...logs, ...logs].map((log, index) => (
+                <div key={`${log.id}-${index}`} className="p-4 border-b border-gray-50 hover:bg-gray-50/50 transition-colors group">
                   <div className="flex items-start gap-3">
                     <div className="shrink-0 mt-1">
                       <div className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${getActionStyles(log.action_type)}`}>
@@ -95,7 +109,7 @@ export function ActivityWidget() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-900 leading-tight">
-                        <span className="font-bold text-gray-900 mr-1">{log.user_name}</span>
+                        <span className="font-bold text-gray-900 mr-1 truncate inline-block max-w-[120px] align-bottom">{log.user_name}</span>
                         <span className="text-gray-600" dangerouslySetInnerHTML={{ __html: log.content }} />
                       </p>
                       <div className="flex items-center gap-3 mt-1.5 text-[11px] text-gray-400 font-medium">
@@ -110,6 +124,10 @@ export function ActivityWidget() {
               ))}
             </div>
           )}
+          
+          {/* Fading Gradients for Smoothness */}
+          <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-white to-transparent z-10 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none" />
         </div>
       </CardContent>
     </Card>
