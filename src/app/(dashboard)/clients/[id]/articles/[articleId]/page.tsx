@@ -237,6 +237,26 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                             insertImageAsBase64URI: true
                           },
                           placeholder: 'Start writing your article...',
+                          style: {
+                            fontFamily: 'Inter, sans-serif',
+                            fontSize: '16px',
+                            color: '#374151',
+                            lineHeight: '1.6',
+                            padding: '20px'
+                          },
+                          editorCssClass: 'article-editor-content',
+                          style: `
+                            .article-editor-content p { margin-bottom: 24px !important; }
+                            .article-editor-content h1 { font-size: 32px !important; margin-top: 40px !important; margin-bottom: 20px !important; font-weight: 800 !important; }
+                            .article-editor-content h2 { font-size: 28px !important; margin-top: 36px !important; margin-bottom: 18px !important; font-weight: 700 !important; }
+                            .article-editor-content h3 { font-size: 24px !important; margin-top: 32px !important; margin-bottom: 16px !important; font-weight: 700 !important; }
+                            .article-editor-content h4 { font-size: 20px !important; margin-top: 28px !important; margin-bottom: 14px !important; font-weight: 600 !important; }
+                            .article-editor-content img { max-width: 100%; border-radius: 8px; margin: 20px 0; }
+                            .article-editor-content ul, .article-editor-content ol { margin-bottom: 24px !important; padding-inline-start: 40px !important; }
+                            .article-editor-content li { margin-bottom: 8px !important; }
+                            .article-editor-content table { border-collapse: collapse; width: 100%; margin-bottom: 24px !important; }
+                            .article-editor-content table td, .article-editor-content table th { border: 1px solid #e5e7eb; padding: 12px; }
+                          `,
                           buttons: [
                             'source', '|',
                             'bold', 'italic', 'underline', 'strikethrough', '|',
