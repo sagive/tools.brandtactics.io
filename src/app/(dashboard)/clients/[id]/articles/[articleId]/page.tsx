@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, Bot, Loader2, Pencil, X, Share2, Globe, Lock } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Bot, Loader2, Pencil, X, Share2, Globe, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -165,10 +165,10 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
         .article-content ul, .article-content ol { margin-bottom: 1.5rem !important; padding-${direction === 'rtl' ? 'left' : 'right'}: 2rem !important; }
         .article-content li { margin-bottom: 0.5rem !important; }
       `}} />
-      <div className="flex items-center gap-4 mb-6">
+      <div className={`flex items-center gap-4 mb-6 ${direction === 'rtl' ? 'flex-row-reverse text-right' : ''}`}>
         <Link href={`/clients/${clientId}/articles`}>
           <Button variant="ghost" size="icon" className="hover:bg-gray-100">
-            <ArrowLeft className="w-4 h-4" />
+            {direction === 'rtl' ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
           </Button>
         </Link>
         <div className="flex-1">
@@ -210,7 +210,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6 items-start">
+      <div className={`flex flex-col gap-6 items-start ${direction === 'rtl' ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
         <div className="flex-1 min-w-0 space-y-6">
           <Card className="shadow-sm">
             <CardContent className="p-6 space-y-4">
