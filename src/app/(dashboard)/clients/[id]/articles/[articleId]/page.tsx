@@ -299,7 +299,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                     .article-preview-content table { border-collapse: collapse; width: 100%; margin-bottom: 24px; border: 1px solid #e5e7eb; }
                     .article-preview-content table td, .article-preview-content table th { border: 1px solid #e5e7eb; padding: 12px; }
                   `}} />
-                  <div className="article-preview-content">
+                  <div className="article-preview-content" dir={direction}>
                     <div 
                       dangerouslySetInnerHTML={{ __html: content }} 
                       className="text-gray-800 leading-relaxed" 
