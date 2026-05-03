@@ -283,8 +283,14 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
                           lineHeight: '1.6',
                           padding: '20px'
                         },
+                        iframe: true,
                         iframeStyle: `
-                          body { padding: 20px !important; font-family: Inter, sans-serif !important; }
+                          body { 
+                            padding: 20px !important; 
+                            font-family: Inter, sans-serif !important; 
+                            line-height: 1.6 !important;
+                            color: #374151 !important;
+                          }
                           p { margin-bottom: 24px !important; }
                           h1 { font-size: 32px !important; margin-top: 40px !important; margin-bottom: 20px !important; font-weight: 800 !important; }
                           h2 { font-size: 28px !important; margin-top: 36px !important; margin-bottom: 18px !important; font-weight: 700 !important; }
@@ -293,8 +299,8 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
                           img { max-width: 100%; border-radius: 8px; margin: 20px 0; }
                           ul, ol { margin-bottom: 24px !important; padding-inline-start: 40px !important; }
                           li { margin-bottom: 8px !important; }
-                          table { border-collapse: collapse; width: 100%; margin-bottom: 24px !important; }
-                          table td, table th { border: 1px solid #e5e7eb; padding: 12px; }
+                          table { border-collapse: collapse; width: 100%; margin-bottom: 24px !important; border: 1px solid #e5e7eb !important; }
+                          table td, table th { border: 1px solid #e5e7eb !important; padding: 12px !important; }
                         `,
                         buttons: [
                           'source', '|',
