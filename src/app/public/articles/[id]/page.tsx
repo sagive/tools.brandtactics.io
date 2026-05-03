@@ -1,10 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Head from "next/head";
 import { supabase } from "@/lib/supabase";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function PublicArticleView({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
@@ -39,6 +42,29 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
     fetchArticle();
   }, [id]);
 
+  const handleApprove = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('articles')
+        .update({ 
+          client_approved: true, 
+          is_public: false 
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      setArticle((prev: any) => ({ ...prev, client_approved: true, is_public: false }));
+      toast.success("Article approved successfully!");
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Failed to approve article");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
@@ -64,21 +90,37 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
   const direction = article.direction || "ltr";
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white" dir={direction}>
+      <Head>
+        <title>{article.title} | BrandTactics</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Head>
       {/* Premium Header */}
-      <header className="border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
+      <header className="border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="max-w-4xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
               BT
             </div>
             <span className="font-bold text-gray-900 tracking-tight">BrandTactics</span>
           </div>
-          {article.client_approved && (
-            <Badge className="bg-green-50 text-green-700 hover:bg-green-50 border-green-100">
-              Approved
-            </Badge>
-          )}
+          
+          <div className="flex items-center gap-4">
+            {article.client_approved ? (
+              <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-100 py-1.5 px-4 rounded-full flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Approved by Client
+              </Badge>
+            ) : (
+              <Button 
+                onClick={handleApprove}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-6 shadow-lg shadow-emerald-200 transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                Approve Article
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -93,7 +135,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
                 <span className="text-sm text-gray-400 font-medium">for {article.clients.name}</span>
               )}
             </div>
-            <h1 className="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight mb-6">
+            <h1 className={`text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight mb-6 ${direction === 'rtl' ? 'text-right' : 'text-left'}`}>
               {article.title}
             </h1>
             <div className="flex items-center gap-4 text-sm text-gray-500 border-t border-gray-50 pt-6">
@@ -124,25 +166,26 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
               font-weight: 800; 
               color: #111827;
               letter-spacing: -0.025em;
+              line-height: 1.2;
             }
+            .public-content h1 { font-size: 2.5rem; }
             .public-content h2 { font-size: 2rem; }
             .public-content h3 { font-size: 1.5rem; }
             .public-content img { 
               max-width: 100%; 
               height: auto; 
               border-radius: 16px; 
-              margin: 3rem 0;
+              margin: 3.5rem 0;
               box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
             }
             .public-content ul, .public-content ol { 
               margin-bottom: 2rem; 
-              padding-${direction === 'rtl' ? 'left' : 'right'}: 2rem; 
+              padding-inline-start: 2.5rem; 
             }
             .public-content li { margin-bottom: 0.75rem; }
             .public-content blockquote {
-              border-${direction === 'rtl' ? 'right' : 'left'}-width: 4px;
-              border-color: #2563eb;
-              padding-${direction === 'rtl' ? 'right' : 'left'}: 1.5rem;
+              border-inline-start: 4px solid #2563eb;
+              padding-inline-start: 1.5rem;
               font-style: italic;
               color: #4b5563;
               margin: 2.5rem 0;
@@ -152,6 +195,47 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
               text-decoration: underline;
               text-underline-offset: 4px;
               font-weight: 500;
+            }
+            
+            /* Table Styling */
+            .public-content table {
+                border-collapse: collapse;
+                margin: 25px 0 50px 0;
+                font-family: 'Inter', sans-serif;
+                font-size: 0.95em;
+                min-width: 400px;
+                width: 100%;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+                border-radius: 12px; 
+                overflow: hidden; 
+                border: 1px solid #f3f4f6;
+            }
+
+            .public-content thead tr {
+                background-color: #374151;
+                color: #ffffff;
+                text-align: ${direction === 'rtl' ? 'right' : 'left'};
+            }
+
+            .public-content th,
+            .public-content td {
+                padding: 14px 20px;
+            }
+
+            .public-content tbody tr {
+                border-bottom: 1px solid #f3f4f6;
+            }
+
+            .public-content tbody tr:nth-of-type(even) {
+                background-color: #f9fafb;
+            }
+
+            .public-content tbody tr:hover {
+                background-color: #f3f4f6;
+            }
+
+            .public-content tbody tr:last-of-type {
+                border-bottom: 2px solid #374151;
             }
           `}} />
 
