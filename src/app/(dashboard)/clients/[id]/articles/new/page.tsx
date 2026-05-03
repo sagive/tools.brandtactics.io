@@ -16,9 +16,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import "react-quill-new/dist/quill.snow.css";
-
-const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
+import { Editor } from "@tinymce/tinymce-react";
 
 export default function NewClientArticle({ params }: { params: Promise<{ id: string }> }) {
   const { id: clientId } = React.use(params);
@@ -268,33 +266,30 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
 
               {!isAiMode ? (
                 <div className="space-y-2 pt-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold text-gray-700">Content</Label>
-                    <Tabs value={editorMode} onValueChange={setEditorMode} className="w-auto">
-                      <TabsList className="grid w-full grid-cols-2 h-8">
-                        <TabsTrigger value="visual" className="text-xs">Visual</TabsTrigger>
-                        <TabsTrigger value="code" className="text-xs">Code (HTML)</TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                  </div>
-                  <div className="border border-gray-200 rounded-md overflow-hidden bg-white">
-                    {editorMode === "visual" ? (
-                      <ReactQuill 
-                        theme="snow" 
-                        value={content} 
-                        onChange={setContent} 
-                        className="[&_.ql-editor]:min-h-[400px] [&_.ql-editor]:text-base [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" 
-                        style={{ direction: direction as any }}
-                      />
-                    ) : (
-                      <Textarea 
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        placeholder="Paste your HTML here..."
-                        className="min-h-[400px] font-mono text-sm border-none focus-visible:ring-0 resize-y"
-                        style={{ direction: 'ltr' }}
-                      />
-                    )}
+                  <Label className="text-sm font-semibold text-gray-700">Content</Label>
+                  <div className="border border-gray-200 rounded-md overflow-hidden bg-white min-h-[500px]">
+                    <Editor
+                      apiKey='no-api-key'
+                      value={content}
+                      onEditorChange={(newContent) => setContent(newContent)}
+                      init={{
+                        height: 500,
+                        menubar: true,
+                        directionality: direction as any,
+                        plugins: [
+                          'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                          'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                          'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
+                        ],
+                        toolbar: 'undo redo | blocks | ' +
+                          'bold italic forecolor | alignleft aligncenter ' +
+                          'alignright alignjustify | bullist numlist outdent indent | ' +
+                          'removeformat | code help',
+                        content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+                        branding: false,
+                        promotion: false
+                      }}
+                    />
                   </div>
                 </div>
               ) : (
