@@ -321,7 +321,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
               <div className="space-y-2 pt-2">
                 <Label className="text-xs font-semibold text-gray-600">Content Direction</Label>
                 {isEditing ? (
-                  <Select value={direction} onValueChange={setDirection}>
+                  <Select value={direction} onValueChange={(val) => setDirection(val || "ltr")}>
                     <SelectTrigger className="w-full bg-gray-50/50">
                       <SelectValue placeholder="Direction" />
                     </SelectTrigger>
