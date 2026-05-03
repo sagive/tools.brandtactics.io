@@ -284,8 +284,9 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
                           padding: '20px'
                         },
                         // This injects actual CSS rules into the editor iframe
-                        editorCssClass: 'article-editor-content',
+                        bodyClass: 'article-editor-content',
                         iframeStyle: `
+                          .article-editor-content { padding: 20px !important; }
                           .article-editor-content p { margin-bottom: 24px !important; }
                           .article-editor-content h1 { font-size: 32px !important; margin-top: 40px !important; margin-bottom: 20px !important; font-weight: 800 !important; }
                           .article-editor-content h2 { font-size: 28px !important; margin-top: 36px !important; margin-bottom: 18px !important; font-weight: 700 !important; }
