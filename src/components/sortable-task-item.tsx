@@ -19,6 +19,22 @@ import {
   TooltipTrigger 
 } from "@/components/ui/tooltip";
 
+function stripHtml(html: string) {
+  if (!html) return "";
+  // First, replace common block elements with spaces to avoid merging words
+  let text = html.replace(/<(p|br|div|li|h[1-6])[^>]*>/gi, ' ');
+  // Then remove all other tags
+  text = text.replace(/<[^>]*>?/gm, '');
+  // Decode common HTML entities
+  text = text.replace(/&nbsp;/g, ' ')
+             .replace(/&amp;/g, '&')
+             .replace(/&lt;/g, '<')
+             .replace(/&gt;/g, '>')
+             .replace(/&quot;/g, '"');
+  // Collapse multiple spaces
+  return text.replace(/\s+/g, ' ').trim();
+}
+
 export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: { task: any, onDelete?: () => void, onUpdate?: () => void, autoOpenTaskId?: string | null }) {
   const [status, setStatus] = useState(task.status);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
@@ -64,8 +80,11 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
         </button>
         
         <Dialog defaultOpen={autoOpenTaskId === task.id}>
-          <DialogTrigger className="flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 cursor-pointer min-w-0 bg-transparent border-0 text-left p-0 mx-0 outline-none w-full">
-            <span className="font-medium text-sm text-gray-900 truncate pr-2 block">{task.title}</span>
+          <DialogTrigger className="flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 cursor-pointer min-w-0 bg-transparent border-0 text-left p-0 mx-0 outline-none w-full group/title">
+            <span className="font-medium text-sm text-gray-900 truncate pr-2 block group-hover/title:text-blue-600 transition-colors">
+              {stripHtml(task.description || task.title).substring(0, 120)}
+              {stripHtml(task.description || task.title).length > 120 ? '...' : ''}
+            </span>
             
             {/* Metadata Area (Visible on tablets and up) */}
              <div className="hidden md:flex items-center text-[11px] sm:text-xs text-gray-500 shrink-0 ml-auto gap-4 pr-1">

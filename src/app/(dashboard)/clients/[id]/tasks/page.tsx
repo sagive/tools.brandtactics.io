@@ -60,7 +60,10 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
     }
   };
 
-  const filteredTasks = tasks.filter(t => t.title?.toLowerCase().includes(search.toLowerCase()));
+  const filteredTasks = tasks.filter(t => 
+    (t.title || "").toLowerCase().includes(search.toLowerCase()) || 
+    (t.description || "").toLowerCase().includes(search.toLowerCase())
+  );
 
   const pending = filteredTasks.filter(t => t.status === "Pending");
   const active = filteredTasks.filter(t => t.status === "Working on it" || t.status === "Review");
