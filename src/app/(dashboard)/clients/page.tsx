@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth-provider";
+import { cn } from "@/lib/utils";
 
 export default function ClientsPage() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function ClientsPage() {
   const [clients, setClients] = React.useState<any[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isCreating, setIsCreating] = React.useState(false);
+  const [showArchived, setShowArchived] = React.useState(false);
   const { profile, isLoading: isAuthLoading } = useAuth();
   const isAdmin = profile?.role === 'admin';
 
@@ -49,9 +51,11 @@ export default function ClientsPage() {
     }
   }, [isAuthLoading, profile?.id]);
 
-  const filteredClients = clients.filter(c => 
-    (c.name || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredClients = clients.filter(c => {
+    const matchesSearch = (c.name || "").toLowerCase().includes(search.toLowerCase());
+    const matchesArchived = showArchived || c.status !== "Archived";
+    return matchesSearch && matchesArchived;
+  });
 
   const handleNewClient = async () => {
     setIsCreating(true);
@@ -91,8 +95,8 @@ export default function ClientsPage() {
         </Button>
       </div>
 
-      <div className="flex items-center space-x-2">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col sm:flex-row items-center gap-4">
+        <div className="relative flex-1 max-w-md w-full">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
           <Input
             placeholder="Search clients..."
@@ -100,6 +104,24 @@ export default function ClientsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+        </div>
+        
+        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-200">
+           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Show Archived</span>
+           <button 
+             onClick={() => setShowArchived(!showArchived)}
+             className={cn(
+               "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+               showArchived ? "bg-blue-600" : "bg-gray-200"
+             )}
+           >
+             <span
+               className={cn(
+                 "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                 showArchived ? "translate-x-4" : "translate-x-0"
+               )}
+             />
+           </button>
         </div>
       </div>
 
@@ -118,8 +140,13 @@ export default function ClientsPage() {
           {filteredClients.map((client) => (
             <Card key={client.id} className="hover:shadow-md transition-shadow relative group border-gray-200">
               <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-                <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20">
-                  Active
+                <span className={cn(
+                  "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset",
+                  client.status === "Archived" 
+                    ? "bg-gray-50 text-gray-700 ring-gray-600/20" 
+                    : "bg-green-50 text-green-700 ring-green-600/20"
+                )}>
+                  {client.status || "Active"}
                 </span>
                 <DropdownMenu>
                   <DropdownMenuTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-8 w-8 text-gray-400 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
