@@ -157,7 +157,7 @@ export default function BacklinksDashboard() {
                      </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
                     {categoryBacklinks.map((backlink) => (
                       <BacklinkCard key={backlink.id} backlink={backlink} onDelete={handleDelete} onRefresh={fetchData} />
                     ))}
@@ -173,6 +173,7 @@ export default function BacklinksDashboard() {
 
 function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDelete: (id: string) => void, onRefresh: () => void }) {
   const copyToClipboard = (text: string, type: string) => {
+    if (!text) return;
     navigator.clipboard.writeText(text);
     toast.success(`${type} copied to clipboard`);
   };
@@ -201,16 +202,28 @@ function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDele
         {/* Actions Area */}
         <div className="flex items-center gap-1.5 shrink-0 relative z-20">
            {/* Global Credentials (Peek) */}
-           {backlink.global_username && (
-             <button 
-               onClick={(e) => { e.preventDefault(); e.stopPropagation(); copyToClipboard(backlink.global_username, "Username"); }}
-               className="flex items-center gap-1 px-1 py-0.5 rounded bg-gray-50 hover:bg-gray-100 border border-gray-100 text-[8px] text-gray-500 transition-colors"
-               title={`Copy Global User: ${backlink.global_username}`}
-             >
-               <User className="w-2 h-2" />
-               <span className="max-w-[40px] truncate">{backlink.global_username}</span>
-             </button>
-           )}
+           <div className="flex flex-col gap-0.5">
+             {backlink.global_username && (
+               <button 
+                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); copyToClipboard(backlink.global_username, "Username"); }}
+                 className="flex items-center gap-1 px-1 py-0.5 rounded bg-gray-50 hover:bg-gray-100 border border-gray-100 text-[8px] text-gray-500 transition-colors"
+                 title={`Copy Global User: ${backlink.global_username}`}
+               >
+                 <User className="w-2 h-2" />
+                 <span className="max-w-[40px] truncate">{backlink.global_username}</span>
+               </button>
+             )}
+             {backlink.global_password && (
+               <button 
+                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); copyToClipboard(backlink.global_password, "Password"); }}
+                 className="flex items-center gap-1 px-1 py-0.5 rounded bg-blue-50/50 hover:bg-blue-100/50 border border-blue-100/30 text-[8px] text-blue-600 transition-colors"
+                 title={`Copy Global Pass: ${backlink.global_password}`}
+               >
+                 <Lock className="w-2 h-2" />
+                 <span className="max-w-[40px] truncate">********</span>
+               </button>
+             )}
+           </div>
 
           {/* Edit/Settings Dropdown */}
           <div className="opacity-0 group-hover:opacity-100 transition-opacity">

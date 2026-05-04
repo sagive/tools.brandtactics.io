@@ -46,6 +46,12 @@ export function ClientBacklinkCard({
     setIsDirty(false);
   }, [clientData?.is_used, clientData?.is_tasked, clientData?.client_username, clientData?.client_password]);
 
+  const copyToClipboard = (text: string, type: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    toast.success(`${type} copied to clipboard`);
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -159,8 +165,14 @@ export function ClientBacklinkCard({
         {/* Credentials Area */}
         <div className="space-y-2">
           <div className="grid grid-cols-2 gap-2">
-            <div className="relative">
-              <User className="absolute left-2 top-2.5 h-3 w-3 text-gray-400" />
+            <div className="relative group/input">
+              <button 
+                onClick={() => copyToClipboard(username, "Username")}
+                className="absolute left-2 top-2.5 z-10 text-gray-400 hover:text-blue-600 transition-colors"
+                title="Copy Username"
+              >
+                <User className="h-3 w-3" />
+              </button>
               <Input 
                 placeholder="Client User" 
                 value={username} 
@@ -168,8 +180,14 @@ export function ClientBacklinkCard({
                 className="pl-7 h-8 text-[11px] bg-gray-50/50 border-gray-100 focus:bg-white"
               />
             </div>
-            <div className="relative">
-              <Lock className="absolute left-2 top-2.5 h-3 w-3 text-gray-400" />
+            <div className="relative group/input">
+              <button 
+                onClick={() => copyToClipboard(password, "Password")}
+                className="absolute left-2 top-2.5 z-10 text-gray-400 hover:text-blue-600 transition-colors"
+                title="Copy Password"
+              >
+                <Lock className="h-3 w-3" />
+              </button>
               <Input 
                 type="text"
                 placeholder="Client Pass" 
@@ -182,9 +200,31 @@ export function ClientBacklinkCard({
 
           {/* Global Reference (Small) */}
           {(backlink.global_username || backlink.global_password) && (
-            <div className="flex items-center gap-2 px-2 py-1 bg-blue-50/50 rounded border border-blue-100/50 text-[9px] text-blue-600/70">
-              <span className="font-bold uppercase shrink-0">Global:</span>
-              <span className="truncate">{backlink.global_username || '---'} / {backlink.global_password ? '****' : '---'}</span>
+            <div className="flex items-center justify-between px-2 py-1 bg-blue-50/50 rounded border border-blue-100/50 text-[9px] text-blue-600/70">
+              <div className="flex items-center gap-2 truncate">
+                <span className="font-bold uppercase shrink-0">Global:</span>
+                <span className="truncate">{backlink.global_username || '---'} / {backlink.global_password ? '****' : '---'}</span>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                {backlink.global_username && (
+                  <button 
+                    onClick={() => copyToClipboard(backlink.global_username, "Global Username")}
+                    className="hover:text-blue-800 transition-colors"
+                    title="Copy Global Username"
+                  >
+                    <User className="w-2.5 h-2.5" />
+                  </button>
+                )}
+                {backlink.global_password && (
+                  <button 
+                    onClick={() => copyToClipboard(backlink.global_password, "Global Password")}
+                    className="hover:text-blue-800 transition-colors"
+                    title="Copy Global Password"
+                  >
+                    <Lock className="w-2.5 h-2.5" />
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
