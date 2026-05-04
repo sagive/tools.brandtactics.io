@@ -101,29 +101,31 @@ export default function ActivityPage() {
             <div className="divide-y divide-gray-100">
               {filteredLogs.map((log) => (
                 <div key={log.id} className="p-6 hover:bg-gray-50/50 transition-colors">
-                  <div className="flex items-start gap-4">
-                    <div className="shrink-0 pt-1">
-                      <div className={`w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 border border-gray-200`}>
-                        <User className="w-5 h-5" />
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${getActionStyles(log.action_type)}`}>
+                        {getActionLabel(log.action_type)}
                       </div>
+                      <span className="text-xs text-gray-400 font-medium flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
+                      </span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-gray-900">{log.user_name}</span>
-                          <div className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${getActionStyles(log.action_type)}`}>
-                            {getActionLabel(log.action_type)}
-                          </div>
+                    <div className="flex items-start gap-4">
+                      <div className="shrink-0">
+                        <div className={`w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 border border-gray-200`}>
+                          <User className="w-5 h-5" />
                         </div>
-                        <span className="text-xs text-gray-400 font-medium flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
-                        </span>
                       </div>
-                      <div 
-                        className="text-gray-700 text-sm leading-relaxed" 
-                        dangerouslySetInnerHTML={{ __html: log.content }} 
-                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="mb-1">
+                          <span className="font-bold text-gray-900">{log.user_name}</span>
+                        </div>
+                        <div 
+                          className="text-gray-700 text-sm leading-relaxed" 
+                          dangerouslySetInnerHTML={{ __html: log.content }} 
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -101,23 +101,21 @@ export function ActivityWidget() {
               {/* Duplicate the list to create a seamless loop */}
               {[...logs, ...logs].map((log, index) => (
                 <div key={`${log.id}-${index}`} className="p-4 border-b border-gray-50 hover:bg-gray-50/50 transition-colors group">
-                  <div className="flex items-start gap-3">
-                    <div className="shrink-0 mt-1">
-                      <div className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${getActionStyles(log.action_type)}`}>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${getActionStyles(log.action_type)}`}>
                         {getActionLabel(log.action_type)}
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] text-gray-400 font-medium">
+                        <Clock className="w-3 h-3" />
+                        {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-900 leading-tight">
-                        <span className="font-bold text-gray-900 mr-1 truncate inline-block max-w-[120px] align-bottom">{log.user_name}</span>
+                        <span className="font-bold text-gray-900 mr-1 truncate inline-block max-w-[150px] align-bottom">{log.user_name}</span>
                         <span className="text-gray-600" dangerouslySetInnerHTML={{ __html: log.content }} />
                       </p>
-                      <div className="flex items-center gap-3 mt-1.5 text-[11px] text-gray-400 font-medium">
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
-                        </span>
-                      </div>
                     </div>
                   </div>
                 </div>
