@@ -177,7 +177,7 @@ export function ClientBacklinkCard({
                 placeholder="Client User" 
                 value={username} 
                 onChange={(e) => { setUsername(e.target.value); setIsDirty(true); }}
-                className="pl-7 h-8 text-[11px] bg-gray-50/50 border-gray-100 focus:bg-white"
+                className="pl-7 h-8 text-[11px] bg-gray-50/50 border-gray-200 focus:bg-white"
               />
             </div>
             <div className="relative group/input">
@@ -193,35 +193,34 @@ export function ClientBacklinkCard({
                 placeholder="Client Pass" 
                 value={password} 
                 onChange={(e) => { setPassword(e.target.value); setIsDirty(true); }}
-                className="pl-7 h-8 text-[11px] bg-gray-50/50 border-gray-100 focus:bg-white"
+                className="pl-7 h-8 text-[11px] bg-gray-50/50 border-gray-200 focus:bg-white"
               />
             </div>
           </div>
 
           {/* Global Reference (Small) */}
           {(backlink.global_username || backlink.global_password) && (
-            <div className="flex items-center justify-between px-2 py-1 bg-blue-50/50 rounded border border-blue-100/50 text-[9px] text-blue-600/70">
-              <div className="flex items-center gap-2 truncate">
-                <span className="font-bold uppercase shrink-0">Global:</span>
-                <span className="truncate">{backlink.global_username || '---'} / {backlink.global_password ? '****' : '---'}</span>
+            <div className="flex items-center justify-between px-3 py-2 bg-blue-50/30 rounded-lg border border-blue-100/50 text-[10px] text-blue-600">
+              <div className="flex items-center gap-2">
+                <span className="font-bold uppercase tracking-wider">Global:</span>
               </div>
-              <div className="flex items-center gap-1.5 shrink-0 ml-2">
+              <div className="flex items-center gap-3 shrink-0">
                 {backlink.global_username && (
                   <button 
                     onClick={() => copyToClipboard(backlink.global_username, "Global Username")}
-                    className="hover:text-blue-800 transition-colors"
-                    title="Copy Global Username"
+                    className="p-1 hover:bg-blue-100/50 rounded-md transition-colors"
+                    title={`Copy Global Username: ${backlink.global_username}`}
                   >
-                    <User className="w-2.5 h-2.5" />
+                    <User className="w-4 h-4" />
                   </button>
                 )}
                 {backlink.global_password && (
                   <button 
                     onClick={() => copyToClipboard(backlink.global_password, "Global Password")}
-                    className="hover:text-blue-800 transition-colors"
+                    className="p-1 hover:bg-blue-100/50 rounded-md transition-colors"
                     title="Copy Global Password"
                   >
-                    <Lock className="w-2.5 h-2.5" />
+                    <Lock className="w-4 h-4" />
                   </button>
                 )}
               </div>

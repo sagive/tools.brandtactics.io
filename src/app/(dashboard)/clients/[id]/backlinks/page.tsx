@@ -152,7 +152,7 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
 
       {/* Search & Categories */}
       <div className="space-y-4">
-        <div className="flex flex-col md:flex-row justify-between items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-center bg-white p-3 rounded-xl border border-gray-200 shadow-sm gap-4">
           <div className="relative w-full max-w-sm">
              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
              <Input 
@@ -172,7 +172,7 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
 
           <div className="flex items-center gap-4">
             {selectedIds.length > 0 && (
-              <div className="flex items-center gap-2 pr-4 border-r border-gray-100">
+              <div className="flex items-center gap-2 pr-4 border-r border-gray-200">
                 <BulkTaskDialog 
                   clientId={clientId}
                   selectedBacklinks={backlinks.filter(b => selectedIds.includes(b.id))}
@@ -282,7 +282,7 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
       )}
 
       {!loading && filteredBacklinks.length === 0 && (
-         <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
+         <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
            <Link2 className="w-12 h-12 text-gray-200 mx-auto mb-4" />
            <h3 className="text-sm font-bold text-gray-400">No backlinks found matching your search</h3>
          </div>
