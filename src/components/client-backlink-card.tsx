@@ -9,6 +9,8 @@ import { ExternalLink, User, Lock, Save, Loader2, Share2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { EditTaskDialog } from "@/components/edit-task-dialog";
 
 interface ClientBacklinkCardProps {
   clientId: string;
@@ -33,6 +35,7 @@ export function ClientBacklinkCard({
   const [password, setPassword] = useState(clientData?.client_password || "");
   const [isSaving, setIsSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
 
   // Sync state with props when clientData changes (e.g. after bulk update)
   useEffect(() => {
@@ -80,6 +83,9 @@ export function ClientBacklinkCard({
   const toggleTasked = (checked: boolean) => {
     setIsTasked(checked);
     setIsDirty(true);
+    if (checked) {
+      setIsTaskDialogOpen(true);
+    }
   };
 
   return (
@@ -195,6 +201,17 @@ export function ClientBacklinkCard({
           </Button>
         )}
       </CardContent>
+
+      <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
+        <EditTaskDialog 
+          defaultClientId={clientId} 
+          defaultDescription={`<br /><br />${backlink.website_name}<br />${backlink.url}`}
+          onTaskCreated={() => {
+            setIsTaskDialogOpen(false);
+            onUpdated();
+          }}
+        />
+      </Dialog>
     </Card>
   );
 }

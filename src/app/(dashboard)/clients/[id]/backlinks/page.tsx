@@ -259,7 +259,7 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
           <p className="text-xs text-gray-400 font-medium animate-pulse">SYNCING GLOBAL BACKLINK DIRECTORY...</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
           {filteredBacklinks.map((backlink) => {
             const mapping = clientMappings.find(m => m.backlink_id === backlink.id);
             return (
