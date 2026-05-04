@@ -11,6 +11,8 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth-provider";
 import { format } from "date-fns";
 
+import { Textarea } from "@/components/ui/textarea";
+
 export default function ClientSettings({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const { profile } = useAuth();
@@ -24,22 +26,26 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
     contactPhone: "",
     type: "",
     monthlyFee: "",
-    status: "Active"
+    status: "Active",
+    managerId: "",
+    managerFee: "",
+    managerNotes: ""
   });
   const [joinDate, setJoinDate] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [users, setUsers] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const { data: clientData } = await supabase
-          .from("clients")
-          .select("*")
-          .eq("id", id)
-          .single();
+        const [clientRes, usersRes] = await Promise.all([
+          supabase.from("clients").select("*").eq("id", id).single(),
+          supabase.from("users").select("id, full_name, email").order("full_name")
+        ]);
           
+        const clientData = clientRes.data;
         if (clientData) {
           setFormData({
             name: clientData.name || "",
@@ -49,12 +55,16 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
             contactPhone: clientData.contact_phone || "",
             type: clientData.type || "",
             monthlyFee: clientData.monthly_fee !== null && clientData.monthly_fee !== undefined ? clientData.monthly_fee.toString() : "0",
-            status: clientData.status || "Active"
+            status: clientData.status || "Active",
+            managerId: clientData.manager_id || "",
+            managerFee: clientData.manager_fee !== null && clientData.manager_fee !== undefined ? clientData.manager_fee.toString() : "0",
+            managerNotes: clientData.manager_notes || ""
           });
           if (clientData.created_at) {
              setJoinDate(format(new Date(clientData.created_at), "MMM d, yyyy"));
           }
         }
+        if (usersRes.data) setUsers(usersRes.data);
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching client data:", error);
@@ -64,7 +74,7 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
     fetchData();
   }, [id]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setIsDirty(true);
   };
@@ -83,7 +93,10 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
         contact_phone: formData.contactPhone,
         type: formData.type,
         monthly_fee: parseInt(formData.monthlyFee) || 0,
-        status: formData.status
+        status: formData.status,
+        manager_id: formData.managerId || null,
+        manager_fee: parseInt(formData.managerFee) || 0,
+        manager_notes: formData.managerNotes
       })
       .eq("id", id);
 
@@ -138,7 +151,7 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
             </Select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             {/* Field: Client Name */}
             <div className="space-y-1">
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Client Name</label>
@@ -204,6 +217,54 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Notification Emails</label>
               <p className="text-[11px] text-gray-400 mb-1.5">Comma separated list of emails for SEO updates</p>
               <Input name="contactEmail" value={formData.contactEmail} onChange={handleChange} className="h-10" />
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100 pt-8 mt-8">
+            <h3 className="text-sm font-bold text-gray-900 mb-6 uppercase tracking-wider">Client Manager</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+               <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Assigned Manager</label>
+                  <Select 
+                    value={formData.managerId} 
+                    onValueChange={(val) => { setFormData({ ...formData, managerId: val }); setIsDirty(true); }}
+                  >
+                    <SelectTrigger className="h-10 w-full">
+                      <SelectValue placeholder="Select manager" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Manager</SelectItem>
+                      {users.map(u => (
+                        <SelectItem key={u.id} value={u.id}>{u.full_name || u.email}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+               </div>
+
+               <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Manager Fee ($)</label>
+                  <div className="relative">
+                    <Input 
+                      name="managerFee" 
+                      type="number" 
+                      value={formData.managerFee} 
+                      onChange={handleChange} 
+                      className="h-10 pr-12" 
+                    />
+                    <span className="absolute right-3 top-2.5 text-xs font-bold text-gray-400">USD</span>
+                  </div>
+               </div>
+
+               <div className="space-y-1 lg:col-span-3">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Manager Notes</label>
+                  <Textarea 
+                    name="managerNotes" 
+                    value={formData.managerNotes} 
+                    onChange={handleChange}
+                    placeholder="Internal notes about manager performance or setup..."
+                    className="min-h-[100px] resize-none"
+                  />
+               </div>
             </div>
           </div>
 
