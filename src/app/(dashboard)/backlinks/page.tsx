@@ -200,38 +200,38 @@ function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDele
         </div>
 
         {/* Actions Area */}
-        <div className="flex items-center gap-1.5 shrink-0 relative z-20">
+        <div className="flex items-center gap-2 shrink-0 relative z-20">
            {/* Global Credentials (Peek) */}
-           <div className="flex flex-col gap-0.5">
+           <div className="flex items-center gap-1">
              {backlink.global_username && (
                <button 
                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); copyToClipboard(backlink.global_username, "Username"); }}
-                 className="flex items-center gap-1 px-1 py-0.5 rounded bg-gray-50 hover:bg-gray-100 border border-gray-100 text-[8px] text-gray-500 transition-colors"
+                 className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-50 hover:bg-gray-100 border border-gray-100 text-[8px] text-gray-500 transition-colors"
                  title={`Copy Global User: ${backlink.global_username}`}
                >
-                 <User className="w-2 h-2" />
-                 <span className="max-w-[40px] truncate">{backlink.global_username}</span>
+                 <User className="w-2.5 h-2.5" />
+                 <span className="max-w-[45px] truncate">{backlink.global_username}</span>
                </button>
              )}
              {backlink.global_password && (
                <button 
                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); copyToClipboard(backlink.global_password, "Password"); }}
-                 className="flex items-center gap-1 px-1 py-0.5 rounded bg-blue-50/50 hover:bg-blue-100/50 border border-blue-100/30 text-[8px] text-blue-600 transition-colors"
+                 className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50/50 hover:bg-blue-100/50 border border-blue-100/30 text-[8px] text-blue-600 transition-colors"
                  title={`Copy Global Pass: ${backlink.global_password}`}
                >
-                 <Lock className="w-2 h-2" />
-                 <span className="max-w-[40px] truncate">********</span>
+                 <Lock className="w-2.5 h-2.5" />
+                 <span className="max-w-[45px] truncate">********</span>
                </button>
              )}
            </div>
 
           {/* Edit/Settings Dropdown */}
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="transition-opacity">
             <Dialog>
               <DropdownMenu>
                 <DropdownMenuTrigger render={
-                  <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-gray-600 bg-gray-50/50 hover:bg-gray-100">
-                    <SlidersHorizontal className="w-3 h-3" />
+                  <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-blue-600 bg-gray-50/50 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all">
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
                   </Button>
                 }/>
                 <DropdownMenuContent align="end">
