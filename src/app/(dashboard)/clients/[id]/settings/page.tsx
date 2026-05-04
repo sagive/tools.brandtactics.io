@@ -227,7 +227,7 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
                   <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Assigned Manager</label>
                   <Select 
                     value={formData.managerId} 
-                    onValueChange={(val) => { setFormData({ ...formData, managerId: val }); setIsDirty(true); }}
+                    onValueChange={(val) => { setFormData({ ...formData, managerId: val || "" }); setIsDirty(true); }}
                   >
                     <SelectTrigger className="h-10 w-full">
                       <SelectValue placeholder="Select manager" />

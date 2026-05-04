@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, ExternalLink, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, CheckCircle2, CircleDot } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { QuickActionsSidebar } from "@/components/quick-actions-sidebar";
 import { Badge } from "@/components/ui/badge";
@@ -37,19 +37,21 @@ export default function ClientLayout({
 
   const [clientName, setClientName] = useState("");
   const [clientWebsite, setClientWebsite] = useState("");
+  const [clientStatus, setClientStatus] = useState("Active");
   const [isLoading, setIsLoading] = useState(true);
 
   React.useEffect(() => {
     async function getClient() {
       const { data } = await supabase
         .from("clients")
-        .select("name, website")
+        .select("name, website, status")
         .eq("id", clientId)
         .single();
         
       if (data) {
         setClientName(data.name);
         setClientWebsite(data.website);
+        setClientStatus(data.status || "Active");
       }
       setIsLoading(false);
     }
@@ -104,9 +106,14 @@ export default function ClientLayout({
             </div>
             
             <div className="hidden sm:flex items-center gap-2">
-              <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none px-3 py-1 uppercase text-[10px] font-bold tracking-wider">
-                <CheckCircle2 className="w-3 h-3 mr-1" />
-                Active
+              <Badge className={cn(
+                "border-none px-3 py-1 uppercase text-[10px] font-bold tracking-wider",
+                clientStatus === "Active" 
+                  ? "bg-green-100 text-green-700 hover:bg-green-100" 
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-100"
+              )}>
+                {clientStatus === "Active" ? <CheckCircle2 className="w-3 h-3 mr-1" /> : <CircleDot className="w-3 h-3 mr-1" />}
+                {clientStatus}
               </Badge>
             </div>
           </div>
