@@ -13,11 +13,11 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/clients", label: "Clients", icon: Briefcase },
   { href: "/tasks", label: "Tasks", icon: FileText },
+  { href: "/email-updates", label: "Seo Updates", icon: Mail },
   { href: "/users", label: "Team", icon: Users },
   { href: "/profiles", label: "Profiles", icon: Contact },
   { href: "/backlinks", label: "Backlinks", icon: Link2 },
   { href: "/tools", label: "Tools", icon: LayoutGrid },
-  { href: "/email-updates", label: "Email Updates", icon: Mail },
   { href: "/activity", label: "Activity", icon: Activity },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

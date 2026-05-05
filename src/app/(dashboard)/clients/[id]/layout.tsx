@@ -23,11 +23,11 @@ export default function ClientLayout({
   const NAV_LINKS = [
     { href: `/clients/${clientId}`, label: "Overview" },
     { href: `/clients/${clientId}/tasks`, label: "Tasks" },
+    { href: `/clients/${clientId}/emails`, label: "Seo Updates" },
     { href: `/clients/${clientId}/keywords`, label: "SEO Data" },
     { href: `/clients/${clientId}/strategy`, label: "Strategy" },
     { href: `/clients/${clientId}/articles`, label: "Articles" },
     { href: `/clients/${clientId}/backlinks`, label: "Backlinks" },
-    { href: `/clients/${clientId}/emails`, label: "Email Updates" },
     { href: `/clients/${clientId}/description`, label: "Description" },
     { href: `/clients/${clientId}/settings`, label: "Settings", adminOnly: true },
   ];
