@@ -34,7 +34,6 @@ function SortableSocialItem({
   onEdit: () => void; 
   onRemove: () => void; 
 }) {
-  const [showPassword, setShowPassword] = useState(false);
   const {
     attributes,
     listeners,
@@ -114,11 +113,14 @@ function SortableSocialItem({
             {social.password && (
               <div 
                 className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white border border-gray-200 text-[11px] text-gray-600 font-medium cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => setShowPassword(!showPassword)}
-                title="Click to reveal/hide"
+                onClick={() => {
+                  navigator.clipboard.writeText(social.password || "");
+                  toast.success("Password copied");
+                }}
+                title="Click to copy password"
               >
                 <Lock className="w-3 h-3 text-gray-400" />
-                <span className="w-12 tracking-widest">{showPassword ? social.password : "••••"}</span>
+                <span className="truncate max-w-[100px]">{social.password}</span>
               </div>
             )}
           </div>
