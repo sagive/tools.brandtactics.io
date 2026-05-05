@@ -4,7 +4,7 @@
         {
             "label": "Git Pull and Overwrite",
             "type": "shell",
-            "command": "git fetch origin && git reset --hard origin/main",
+            "command": "git fetch origin ; git reset --hard origin/main",
             "problemMatcher": [],
             "runOptions": {
                 "runOn": "folderOpen"
@@ -13,7 +13,7 @@
         {
             "label": "Git Push with Commit Message",
             "type": "shell",
-            "command": "read -p 'Enter commit message: ' msg && git add . && git commit -m \"$msg\" && git push",
+            "command": "$msg = Read-Host 'Enter commit message' ; git add . ; git commit -m \"$msg\" ; git push",
             "problemMatcher": [],
             "group": {
                 "kind": "build",
