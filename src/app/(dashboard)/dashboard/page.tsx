@@ -333,10 +333,10 @@ function DashboardToolCard({ tool, onDelete, onRefresh }: { tool: any, onDelete:
             <button 
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); copyToClipboard(tool.password, "Password"); }}
               className="hidden xs:flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-50 hover:bg-gray-100 border border-gray-100 text-[9px] text-gray-500 transition-colors"
-              title="Copy Password"
+              title="Click to copy password"
             >
               <Lock className="w-2.5 h-2.5 text-gray-400" />
-              <span>****</span>
+              <span>{tool.password}</span>
             </button>
           )}
 

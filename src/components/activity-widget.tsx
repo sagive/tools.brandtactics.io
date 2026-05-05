@@ -76,6 +76,7 @@ export function ActivityWidget() {
           </CardTitle>
           <CardDescription>Track latest workspace actions</CardDescription>
         </div>
+        <Link href="/activity" className="text-xs text-blue-600 hover:underline font-medium">View All</Link>
       </CardHeader>
       <CardContent className="p-0 flex-1 overflow-hidden relative">
         <style dangerouslySetInnerHTML={{ __html: `

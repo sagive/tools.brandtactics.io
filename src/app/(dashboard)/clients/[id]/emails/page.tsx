@@ -161,12 +161,14 @@ export default function ClientEmailsPage() {
                               {truncate(email.title, 55) || "No Subject"}
                             </button>
                           } />
-                          <PopoverContent className="w-[450px] p-5 shadow-xl border-gray-100 bg-white" align="start">
-                            <div className="space-y-3">
+                          <PopoverContent className="w-[600px] p-0 shadow-2xl border-gray-100 bg-white rounded-xl overflow-hidden" align="start">
+                            <div className="bg-gray-50/80 px-5 py-3 border-b border-gray-100">
                               <h4 className="font-bold text-sm text-gray-900 leading-tight">
                                 {email.title || "No Subject"}
                               </h4>
-                              <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-100 max-h-[300px] overflow-y-auto w-full prose prose-sm prose-p:my-1 prose-a:text-blue-600 [&>p]:whitespace-pre-wrap">
+                            </div>
+                            <div className="p-6">
+                              <div className="text-[13px] text-gray-700 leading-relaxed max-h-[500px] overflow-y-auto w-full prose prose-sm prose-p:my-2 prose-a:text-blue-600 [&>p]:whitespace-pre-wrap custom-scrollbar">
                                 <div dangerouslySetInnerHTML={{ __html: email.body || "No content." }} />
                               </div>
                             </div>
