@@ -58,6 +58,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
   const [requester, setRequester] = useState(task?.requester || "");
   const [comments, setComments] = useState<any[]>(task?.comments || []);
   const [clientId, setClientId] = useState(task?.client_id || defaultClientId || "");
+  const [isEditingDesc, setIsEditingDesc] = useState(!isEditing);
   
   // Sync clientId with defaultClientId when it changes (for new tasks)
   useEffect(() => {
@@ -226,6 +227,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
       
       if (error) throw error;
       toast.success("Task updated successfully");
+      setIsEditingDesc(false);
       onTaskCreated?.(); // Refresh parent list
       
       // If assignment changed, send email
@@ -507,16 +509,42 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
             </div>
 
             <div className="space-y-2 max-w-full">
-              <Label className="text-gray-900 font-bold text-lg">Description <span className="text-red-500">*</span></Label>
-              <div id="task-description-container" className="border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[120px] [&_.ql-editor]:overflow-x-auto flex-1 min-w-0">
-                 <ReactQuill 
-                   theme="snow"
-                   value={description}
-                   onChange={setDescription}
-                   modules={TASK_QUILL_MODULES}
-                   placeholder="Describe this task (you can paste screenshots)..."
-                 />
+              <div className="flex items-center justify-between">
+                <Label className="text-gray-900 font-bold text-lg">Description <span className="text-red-500">*</span></Label>
+                {isEditing && !isEditingDesc && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setIsEditingDesc(true)}
+                    className="h-8 w-8 text-blue-600 hover:bg-blue-50"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
+              
+              {isEditingDesc ? (
+                <div id="task-description-container" className="border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[120px] [&_.ql-editor]:overflow-x-auto flex-1 min-w-0">
+                   <ReactQuill 
+                     theme="snow"
+                     value={description}
+                     onChange={setDescription}
+                     modules={TASK_QUILL_MODULES}
+                     placeholder="Describe this task (you can paste screenshots)..."
+                   />
+                </div>
+              ) : (
+                <div 
+                  className="p-4 border rounded-md bg-gray-50/30 prose prose-sm max-w-none min-h-[120px] overflow-x-auto
+                    [&_a]:text-blue-600 [&_a]:underline [&_a]:underline-offset-4 [&_a]:font-medium hover:[&_a]:text-blue-800
+                    [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4
+                    [&_img]:max-w-full [&_img]:rounded-lg [&_img]:shadow-sm"
+                  dangerouslySetInnerHTML={{ 
+                    __html: (description || "<p class='text-gray-400 italic'>No description provided.</p>")
+                      .replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" ') 
+                  }}
+                />
+              )}
             </div>
 
             <div className="space-y-4 pt-2">
