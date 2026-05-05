@@ -18,6 +18,8 @@ import {
 } from '@dnd-kit/sortable';
 import { SortableTaskItem } from "./sortable-task-item";
 import { Card } from "@/components/ui/card";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export function SortableTaskList({ title, initialTasks, onRefresh, autoOpenTaskId }: { title: string, initialTasks: any[], onRefresh?: () => void, autoOpenTaskId?: string | null }) {
   const [tasks, setTasks] = useState(initialTasks);
@@ -31,15 +33,36 @@ export function SortableTaskList({ title, initialTasks, onRefresh, autoOpenTaskI
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  function handleDragEnd(event: DragEndEvent) {
+  async function handleDragEnd(event: DragEndEvent) {
     const {active, over} = event;
     
     if (over && active.id !== over.id) {
-      setTasks((items) => {
-        const oldIndex = items.findIndex(i => i.id === active.id);
-        const newIndex = items.findIndex(i => i.id === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
+      const oldIndex = tasks.findIndex(i => i.id === active.id);
+      const newIndex = tasks.findIndex(i => i.id === over.id);
+      
+      const newItems = arrayMove(tasks, oldIndex, newIndex);
+      setTasks(newItems);
+
+      // Save the new order to the database
+      try {
+        const updates = newItems.map((task, index) => ({
+          id: task.id,
+          position: index
+        }));
+
+        // Run updates in parallel for better performance
+        await Promise.all(updates.map(update => 
+          supabase
+            .from('tasks')
+            .update({ position: update.position })
+            .eq('id', update.id)
+        ));
+        
+        if (onRefresh) onRefresh();
+      } catch (error) {
+        console.error("Failed to save task order:", error);
+        toast.error("Failed to save new order");
+      }
     }
   }
 

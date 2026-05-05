@@ -43,6 +43,7 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
         .from("tasks")
         .select(`*, clients(name)`)
         .eq("client_id", id)
+        .order("position", { ascending: true })
         .order("created_at", { ascending: false });
 
       if (error) throw error;
