@@ -407,7 +407,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
           <div className="flex items-center gap-2">
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger asChild>
+                <TooltipTrigger>
                   <Button variant="outline" size="icon" onClick={handleExport} className="bg-white hover:bg-gray-50 text-gray-600 border-gray-200 shadow-sm h-9 w-9">
                     <Download className="w-4 h-4" />
                   </Button>
@@ -416,7 +416,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
               </Tooltip>
 
               <Tooltip>
-                <TooltipTrigger asChild>
+                <TooltipTrigger>
                   <div className="relative">
                     <input 
                       type="file" 
