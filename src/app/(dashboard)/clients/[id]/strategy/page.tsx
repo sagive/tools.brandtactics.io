@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, Trash2, Save, Loader2, ExternalLink, GripVertical, FileText, Layout, Table as TableIcon, Maximize2, Minimize2, X as CloseIcon, Link as LinkIcon, Info, ChevronDown, ChevronRight, Pencil } from "lucide-react";
+import { Plus, Trash2, Save, Loader2, ExternalLink, GripVertical, FileText, Layout, Table as TableIcon, Maximize2, Minimize2, X as CloseIcon, Link as LinkIcon, Info, ChevronDown, ChevronRight, Pencil, Download, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
@@ -185,6 +185,66 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
     }
     fetchStrategy();
   }, [clientId]);
+  
+  const handleExport = () => {
+    // Strip checked data
+    const exportData = repeaterData.map(group => ({
+      ...group,
+      items: group.items.map(item => {
+        const { checked, checkedBy, ...rest } = item;
+        return rest;
+      })
+    }));
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `strategy-${clientId}-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Strategy exported successfully (without checked status)");
+  };
+
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const importedData = JSON.parse(content);
+        
+        // Basic validation
+        if (!Array.isArray(importedData)) throw new Error("Invalid format");
+        
+        // Strip checked data just in case it was in the file, and ensure URLs format
+        const cleanedData = importedData.map((group: any) => ({
+          ...group,
+          id: group.id || crypto.randomUUID(),
+          items: (group.items || []).map((item: any) => {
+            const { checked, checkedBy, ...rest } = item;
+            return {
+              ...rest,
+              id: item.id || crypto.randomUUID(),
+              urls: item.urls || (item.url ? [item.url] : [""])
+            };
+          })
+        }));
+
+        setRepeaterData(cleanedData);
+        toast.success("Strategy imported successfully. Click 'Save Strategy' to persist changes.");
+      } catch (err) {
+        toast.error("Failed to import strategy: Invalid file format");
+      }
+    };
+    reader.readAsText(file);
+    // Reset input
+    event.target.value = "";
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -343,6 +403,38 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
               ({repeaterData.length} groups)
             </span>
           </div>
+          
+          <div className="flex items-center gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="icon" onClick={handleExport} className="bg-white hover:bg-gray-50 text-gray-600 border-gray-200 shadow-sm h-9 w-9">
+                    <Download className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Export Strategy (JSON)</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="relative">
+                    <input 
+                      type="file" 
+                      accept=".json" 
+                      onChange={handleImport}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      title="Import Strategy"
+                    />
+                    <Button variant="outline" size="icon" className="bg-white hover:bg-gray-50 text-gray-600 border-gray-200 shadow-sm h-9 w-9">
+                      <Upload className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top">Import Strategy (JSON)</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
           <div className="flex items-center gap-3">
             <Select value={direction} onValueChange={(val: any) => val && handleDirectionChange(val)}>
               <SelectTrigger className="w-[140px] bg-white">
