@@ -107,6 +107,8 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
+        </div>
+
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
           <Button 
             variant={showOnlyMyTasks ? "default" : "outline"}
