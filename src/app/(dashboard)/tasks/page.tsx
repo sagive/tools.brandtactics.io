@@ -121,31 +121,6 @@ export default function GlobalTasksPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
-          <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setStatusFilter('open')}
-              className={cn(
-                "h-8 px-3 text-xs font-bold transition-all rounded-md",
-                statusFilter === 'open' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
-              )}
-            >
-              Open
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setStatusFilter('completed')}
-              className={cn(
-                "h-8 px-3 text-xs font-bold transition-all rounded-md",
-                statusFilter === 'completed' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
-              )}
-            >
-              Completed
-            </Button>
-          </div>
-
           <Button 
             variant={showOnlyMyTasks ? "default" : "outline"}
             size="sm"
@@ -177,6 +152,31 @@ export default function GlobalTasksPage() {
               ))}
             </SelectContent>
           </Select>
+
+          <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setStatusFilter('open')}
+              className={cn(
+                "h-8 px-3 text-xs font-bold transition-all rounded-md",
+                statusFilter === 'open' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+              )}
+            >
+              Open
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setStatusFilter('completed')}
+              className={cn(
+                "h-8 px-3 text-xs font-bold transition-all rounded-md",
+                statusFilter === 'completed' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+              )}
+            >
+              Completed
+            </Button>
+          </div>
           
           <Link href="/tasks/quick">
             <Button variant="default" className="h-10 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4">

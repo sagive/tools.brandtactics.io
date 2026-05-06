@@ -107,6 +107,27 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
+          <Button 
+            variant={showOnlyMyTasks ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowOnlyMyTasks(!showOnlyMyTasks)}
+            className={cn(
+              "h-10 px-4 font-semibold transition-all shrink-0 relative",
+              showOnlyMyTasks ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-white text-gray-600 border-gray-200"
+            )}
+          >
+            My Tasks
+            {myTasksCount > 0 && (
+              <span className={cn(
+                "ml-2 px-1.5 py-0.5 rounded-full text-[10px] font-bold",
+                showOnlyMyTasks ? "bg-blue-500 text-white" : "bg-blue-100 text-blue-600"
+              )}>
+                {myTasksCount}
+              </span>
+            )}
+          </Button>
+
           <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200">
             <Button 
               variant="ghost" 
@@ -131,26 +152,6 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
               Completed
             </Button>
           </div>
-
-          <Button 
-            variant={showOnlyMyTasks ? "default" : "outline"}
-            size="sm"
-            onClick={() => setShowOnlyMyTasks(!showOnlyMyTasks)}
-            className={cn(
-              "h-10 px-4 font-semibold transition-all shrink-0 relative",
-              showOnlyMyTasks ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-white text-gray-600 border-gray-200"
-            )}
-          >
-            My Tasks
-            {myTasksCount > 0 && (
-              <span className={cn(
-                "ml-2 px-1.5 py-0.5 rounded-full text-[10px] font-bold",
-                showOnlyMyTasks ? "bg-blue-500 text-white" : "bg-blue-100 text-blue-600"
-              )}>
-                {myTasksCount}
-              </span>
-            )}
-          </Button>
         </div>
       </div>
 
