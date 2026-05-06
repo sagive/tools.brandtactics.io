@@ -144,6 +144,35 @@ export function ClientBacklinkCard({
             </p>
           </div>
           <div className="flex items-center gap-4">
+            {(backlink.global_username || backlink.global_password) && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger render={
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50/50 rounded-lg border border-blue-100/50 cursor-help">
+                      {backlink.global_username && (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); copyToClipboard(backlink.global_username, "Global Username"); }}
+                          className="p-0.5 hover:bg-blue-100/50 rounded transition-colors text-blue-600"
+                        >
+                          <User className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      {backlink.global_password && (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); copyToClipboard(backlink.global_password, "Global Password"); }}
+                          className="p-0.5 hover:bg-blue-100/50 rounded transition-colors text-blue-600"
+                        >
+                          <Lock className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  } />
+                  <TooltipContent>
+                    <p className="font-bold">Global Directory Credentials</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             <div className="flex flex-col items-center gap-1">
               <Checkbox 
                 checked={isTasked} 
@@ -199,41 +228,6 @@ export function ClientBacklinkCard({
             </div>
           </div>
 
-          {/* Global Reference (Small) */}
-          {(backlink.global_username || backlink.global_password) && (
-            <div className="flex items-center justify-between px-3 py-2 bg-blue-50/30 rounded-lg border border-blue-100/50 text-[10px] text-blue-600">
-              <div className="flex items-center gap-2">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger render={<Globe className="w-3.5 h-3.5 opacity-70" />} />
-                    <TooltipContent>
-                      <p>Global Directory Credentials</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <div className="flex items-center gap-3 shrink-0">
-                {backlink.global_username && (
-                  <button 
-                    onClick={() => copyToClipboard(backlink.global_username, "Global Username")}
-                    className="p-1 hover:bg-blue-100/50 rounded-md transition-colors"
-                    title={`Copy Global Username: ${backlink.global_username}`}
-                  >
-                    <User className="w-4 h-4" />
-                  </button>
-                )}
-                {backlink.global_password && (
-                  <button 
-                    onClick={() => copyToClipboard(backlink.global_password, "Global Password")}
-                    className="p-1 hover:bg-blue-100/50 rounded-md transition-colors"
-                    title="Copy Global Password"
-                  >
-                    <Lock className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Actions */}
