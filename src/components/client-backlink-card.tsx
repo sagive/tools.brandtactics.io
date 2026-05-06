@@ -205,9 +205,7 @@ export function ClientBacklinkCard({
               <div className="flex items-center gap-2">
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Globe className="w-3.5 h-3.5 opacity-70" />
-                    </TooltipTrigger>
+                    <TooltipTrigger render={<Globe className="w-3.5 h-3.5 opacity-70" />} />
                     <TooltipContent>
                       <p>Global Directory Credentials</p>
                     </TooltipContent>
