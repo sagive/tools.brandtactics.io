@@ -255,8 +255,11 @@ export default function UsersTeamPage() {
                   <TableRow key={member.id} className="hover:bg-gray-50/50 group">
                     <TableCell className="pl-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-xs shrink-0">
-                          {member.email.substring(0, 2).toUpperCase()}
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs shrink-0 uppercase">
+                          {member.full_name 
+                            ? member.full_name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)
+                            : member.email.substring(0, 2)
+                          }
                         </div>
                         <div>
                           <div className="font-medium text-gray-900 text-sm">{member.full_name || "Unnamed"}</div>

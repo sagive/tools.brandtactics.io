@@ -22,6 +22,7 @@ export default function MyProfilePage() {
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [title, setTitle] = useState("");
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -31,6 +32,7 @@ export default function MyProfilePage() {
       if (profile.full_name) setFullName(profile.full_name);
       if (profile.phone) setPhoneNumber(profile.phone);
       if (profile.avatar_url) setAvatarUrl(profile.avatar_url);
+      if (profile.title) setTitle(profile.title);
     }
   }, [profile]);
 
@@ -125,9 +127,10 @@ export default function MyProfilePage() {
         .update({ 
           full_name: fullName,
           phone: phoneNumber,
-          avatar_url: avatarUrl
+          avatar_url: avatarUrl,
+          title: title
         })
-        .eq('email', user.email);
+        .or(`id.eq.${profile?.id},email.eq.${user.email}`);
 
       if (error) throw error;
       toast.success("Profile updated successfully!");
@@ -190,12 +193,21 @@ export default function MyProfilePage() {
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Full Name</Label>
+                  <Label>Full Name / Display Name</Label>
                   <Input 
                     type="text" 
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Your Name" 
+                    placeholder="Daniel Haimoff" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Job Title</Label>
+                  <Input 
+                    type="text" 
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. SEO Specialist" 
                   />
                 </div>
                 <div className="space-y-2">

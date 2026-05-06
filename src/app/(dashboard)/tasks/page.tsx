@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
 import { SortableTaskList } from "@/components/sortable-task-list";
 import { EditTaskDialog } from "@/components/edit-task-dialog";
 

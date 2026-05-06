@@ -21,6 +21,7 @@ interface ProfileData {
   address: string | null;
   gender: string | null;
   image_url: string | null;
+  title: string | null;
 }
 
 export default function PersonaDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -66,7 +67,8 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
         name: formData.name,
         address: formData.address,
         gender: formData.gender,
-        image_url: formData.image_url
+        image_url: formData.image_url,
+        title: formData.title
       })
       .eq("id", id);
 
@@ -229,6 +231,19 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
                     }}
                     className={cn(inputClasses, "text-2xl font-black text-center tracking-tight h-auto py-2 -ml-0 bg-gray-50/50 border-gray-300")}
                     placeholder="Enter full name..."
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] block mb-2">Title</Label>
+                  <Input 
+                    value={formData.title || ""} 
+                    onChange={(e) => {
+                      setFormData({...formData, title: e.target.value});
+                      setIsDirty(true);
+                    }}
+                    className={cn(inputClasses, "text-sm font-bold text-center bg-gray-50/50 border-gray-300")}
+                    placeholder="e.g. Founder, CEO, etc."
                   />
                 </div>
 
