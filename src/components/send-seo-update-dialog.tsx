@@ -19,6 +19,42 @@ import "react-quill-new/dist/quill.snow.css";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
+const QUILL_MODULES = {
+  toolbar: [
+    [{ 'header': [1, 2, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    ['link'],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    ['clean']
+  ],
+  clipboard: {
+    matchers: [
+      [3, (node: any, delta: any) => {
+        const urlRegex = /https?:\/\/[^\s]+/g;
+        if (typeof node.data !== 'string') return delta;
+        const matches = node.data.match(urlRegex);
+        if (matches && matches.length > 0) {
+          const ops: any[] = [];
+          let str = node.data;
+          let lastIndex = 0;
+          let match;
+          urlRegex.lastIndex = 0;
+          while ((match = urlRegex.exec(str)) !== null) {
+            const before = str.slice(lastIndex, match.index);
+            if (before) ops.push({ insert: before });
+            ops.push({ insert: match[0], attributes: { link: match[0] } });
+            lastIndex = urlRegex.lastIndex;
+          }
+          const after = str.slice(lastIndex);
+          if (after) ops.push({ insert: after });
+          return { ops };
+        }
+        return delta;
+      }]
+    ]
+  }
+};
+
 interface SendSeoUpdateDialogProps {
   defaultClientId?: string;
   trigger?: React.ReactElement;
@@ -292,6 +328,7 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
                 theme="snow" 
                 value={body} 
                 onChange={setBody}
+                modules={QUILL_MODULES}
               />
             </div>
           </div>
