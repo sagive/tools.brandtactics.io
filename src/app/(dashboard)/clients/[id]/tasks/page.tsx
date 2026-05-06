@@ -156,9 +156,8 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
           </div>
         </div>
       </div>
-    </div>
 
-    <div className="space-y-6">
+      <div className="space-y-6">
         {isLoading ? (
           <div className="py-12 text-center text-gray-500">Loading tasks...</div>
         ) : (
