@@ -5,12 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, User, Lock, Save, Loader2, Share2 } from "lucide-react";
+import { ExternalLink, User, Lock, Save, Loader2, Share2, Globe } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { EditTaskDialog } from "@/components/edit-task-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ClientBacklinkCardProps {
   clientId: string;
@@ -202,7 +203,16 @@ export function ClientBacklinkCard({
           {(backlink.global_username || backlink.global_password) && (
             <div className="flex items-center justify-between px-3 py-2 bg-blue-50/30 rounded-lg border border-blue-100/50 text-[10px] text-blue-600">
               <div className="flex items-center gap-2">
-                <span className="font-bold uppercase tracking-wider">Global:</span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Globe className="w-3.5 h-3.5 opacity-70" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Global Directory Credentials</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 {backlink.global_username && (
