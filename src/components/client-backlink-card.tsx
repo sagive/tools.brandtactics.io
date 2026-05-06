@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, User, Lock, Save, Loader2, Share2, Globe } from "lucide-react";
+import { ExternalLink, User, Lock, Save, Loader2, Share2, Globe, Link2, Edit2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -34,6 +34,8 @@ export function ClientBacklinkCard({
   const [isTasked, setIsTasked] = useState(clientData?.is_tasked || false);
   const [username, setUsername] = useState(clientData?.client_username || "");
   const [password, setPassword] = useState(clientData?.client_password || "");
+  const [liveLink, setLiveLink] = useState(clientData?.live_link || "");
+  const [isEditingLink, setIsEditingLink] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
@@ -44,8 +46,9 @@ export function ClientBacklinkCard({
     setIsTasked(clientData?.is_tasked || false);
     setUsername(clientData?.client_username || "");
     setPassword(clientData?.client_password || "");
+    setLiveLink(clientData?.live_link || "");
     setIsDirty(false);
-  }, [clientData?.is_used, clientData?.is_tasked, clientData?.client_username, clientData?.client_password]);
+  }, [clientData?.is_used, clientData?.is_tasked, clientData?.client_username, clientData?.client_password, clientData?.live_link]);
 
   const copyToClipboard = (text: string, type: string) => {
     if (!text) return;
@@ -63,6 +66,7 @@ export function ClientBacklinkCard({
         is_tasked: isTasked,
         client_username: username,
         client_password: password,
+        live_link: liveLink,
         updated_at: new Date().toISOString()
       };
 
@@ -198,7 +202,7 @@ export function ClientBacklinkCard({
 
         {/* Credentials Area */}
         <div className="space-y-2">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <div className="relative group/input">
               <button 
                 onClick={() => copyToClipboard(username, "Username")}
@@ -229,6 +233,64 @@ export function ClientBacklinkCard({
                 onChange={(e) => { setPassword(e.target.value); setIsDirty(true); }}
                 className="pl-7 h-8 text-[11px] bg-gray-50/50 border-gray-200 focus:bg-white"
               />
+            </div>
+            <div className="relative group/input">
+              {isEditingLink ? (
+                <div className="relative flex-1">
+                  <Link2 className="absolute left-2 top-2.5 h-3 w-3 text-gray-400" />
+                  <Input 
+                    placeholder="Link..." 
+                    value={liveLink} 
+                    onChange={(e) => { setLiveLink(e.target.value); setIsDirty(true); }}
+                    className="pl-7 h-8 text-[11px] bg-gray-50/50 border-gray-200 focus:bg-white pr-7"
+                    autoFocus
+                    onBlur={() => setIsEditingLink(false)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') setIsEditingLink(false); }}
+                  />
+                  <button 
+                    onClick={() => setIsEditingLink(false)}
+                    className="absolute right-2 top-2.5 text-gray-400 hover:text-blue-600"
+                  >
+                    <Save className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 h-8 px-2 bg-gray-50/50 border border-gray-200 rounded-lg text-[10px] group/link overflow-hidden">
+                  <button 
+                    onClick={() => setIsEditingLink(true)}
+                    className="text-gray-400 hover:text-blue-600 transition-colors shrink-0"
+                    title="Edit Live Link"
+                  >
+                    <Link2 className="h-3 w-3" />
+                  </button>
+                  {liveLink ? (
+                    <a 
+                      href={liveLink} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex-1 truncate text-blue-600 hover:underline font-medium"
+                      title={liveLink}
+                    >
+                      {liveLink.replace(/^https?:\/\/(www\.)?/, '').substring(0, 12)}...
+                    </a>
+                  ) : (
+                    <span 
+                      className="flex-1 text-gray-400 cursor-pointer truncate" 
+                      onClick={() => setIsEditingLink(true)}
+                    >
+                      Live Link
+                    </span>
+                  )}
+                  {liveLink && (
+                     <button 
+                       onClick={() => setIsEditingLink(true)}
+                       className="opacity-0 group-hover/link:opacity-100 text-gray-400 hover:text-blue-600 transition-colors shrink-0"
+                     >
+                       <Edit2 className="h-3 w-3" />
+                     </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
