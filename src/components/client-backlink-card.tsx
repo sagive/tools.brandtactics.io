@@ -120,36 +120,97 @@ export function ClientBacklinkCard({
         />
       </div>
 
-      {/* Global Credentials Tooltip (Absolute Top Right) */}
-      {(backlink.global_username || backlink.global_password) && (
+      {/* Global Credentials & Live Link Tooltip (Absolute Top Right) */}
+      {(backlink.global_username || backlink.global_password || true) && (
         <div className="absolute top-3 right-3 z-30">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger render={
-                <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50/50 rounded-lg border border-blue-100/50 cursor-help transition-colors hover:bg-blue-100/50">
-                  {backlink.global_username && (
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); copyToClipboard(backlink.global_username, "Global Username"); }}
-                      className="p-0.5 hover:bg-blue-600 hover:text-white rounded transition-all text-blue-600"
+          <div className={cn(
+            "flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all duration-300",
+            isEditingLink 
+              ? "bg-white border-blue-400 shadow-lg w-64 ring-2 ring-blue-500/20" 
+              : "bg-blue-50/50 border-blue-100/50 hover:bg-blue-100/50"
+          )}>
+            {isEditingLink ? (
+              <div className="flex items-center gap-2 w-full">
+                <Link2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <Input 
+                  className="h-6 text-[10px] px-1.5 flex-1 border-gray-200 focus:ring-0 focus:border-blue-400" 
+                  placeholder="Paste link here..."
+                  value={liveLink} 
+                  onChange={(e) => { setLiveLink(e.target.value); setIsDirty(true); }}
+                  autoFocus
+                  onBlur={() => setIsEditingLink(false)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') setIsEditingLink(false); }}
+                />
+                <button 
+                  onClick={() => setIsEditingLink(false)}
+                  className="p-0.5 hover:bg-blue-50 rounded text-blue-600"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                {/* Live Link Section */}
+                <div className="flex items-center gap-1.5 group/livelink">
+                  {liveLink ? (
+                    <a 
+                      href={liveLink} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-[10px] font-bold text-blue-600 hover:underline max-w-[100px] truncate"
+                      title={liveLink}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <User className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                  {backlink.global_password && (
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); copyToClipboard(backlink.global_password, "Global Password"); }}
-                      className="p-0.5 hover:bg-blue-600 hover:text-white rounded transition-all text-blue-600"
-                    >
-                      <Lock className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                      {liveLink.replace(/^https?:\/\/(www\.)?/, '').substring(0, 15)}
+                    </a>
+                  ) : null}
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setIsEditingLink(true); }}
+                    className="p-0.5 hover:bg-blue-600 hover:text-white rounded transition-all text-blue-600"
+                    title={liveLink ? "Edit Live Link" : "Add Live Link"}
+                  >
+                    <Link2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-              } />
-              <TooltipContent>
-                <p className="font-bold">Global Directory Credentials</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+
+                {/* Vertical Divider */}
+                {(backlink.global_username || backlink.global_password) && (
+                  <div className="w-px h-3 bg-blue-200/60" />
+                )}
+
+                {/* Global Icons Section */}
+                {(backlink.global_username || backlink.global_password) && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger render={
+                        <div className="flex items-center gap-1">
+                          {backlink.global_username && (
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); copyToClipboard(backlink.global_username, "Global Username"); }}
+                              className="p-0.5 hover:bg-blue-600 hover:text-white rounded transition-all text-blue-600"
+                            >
+                              <User className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {backlink.global_password && (
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); copyToClipboard(backlink.global_password, "Global Password"); }}
+                              className="p-0.5 hover:bg-blue-600 hover:text-white rounded transition-all text-blue-600"
+                            >
+                              <Lock className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      } />
+                      <TooltipContent>
+                        <p className="font-bold text-[10px]">Global Directory Credentials</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -202,7 +263,7 @@ export function ClientBacklinkCard({
 
         {/* Credentials Area */}
         <div className="space-y-2">
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <div className="relative group/input">
               <button 
                 onClick={() => copyToClipboard(username, "Username")}
@@ -233,64 +294,6 @@ export function ClientBacklinkCard({
                 onChange={(e) => { setPassword(e.target.value); setIsDirty(true); }}
                 className="pl-7 h-8 text-[11px] bg-gray-50/50 border-gray-200 focus:bg-white"
               />
-            </div>
-            <div className="relative group/input">
-              {isEditingLink ? (
-                <div className="relative flex-1">
-                  <Link2 className="absolute left-2 top-2.5 h-3 w-3 text-gray-400" />
-                  <Input 
-                    placeholder="Link..." 
-                    value={liveLink} 
-                    onChange={(e) => { setLiveLink(e.target.value); setIsDirty(true); }}
-                    className="pl-7 h-8 text-[11px] bg-gray-50/50 border-gray-200 focus:bg-white pr-7"
-                    autoFocus
-                    onBlur={() => setIsEditingLink(false)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') setIsEditingLink(false); }}
-                  />
-                  <button 
-                    onClick={() => setIsEditingLink(false)}
-                    className="absolute right-2 top-2.5 text-gray-400 hover:text-blue-600"
-                  >
-                    <Save className="h-3 w-3" />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5 h-8 px-2 bg-gray-50/50 border border-gray-200 rounded-lg text-[10px] group/link overflow-hidden">
-                  <button 
-                    onClick={() => setIsEditingLink(true)}
-                    className="text-gray-400 hover:text-blue-600 transition-colors shrink-0"
-                    title="Edit Live Link"
-                  >
-                    <Link2 className="h-3 w-3" />
-                  </button>
-                  {liveLink ? (
-                    <a 
-                      href={liveLink} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex-1 truncate text-blue-600 hover:underline font-medium"
-                      title={liveLink}
-                    >
-                      {liveLink.replace(/^https?:\/\/(www\.)?/, '').substring(0, 12)}...
-                    </a>
-                  ) : (
-                    <span 
-                      className="flex-1 text-gray-400 cursor-pointer truncate" 
-                      onClick={() => setIsEditingLink(true)}
-                    >
-                      Live Link
-                    </span>
-                  )}
-                  {liveLink && (
-                     <button 
-                       onClick={() => setIsEditingLink(true)}
-                       className="opacity-0 group-hover/link:opacity-100 text-gray-400 hover:text-blue-600 transition-colors shrink-0"
-                     >
-                       <Edit2 className="h-3 w-3" />
-                     </button>
-                  )}
-                </div>
-              )}
             </div>
           </div>
 
