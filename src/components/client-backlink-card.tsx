@@ -116,6 +116,39 @@ export function ClientBacklinkCard({
         />
       </div>
 
+      {/* Global Credentials Tooltip (Absolute Top Right) */}
+      {(backlink.global_username || backlink.global_password) && (
+        <div className="absolute top-3 right-3 z-30">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger render={
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50/50 rounded-lg border border-blue-100/50 cursor-help transition-colors hover:bg-blue-100/50">
+                  {backlink.global_username && (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); copyToClipboard(backlink.global_username, "Global Username"); }}
+                      className="p-0.5 hover:bg-blue-600 hover:text-white rounded transition-all text-blue-600"
+                    >
+                      <User className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  {backlink.global_password && (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); copyToClipboard(backlink.global_password, "Global Password"); }}
+                      className="p-0.5 hover:bg-blue-600 hover:text-white rounded transition-all text-blue-600"
+                    >
+                      <Lock className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              } />
+              <TooltipContent>
+                <p className="font-bold">Global Directory Credentials</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      )}
+
       <CardContent className="p-4 space-y-4 pt-10">
         {/* Header: Name and Toggle */}
         <div className="flex items-start justify-between gap-3">
@@ -144,35 +177,6 @@ export function ClientBacklinkCard({
             </p>
           </div>
           <div className="flex items-center gap-4">
-            {(backlink.global_username || backlink.global_password) && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger render={
-                    <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50/50 rounded-lg border border-blue-100/50 cursor-help">
-                      {backlink.global_username && (
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); copyToClipboard(backlink.global_username, "Global Username"); }}
-                          className="p-0.5 hover:bg-blue-100/50 rounded transition-colors text-blue-600"
-                        >
-                          <User className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                      {backlink.global_password && (
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); copyToClipboard(backlink.global_password, "Global Password"); }}
-                          className="p-0.5 hover:bg-blue-100/50 rounded transition-colors text-blue-600"
-                        >
-                          <Lock className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  } />
-                  <TooltipContent>
-                    <p className="font-bold">Global Directory Credentials</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
             <div className="flex flex-col items-center gap-1">
               <Checkbox 
                 checked={isTasked} 
