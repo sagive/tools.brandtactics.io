@@ -14,12 +14,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SortableTaskList } from "@/components/sortable-task-list";
 import { EditTaskDialog } from "@/components/edit-task-dialog";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/components/auth-provider";
+import { cn } from "@/lib/utils";
 
 export default function ClientTasks({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const [search, setSearch] = useState("");
   const [tasks, setTasks] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(false);
+  const { profile } = useAuth();
 
   const [autoOpenTaskId, setAutoOpenTaskId] = useState<string | null>(null);
 
@@ -61,10 +65,15 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
     }
   };
 
-  const filteredTasks = tasks.filter(t => 
-    (t.title || "").toLowerCase().includes(search.toLowerCase()) || 
-    (t.description || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredTasks = tasks.filter(t => {
+    const matchesSearch = (t.title || "").toLowerCase().includes(search.toLowerCase()) || 
+                          (t.description || "").toLowerCase().includes(search.toLowerCase());
+    const matchesMyTasks = !showOnlyMyTasks || (
+      (profile?.full_name && t.assignee === profile.full_name) || 
+      (profile?.email && t.assignee === profile.email)
+    );
+    return matchesSearch && matchesMyTasks;
+  });
 
   const pending = filteredTasks.filter(t => t.status === "Pending");
   const active = filteredTasks.filter(t => t.status === "Working on it" || t.status === "Review");
@@ -84,12 +93,17 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <Link href={`/tasks/quick?clientId=${id}`}>
-            <Button variant="default" className="bg-purple-600 hover:bg-purple-700 text-white shrink-0 px-3" title="Quick Task (AI)">
-              <Zap className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Quick Add</span>
-            </Button>
-          </Link>
+          <Button 
+            variant={showOnlyMyTasks ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowOnlyMyTasks(!showOnlyMyTasks)}
+            className={cn(
+              "h-10 px-4 font-semibold transition-all shrink-0",
+              showOnlyMyTasks ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-white text-gray-600 border-gray-200"
+            )}
+          >
+            My Tasks
+          </Button>
         </div>
       </div>
 

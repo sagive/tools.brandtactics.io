@@ -21,6 +21,7 @@ export default function GlobalTasksPage() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [clientFilter, setClientFilter] = useState("All");
+  const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(false);
   const { profile, isLoading: isAuthLoading } = useAuth();
   const isAdmin = profile?.role === 'admin';
 
@@ -71,7 +72,11 @@ export default function GlobalTasksPage() {
     const matchesSearch = t.title?.toLowerCase().includes(search.toLowerCase()) || 
                           t.client?.toLowerCase().includes(search.toLowerCase());
     const matchesClient = clientFilter === "All" || t.client === clientFilter;
-    return matchesSearch && matchesClient;
+    const matchesMyTasks = !showOnlyMyTasks || (
+      (profile?.full_name && t.assignee === profile.full_name) || 
+      (profile?.email && t.assignee === profile.email)
+    );
+    return matchesSearch && matchesClient && matchesMyTasks;
   });
 
   const uniqueClients = Array.from(new Set(tasks.map(t => t.client).filter(Boolean))).sort();
@@ -101,28 +106,43 @@ export default function GlobalTasksPage() {
           />
         </div>
 
-        <Select value={clientFilter} onValueChange={(val) => setClientFilter(val || "All")}>
-          <SelectTrigger className="w-full sm:w-[200px] h-9 bg-white">
-            <SelectValue placeholder="All Clients" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="All">All Clients</SelectItem>
-            {uniqueClients.map(c => (
-              <SelectItem key={c as string} value={c as string}>{c as string}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        <div className="flex w-full sm:w-auto items-center gap-2 flex-col sm:flex-row">
-          <Link href="/tasks/quick" className="w-full sm:w-auto">
-            <Button variant="default" className="bg-purple-600 hover:bg-purple-700 text-white shrink-0 px-3 w-full sm:w-auto" title="Quick Task (AI)">
-              <Zap className="w-4 h-4 sm:mr-2" />
-              <span className="inline">Quick Add</span>
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+          <Button 
+            variant={showOnlyMyTasks ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowOnlyMyTasks(!showOnlyMyTasks)}
+            className={cn(
+              "h-10 px-4 font-semibold transition-all",
+              showOnlyMyTasks ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-white text-gray-600 border-gray-200"
+            )}
+          >
+            My Tasks
+          </Button>
+
+          <Select value={clientFilter} onValueChange={(val) => setClientFilter(val || "All")}>
+            <SelectTrigger className="w-[180px] h-10 bg-white font-medium border-gray-200">
+              <SelectValue placeholder="All Clients" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Clients</SelectItem>
+              {uniqueClients.map(c => (
+                <SelectItem key={c as string} value={c as string}>{c as string}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Link href="/tasks/quick">
+            <Button variant="default" className="h-10 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4">
+              <Zap className="w-4 h-4 mr-2" />
+              Quick Add
             </Button>
           </Link>
+
           <Dialog>
-            <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-9 px-4 py-2 w-full sm:w-auto bg-blue-600 text-white hover:bg-blue-700">
-              <Plus className="w-4 h-4 mr-2" /> Full Task
+            <DialogTrigger asChild>
+              <Button className="h-10 bg-blue-600 text-white hover:bg-blue-700 font-semibold px-4">
+                <Plus className="w-4 h-4 mr-2" /> Full Task
+              </Button>
             </DialogTrigger>
             <EditTaskDialog onTaskCreated={fetchTasks} />
           </Dialog>
