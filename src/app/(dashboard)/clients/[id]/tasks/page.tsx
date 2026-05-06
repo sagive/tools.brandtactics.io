@@ -23,6 +23,7 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
   const [tasks, setTasks] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'open' | 'completed'>('open');
   const { profile } = useAuth();
 
   const [autoOpenTaskId, setAutoOpenTaskId] = useState<string | null>(null);
@@ -38,15 +39,23 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
     const handleRefresh = () => { if (id) fetchTasks(); };
     window.addEventListener("taskCreated", handleRefresh);
     return () => window.removeEventListener("taskCreated", handleRefresh);
-  }, [id]);
+  }, [id, statusFilter]);
 
   const fetchTasks = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("tasks")
         .select(`*, clients(name)`)
-        .eq("client_id", id)
+        .eq("client_id", id);
+
+      if (statusFilter === 'open') {
+        query = query.neq('status', 'Completed');
+      } else {
+        query = query.eq('status', 'Completed');
+      }
+
+      const { data, error } = await query
         .order("position", { ascending: true })
         .order("created_at", { ascending: false });
 
@@ -75,6 +84,11 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
     return matchesSearch && matchesMyTasks;
   });
 
+  const myTasksCount = tasks.filter(t => (
+    (profile?.full_name && t.assignee === profile.full_name) || 
+    (profile?.email && t.assignee === profile.email)
+  )).length;
+
   const pending = filteredTasks.filter(t => t.status === "Pending");
   const active = filteredTasks.filter(t => t.status === "Working on it" || t.status === "Review");
   const stuck = filteredTasks.filter(t => t.status === "Stuck");
@@ -93,16 +107,49 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
+          <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setStatusFilter('open')}
+              className={cn(
+                "h-8 px-3 text-xs font-bold transition-all rounded-md",
+                statusFilter === 'open' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+              )}
+            >
+              Open
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setStatusFilter('completed')}
+              className={cn(
+                "h-8 px-3 text-xs font-bold transition-all rounded-md",
+                statusFilter === 'completed' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+              )}
+            >
+              Completed
+            </Button>
+          </div>
+
           <Button 
             variant={showOnlyMyTasks ? "default" : "outline"}
             size="sm"
             onClick={() => setShowOnlyMyTasks(!showOnlyMyTasks)}
             className={cn(
-              "h-10 px-4 font-semibold transition-all shrink-0",
+              "h-10 px-4 font-semibold transition-all shrink-0 relative",
               showOnlyMyTasks ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-white text-gray-600 border-gray-200"
             )}
           >
             My Tasks
+            {myTasksCount > 0 && (
+              <span className={cn(
+                "ml-2 px-1.5 py-0.5 rounded-full text-[10px] font-bold",
+                showOnlyMyTasks ? "bg-blue-500 text-white" : "bg-blue-100 text-blue-600"
+              )}>
+                {myTasksCount}
+              </span>
+            )}
           </Button>
         </div>
       </div>
@@ -112,10 +159,15 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
           <div className="py-12 text-center text-gray-500">Loading tasks...</div>
         ) : (
           <>
-            <SortableTaskList title="Pending" initialTasks={pending} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
-            <SortableTaskList title="Working on it / Review" initialTasks={active} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
-            <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
-            <SortableTaskList title="Completed" initialTasks={completed} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
+            {statusFilter === 'open' ? (
+              <>
+                <SortableTaskList title="Pending" initialTasks={pending} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
+                <SortableTaskList title="Working on it / Review" initialTasks={active} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
+                <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
+              </>
+            ) : (
+              <SortableTaskList title="Completed" initialTasks={completed} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
+            )}
             {filteredTasks.length === 0 && (
                <div className="text-center py-10 text-gray-500 bg-white border rounded-lg border-dashed">
                  No tasks found for this client.
