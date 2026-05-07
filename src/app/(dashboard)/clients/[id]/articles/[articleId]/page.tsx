@@ -31,6 +31,9 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
   const [direction, setDirection] = useState("ltr");
   const [isApproved, setIsApproved] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
+  const [metaTitle, setMetaTitle] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
+  const [metaKeywords, setMetaKeywords] = useState("");
   
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -88,6 +91,9 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
           setDirection(data.direction || "ltr");
           setIsApproved(data.client_approved || false);
           setIsPublic(data.is_public || false);
+          setMetaTitle(data.meta_title || "");
+          setMetaDescription(data.meta_description || "");
+          setMetaKeywords(data.meta_keywords || "");
         }
       } catch (err: any) {
         toast.error("Failed to load article");
@@ -129,6 +135,9 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
         direction,
         client_approved: isApproved,
         is_public: isPublic,
+        meta_title: metaTitle,
+        meta_description: metaDescription,
+        meta_keywords: metaKeywords,
         updated_at: new Date().toISOString()
       }).eq('id', articleId);
 
@@ -472,6 +481,52 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                 <Label className="text-xs font-semibold text-gray-600">Word Count</Label>
                 <div className="text-sm font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded-md inline-block">
                   {wordCount} words
+                </div>
+              </div>
+
+              <div className="pt-6 mt-6 border-t border-gray-100 space-y-4">
+                <CardTitle className="text-sm uppercase tracking-wider text-blue-600 font-bold">SEO Settings</CardTitle>
+                
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-gray-600">Meta Title</Label>
+                  {isEditing ? (
+                    <Input 
+                      value={metaTitle} 
+                      onChange={(e) => setMetaTitle(e.target.value)} 
+                      placeholder="SEO title..." 
+                      className="bg-white text-sm"
+                    />
+                  ) : (
+                    <div className="text-sm font-medium text-gray-900">{metaTitle || "-"}</div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-gray-600">Meta Description</Label>
+                  {isEditing ? (
+                    <Textarea 
+                      value={metaDescription} 
+                      onChange={(e) => setMetaDescription(e.target.value)} 
+                      placeholder="SEO description..." 
+                      className="bg-white text-sm min-h-[80px]"
+                    />
+                  ) : (
+                    <div className="text-sm text-gray-700 leading-relaxed">{metaDescription || "-"}</div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-gray-600">Meta Keywords</Label>
+                  {isEditing ? (
+                    <Input 
+                      value={metaKeywords} 
+                      onChange={(e) => setMetaKeywords(e.target.value)} 
+                      placeholder="keyword1, keyword2..." 
+                      className="bg-white text-sm"
+                    />
+                  ) : (
+                    <div className="text-sm font-medium text-gray-900">{metaKeywords || "-"}</div>
+                  )}
                 </div>
               </div>
             </CardContent>

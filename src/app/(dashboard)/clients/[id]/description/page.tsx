@@ -9,19 +9,7 @@ import { supabase } from "@/lib/supabase";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 
-const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
-
-const DESCRIPTION_QUILL_MODULES = {
-  toolbar: [
-    [{ 'header': [1, 2, 3, false] }],
-    ['bold', 'italic', 'underline', 'strike'],
-    [{ 'color': [] }, { 'background': [] }],
-    [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
-    [{ 'direction': 'rtl' }, { 'align': [] }],
-    ['link', 'image', 'code-block'],
-    ['clean']
-  ],
-};
+const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
 export default function ClientDescription({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
@@ -141,61 +129,89 @@ export default function ClientDescription({ params }: { params: Promise<{ id: st
           </div>
 
           <div className="flex-1 flex flex-col relative">
-            {isRtl && (
-              <style dangerouslySetInnerHTML={{__html: `
-                [dir="rtl"] .ql-editor ol, 
-                [dir="rtl"] .ql-editor ul {
-                  margin: 32px 20px 32px 0 !important;
-                  padding: 0 !important;
-                }
-                [dir="rtl"] .ql-editor ol {
-                  list-style: decimal outside !important;
-                }
-                [dir="rtl"] .ql-editor ul {
-                  list-style: disc outside !important;
-                }
-                [dir="rtl"] .ql-editor li {
-                  list-style: inherit !important;
-                  padding-left: 0 !important;
-                  padding-right: 10px !important;
-                  text-align: right !important;
-                }
-                [dir="rtl"] .ql-editor li::before,
-                [dir="rtl"] .ql-editor li .ql-ui {
-                  display: none !important;
-                }
-                [dir="rtl"] .ql-editor li.ql-indent-1 { margin-right: 2em !important; }
-                [dir="rtl"] .ql-editor li.ql-indent-2 { margin-right: 4em !important; }
-                [dir="rtl"] .ql-editor li.ql-indent-3 { margin-right: 6em !important; }
-                [dir="rtl"] .ql-editor li.ql-indent-4 { margin-right: 8em !important; }
-                [dir="rtl"] .ql-editor li.ql-indent-5 { margin-right: 10em !important; }
-                [dir="rtl"] .ql-editor li.ql-indent-6 { margin-right: 12em !important; }
-                [dir="rtl"] .ql-editor li.ql-indent-7 { margin-right: 14em !important; }
-                [dir="rtl"] .ql-editor li.ql-indent-8 { margin-right: 16em !important; }
-                [dir="rtl"] .ql-editor li.ql-indent-9 { margin-right: 18em !important; }
-              `}} />
-            )}
+            <style dangerouslySetInnerHTML={{ __html: `
+              .description-preview-content {
+                font-family: Inter, sans-serif;
+                line-height: 1.8;
+                color: #374151;
+              }
+              .description-preview-content p { margin-bottom: 24px; }
+              .description-preview-content h1 { font-size: 32px; margin-top: 40px; margin-bottom: 20px; font-weight: 800; }
+              .description-preview-content h2 { font-size: 28px; margin-top: 36px; margin-bottom: 18px; font-weight: 700; }
+              .description-preview-content h3 { font-size: 24px; margin-top: 32px; margin-bottom: 16px; font-weight: 700; }
+              .description-preview-content h4 { font-size: 20px; margin-top: 28px; margin-bottom: 14px; font-weight: 600; }
+              .description-preview-content img { max-width: 100%; border-radius: 8px; margin: 20px 0; }
+              .description-preview-content ul, .description-preview-content ol { margin-bottom: 24px; padding-inline-start: 40px; }
+              .description-preview-content li { margin-bottom: 8px; }
+              .description-preview-content table { border-collapse: collapse; width: 100%; margin-bottom: 24px; border: 1px solid #e5e7eb; }
+              .description-preview-content table td, .description-preview-content table th { border: 1px solid #e5e7eb; padding: 12px; }
+              .description-preview-content code { background: #f3f4f6; padding: 2px 4px; rounded: 4px; font-family: monospace; }
+              .description-preview-content pre { background: #1f2937; color: #f9fafb; padding: 16px; rounded: 8px; margin-bottom: 24px; overflow-x: auto; }
+            `}} />
             
             {isEditing ? (
               <div 
                 dir={isRtl ? "rtl" : "ltr"}
-                className="flex-1 border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[400px] [&_.ql-editor]:text-base"
+                className="flex-1 border rounded-md bg-white overflow-hidden"
               >
-                <ReactQuill 
-                  theme="snow"
+                <JoditEditor
                   value={description}
-                  onChange={setDescription}
-                  modules={DESCRIPTION_QUILL_MODULES}
-                  placeholder="Describe this client in detail..."
+                  config={{
+                    readonly: false,
+                    height: 500,
+                    direction: isRtl ? 'rtl' : 'ltr',
+                    uploader: {
+                      insertImageAsBase64URI: true
+                    },
+                    placeholder: 'Describe this client in detail...',
+                    style: {
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '16px',
+                      color: '#374151',
+                      lineHeight: '1.6',
+                      padding: '20px'
+                    },
+                    iframe: true,
+                    iframeStyle: `
+                      body { 
+                        padding: 20px !important; 
+                        font-family: Inter, sans-serif !important; 
+                        line-height: 1.6 !important;
+                        color: #374151 !important;
+                      }
+                      p { margin-bottom: 24px !important; }
+                      h1 { font-size: 32px !important; margin-top: 40px !important; margin-bottom: 20px !important; font-weight: 800 !important; }
+                      h2 { font-size: 28px !important; margin-top: 36px !important; margin-bottom: 18px !important; font-weight: 700 !important; }
+                      h3 { font-size: 24px !important; margin-top: 32px !important; margin-bottom: 16px !important; font-weight: 700 !important; }
+                      h4 { font-size: 20px !important; margin-top: 28px !important; margin-bottom: 14px !important; font-weight: 600 !important; }
+                      img { max-width: 100%; border-radius: 8px; margin: 20px 0; }
+                      ul, ol { margin-bottom: 24px !important; padding-inline-start: 40px !important; }
+                      li { margin-bottom: 8px !important; }
+                      table { border-collapse: collapse; width: 100%; margin-bottom: 24px !important; border: 1px solid #e5e7eb !important; }
+                      table td, table th { border: 1px solid #e5e7eb !important; padding: 12px !important; }
+                    `,
+                    buttons: [
+                      'source', '|',
+                      'bold', 'italic', 'underline', 'strikethrough', '|',
+                      'superscript', 'subscript', '|',
+                      'ul', 'ol', '|',
+                      'outdent', 'indent', '|',
+                      'font', 'fontsize', 'brush', 'paragraph', '|',
+                      'image', 'table', 'link', '|',
+                      'align', 'undo', 'redo', '|',
+                      'hr', 'eraser', 'fullsize', 'print'
+                    ]
+                  }}
+                  onBlur={(newContent) => setDescription(newContent)}
                 />
               </div>
             ) : (
               <div 
                 dir={isRtl ? "rtl" : "ltr"}
-                className="flex-1 min-h-[400px] ql-snow"
+                className="flex-1 min-h-[400px] description-preview-content"
               >
                 <div 
-                  className="ql-editor p-2 text-lg text-gray-700 leading-relaxed"
+                  className="p-2 text-lg text-gray-700"
                   dangerouslySetInnerHTML={{ __html: description || "<p class='text-gray-400 italic font-normal'>No description provided yet.</p>" }} 
                 />
               </div>

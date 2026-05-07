@@ -46,6 +46,9 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
   const [linkUrl2, setLinkUrl2] = useState("");
   const [clientData, setClientData] = useState<{name?: string; description?: string}>({});
   const [wordCount, setWordCount] = useState(0);
+  const [metaTitle, setMetaTitle] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
+  const [metaKeywords, setMetaKeywords] = useState("");
 
   useEffect(() => {
     if (content) {
@@ -180,7 +183,10 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
         status,
         direction,
         client_approved: isApproved,
-        is_public: isPublic
+        is_public: isPublic,
+        meta_title: metaTitle,
+        meta_description: metaDescription,
+        meta_keywords: metaKeywords
       });
 
       if (error) throw error;
@@ -499,6 +505,40 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
                 <Label className="text-xs font-semibold text-gray-600">Word Count</Label>
                 <div className="text-sm font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded-md inline-block">
                   {wordCount} words
+                </div>
+              </div>
+
+              <div className="pt-6 mt-6 border-t border-gray-100 space-y-4">
+                <CardTitle className="text-sm uppercase tracking-wider text-blue-600 font-bold">SEO Settings</CardTitle>
+                
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-gray-600">Meta Title</Label>
+                  <Input 
+                    value={metaTitle} 
+                    onChange={(e) => setMetaTitle(e.target.value)} 
+                    placeholder="SEO title..." 
+                    className="bg-white text-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-gray-600">Meta Description</Label>
+                  <Textarea 
+                    value={metaDescription} 
+                    onChange={(e) => setMetaDescription(e.target.value)} 
+                    placeholder="SEO description..." 
+                    className="bg-white text-sm min-h-[80px]"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-gray-600">Meta Keywords</Label>
+                  <Input 
+                    value={metaKeywords} 
+                    onChange={(e) => setMetaKeywords(e.target.value)} 
+                    placeholder="keyword1, keyword2..." 
+                    className="bg-white text-sm"
+                  />
                 </div>
               </div>
             </CardContent>
