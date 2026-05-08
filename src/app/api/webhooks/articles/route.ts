@@ -30,6 +30,7 @@ export async function POST(request: Request) {
       title, 
       content, 
       type = 'Blog Post',
+      direction = 'ltr',
       meta_title,
       meta_description,
       meta_keywords
@@ -62,6 +63,7 @@ export async function POST(request: Request) {
         title,
         content,
         type,
+        direction,
         length: wordCount,
         status: 'Draft',
         meta_title: meta_title || null,
