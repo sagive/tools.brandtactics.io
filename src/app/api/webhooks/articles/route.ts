@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 /**
  * Webhook for external article submissions (e.g., from n8n)
@@ -43,8 +43,19 @@ export async function POST(request: Request) {
     // 4. Word count calculation (simplistic)
     const wordCount = content.replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
 
-    // 5. Insert into Database
-    const { data, error } = await supabase
+    // 5. Initialize Supabase Admin Client to bypass RLS
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase configuration error in webhook');
+      return NextResponse.json({ error: 'Server database configuration error' }, { status: 500 });
+    }
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    // 6. Insert into Database
+    const { data, error } = await supabaseAdmin
       .from('articles')
       .insert({
         client_id: clientId,
