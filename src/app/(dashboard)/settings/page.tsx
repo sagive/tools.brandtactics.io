@@ -136,6 +136,16 @@ function SettingsContent() {
     }
   };
 
+  const generateRandomSecret = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+    let result = "";
+    for (let i = 0; i < 32; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setWebhookSecret(result);
+    toast.info("Generated new secret. Don't forget to save!");
+  };
+
   const handleSaveWebhookSecret = async () => {
     setIsSavingWebhookSecret(true);
     try {
@@ -789,18 +799,27 @@ function SettingsContent() {
                         <Key className="w-4 h-4 text-gray-400" />
                         Global Webhook Secret
                       </Label>
-                      <div className="flex gap-2">
-                        <Input 
-                          type="password" 
-                          value={webhookSecret}
-                          onChange={(e) => setWebhookSecret(e.target.value)}
-                          placeholder="your-secret-key" 
-                          className="font-mono text-sm"
-                        />
-                        <Button onClick={handleSaveWebhookSecret} disabled={isSavingWebhookSecret} className="bg-gray-900 hover:bg-black shrink-0">
-                          {isSavingWebhookSecret ? "Saving..." : "Update Secret"}
-                        </Button>
-                      </div>
+                        <div className="flex gap-2">
+                          <Input 
+                            type="password" 
+                            value={webhookSecret}
+                            onChange={(e) => setWebhookSecret(e.target.value)}
+                            placeholder="your-secret-key" 
+                            className="font-mono text-sm"
+                          />
+                          <Button variant="outline" size="icon" onClick={() => {
+                            navigator.clipboard.writeText(webhookSecret);
+                            toast.success("Secret copied to clipboard");
+                          }} className="shrink-0 border-gray-200 hover:bg-gray-50" title="Copy Secret">
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                          <Button variant="outline" size="icon" onClick={generateRandomSecret} className="shrink-0 border-gray-200 hover:bg-gray-50" title="Generate Random Secret">
+                            <RotateCw className="w-4 h-4" />
+                          </Button>
+                          <Button onClick={handleSaveWebhookSecret} disabled={isSavingWebhookSecret} className="bg-gray-900 hover:bg-black shrink-0">
+                            {isSavingWebhookSecret ? "Saving..." : "Update Secret"}
+                          </Button>
+                        </div>
                       <p className="text-[11px] text-gray-500">
                         This secret must be passed in the <code>X-Webhook-Secret</code> header for all incoming requests.
                       </p>
@@ -898,9 +917,12 @@ function SettingsContent() {
                           {JSON.stringify({
                             clientId: "UUID-HERE",
                             title: "Amazing SEO Article",
-                            content: "<p>The content...</p>",
+                            content: "<p>The article content in HTML...</p>",
                             type: "Blog Post",
-                            meta_title: "Optional SEO Title"
+                            direction: "ltr",
+                            meta_title: "SEO Optimized Title",
+                            meta_description: "A compelling description for search engines.",
+                            meta_keywords: "seo, keywords, article"
                           }, null, 2)}
                         </pre>
                         <button 
@@ -908,9 +930,12 @@ function SettingsContent() {
                             navigator.clipboard.writeText(JSON.stringify({
                               clientId: "UUID-HERE",
                               title: "Amazing SEO Article",
-                              content: "<p>The content...</p>",
+                              content: "<p>The article content in HTML...</p>",
                               type: "Blog Post",
-                              meta_title: "Optional SEO Title"
+                              direction: "ltr",
+                              meta_title: "SEO Optimized Title",
+                              meta_description: "A compelling description for search engines.",
+                              meta_keywords: "seo, keywords, article"
                             }, null, 2));
                             toast.success("Payload copied");
                           }}

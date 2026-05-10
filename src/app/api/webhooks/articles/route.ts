@@ -54,8 +54,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields: clientId, title, content' }, { status: 400 });
     }
 
-    // 4. Word count calculation (simplistic)
-    const wordCount = content.replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
+    // 4. Word count calculation (robust)
+    const wordCount = content.replace(/<[^>]*>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean).length;
+
+    // 5. Verify Client Existence
+    const { data: client, error: clientError } = await supabaseAdmin
+      .from('clients')
+      .select('id')
+      .eq('id', clientId)
+      .single();
+
+    if (clientError || !client) {
+      console.error('Client validation failed or client not found:', clientId);
+      return NextResponse.json({ error: 'Invalid clientId: Client does not exist' }, { status: 400 });
+    }
 
     // 6. Insert into Database
     const { data, error } = await supabaseAdmin
@@ -85,7 +101,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ 
       success: true, 
       message: 'Article saved as draft', 
-      articleId: data.id 
+      articleId: data.id,
+      wordCount
     });
 
   } catch (err: any) {
