@@ -965,6 +965,108 @@ function SettingsContent() {
                 </CardContent>
               </Card>
 
+              <Card className="shadow-sm border-gray-200 overflow-hidden">
+                <CardHeader className="bg-gray-50/50 border-b border-gray-200 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-blue-100 text-blue-700 p-2 rounded-lg">
+                        <Mail className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-sm font-bold flex items-center gap-2">
+                          Email Dispatch
+                          <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 text-[10px] h-5">ACTIVE</Badge>
+                        </CardTitle>
+                        <CardDescription className="text-xs">Send custom email updates to clients using the global template.</CardDescription>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="font-mono text-[10px] bg-white">POST</Badge>
+                      <code className="text-[10px] bg-gray-100 px-2 py-1 rounded border">/api/webhooks/emails</code>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
+                    <div className="p-6 space-y-6">
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Endpoint Access</Label>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-[11px] mb-1">
+                            <span className="text-gray-500">Public URL</span>
+                            <button 
+                              onClick={() => {
+                                const url = `${window.location.origin}/api/webhooks/emails`;
+                                navigator.clipboard.writeText(url);
+                                toast.success("URL copied");
+                              }}
+                              className="text-blue-600 hover:underline flex items-center gap-1"
+                            >
+                              <Copy className="w-3 h-3" /> Copy URL
+                            </button>
+                          </div>
+                          <Input 
+                            readOnly 
+                            value={typeof window !== 'undefined' ? `${window.location.origin}/api/webhooks/emails` : "/api/webhooks/emails"} 
+                            className="bg-gray-50 font-mono text-xs border-gray-200 h-9" 
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Required Authentication</Label>
+                        <div className="p-4 bg-gray-950 rounded-xl border border-gray-800 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-gray-500 font-mono">Header Key</span>
+                            <span className="text-[10px] font-bold text-purple-400 font-mono">X-Webhook-Secret</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-gray-500 font-mono">Value</span>
+                            <span className="text-[10px] font-bold text-green-400 font-mono">••••••••••••</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-6 bg-gray-50/50 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Sample Payload (JSON)</Label>
+                        <Badge variant="outline" className="text-[9px] bg-white">Example</Badge>
+                      </div>
+                      <div className="relative group">
+                        <pre className="bg-white border border-gray-200 rounded-xl p-4 text-[11px] font-mono leading-relaxed text-gray-700 overflow-x-auto shadow-sm">
+                          {JSON.stringify({
+                            clientId: "UUID-HERE",
+                            subject: "Monthly Performance Update",
+                            content: "<p>Hello, here is your monthly report...</p>"
+                          }, null, 2)}
+                        </pre>
+                        <button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(JSON.stringify({
+                              clientId: "UUID-HERE",
+                              subject: "Monthly Performance Update",
+                              content: "<p>Hello, here is your monthly report...</p>"
+                            }, null, 2));
+                            toast.success("Payload copied");
+                          }}
+                          className="absolute top-3 right-3 p-2 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Copy className="w-3.5 h-3.5 text-gray-500" />
+                        </button>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="flex-1 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                          <p className="text-[10px] text-blue-700 leading-normal">
+                            <strong>Note:</strong> Emails are sent immediately to the client's configured <code>contact_email</code>.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               <div className="h-px bg-gray-200" />
 
               <div className="space-y-6 pb-12">
