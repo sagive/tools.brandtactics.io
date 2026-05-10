@@ -173,22 +173,31 @@ function SettingsContent() {
   };
 
   useEffect(() => {
-    supabase.from('app_settings').select('email_template, gemini_api_key, webhook_secret, webhook_notes').eq('id', 'global').single()
-      .then(({data, error}: {data: any, error: any}) => {
-        if (data?.email_template) {
-          setTemplate(data.email_template);
+    // Fetch settings one by one or handle failure gracefully to avoid breaking the whole page if columns are missing
+    const fetchSettings = async () => {
+      try {
+        const { data, error } = await supabase.from('app_settings').select('*').eq('id', 'global').single();
+        
+        if (data) {
+          if (data.email_template) setTemplate(data.email_template);
+          if (data.gemini_api_key) setGeminiApiKey(data.gemini_api_key);
+          if (data.webhook_secret) setWebhookSecret(data.webhook_secret);
+          if (data.webhook_notes) setWebhookNotes(data.webhook_notes);
+        } else if (error) {
+          console.warn("Could not fetch some settings, likely due to missing columns. Falling back to defaults.", error);
+          // Try a safer fetch for just the core columns if the main one failed
+          const { data: basicData } = await supabase.from('app_settings').select('email_template, gemini_api_key').eq('id', 'global').single();
+          if (basicData) {
+            if (basicData.email_template) setTemplate(basicData.email_template);
+            if (basicData.gemini_api_key) setGeminiApiKey(basicData.gemini_api_key);
+          }
         }
-        if (data?.gemini_api_key) {
-          setGeminiApiKey(data.gemini_api_key);
-        }
-        if (data?.webhook_secret) {
-          setWebhookSecret(data.webhook_secret);
-        }
-        if (data?.webhook_notes) {
-          setWebhookNotes(data.webhook_notes);
-        }
-      });
-      
+      } catch (err) {
+        console.error("Error in settings fetch:", err);
+      }
+    };
+
+    fetchSettings();
     fetchPrewrittenTemplates();
     setIsLoading(false);
   }, []);
