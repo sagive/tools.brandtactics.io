@@ -12,10 +12,23 @@ export async function POST(request: Request) {
   try {
     // 1. Security Check
     const secret = request.headers.get('X-Webhook-Secret');
-    const expectedSecret = process.env.WEBHOOK_SECRET;
+    
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase configuration error in webhook');
+      return NextResponse.json({ error: 'Server database configuration error' }, { status: 500 });
+    }
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Fetch secret from DB
+    const { data: settings } = await supabaseAdmin.from('app_settings').select('webhook_secret').eq('id', 'global').single();
+    const expectedSecret = settings?.webhook_secret || process.env.WEBHOOK_SECRET;
 
     if (!expectedSecret) {
-      console.error('WEBHOOK_SECRET environment variable is not set');
+      console.error('WEBHOOK_SECRET is not set in DB or environment');
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
 
@@ -43,17 +56,6 @@ export async function POST(request: Request) {
 
     // 4. Word count calculation (simplistic)
     const wordCount = content.replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
-
-    // 5. Initialize Supabase Admin Client to bypass RLS
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('Supabase configuration error in webhook');
-      return NextResponse.json({ error: 'Server database configuration error' }, { status: 500 });
-    }
-
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // 6. Insert into Database
     const { data, error } = await supabaseAdmin

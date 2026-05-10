@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, Mail, Lock, User, Users, Trash2, Plus, FileText, RotateCw, Clock, Camera, Upload, Zap, ArrowUp, ArrowDown, Globe, Bot } from "lucide-react";
+import { Save, Mail, Lock, User, Users, Trash2, Plus, FileText, RotateCw, Clock, Camera, Upload, Zap, ArrowUp, ArrowDown, Globe, Bot, Webhook, Link2, Copy, ShieldCheck, Key } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth-provider";
@@ -102,8 +102,6 @@ function SettingsContent() {
     }
   }, [tabParam]);
 
-
-
   const [template, setTemplate] = useState(
 `<div style="font-family: sans-serif; max-w: 600px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: white;">
   <h2 style="color: #2563eb; margin-top: 0;">BrandTactics Update</h2>
@@ -116,11 +114,40 @@ function SettingsContent() {
 </div>`
   );
 
-
   const { user, profile } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [geminiApiKey, setGeminiApiKey] = useState("");
+  const [webhookSecret, setWebhookSecret] = useState("");
+  const [webhookNotes, setWebhookNotes] = useState("");
   const [isSavingApiKey, setIsSavingApiKey] = useState(false);
+  const [isSavingWebhookSecret, setIsSavingWebhookSecret] = useState(false);
+  const [isSavingWebhookNotes, setIsSavingWebhookNotes] = useState(false);
+
+  const handleSaveWebhookNotes = async () => {
+    setIsSavingWebhookNotes(true);
+    try {
+      const { error } = await supabase.from('app_settings').update({ webhook_notes: webhookNotes }).eq('id', 'global');
+      if (error) throw error;
+      toast.success("Webhook notes saved.");
+    } catch (err: any) {
+      toast.error("Failed to save notes.");
+    } finally {
+      setIsSavingWebhookNotes(false);
+    }
+  };
+
+  const handleSaveWebhookSecret = async () => {
+    setIsSavingWebhookSecret(true);
+    try {
+      const { error } = await supabase.from('app_settings').update({ webhook_secret: webhookSecret }).eq('id', 'global');
+      if (error) throw error;
+      toast.success("Webhook secret saved successfully.");
+    } catch (err: any) {
+      toast.error("Failed to save webhook secret. Make sure the 'webhook_secret' column exists.");
+    } finally {
+      setIsSavingWebhookSecret(false);
+    }
+  };
 
   const handleSaveApiKey = async () => {
     setIsSavingApiKey(true);
@@ -135,10 +162,8 @@ function SettingsContent() {
     }
   };
 
-  // Fetch initial template, handle password recovery, and fetch staff
   useEffect(() => {
-    // 1. Fetch Template & Settings
-    supabase.from('app_settings').select('email_template, gemini_api_key').eq('id', 'global').single()
+    supabase.from('app_settings').select('email_template, gemini_api_key, webhook_secret, webhook_notes').eq('id', 'global').single()
       .then(({data, error}: {data: any, error: any}) => {
         if (data?.email_template) {
           setTemplate(data.email_template);
@@ -146,12 +171,15 @@ function SettingsContent() {
         if (data?.gemini_api_key) {
           setGeminiApiKey(data.gemini_api_key);
         }
+        if (data?.webhook_secret) {
+          setWebhookSecret(data.webhook_secret);
+        }
+        if (data?.webhook_notes) {
+          setWebhookNotes(data.webhook_notes);
+        }
       });
       
-    // Fetch prewritten templates
     fetchPrewrittenTemplates();
-
-    // 2. Finish Loading
     setIsLoading(false);
   }, []);
 
@@ -187,11 +215,9 @@ function SettingsContent() {
 
   const fetchArticleSettings = async () => {
     try {
-      // Fetch Types
       const { data: typesData } = await supabase.from('article_types').select('*').order('rank', { ascending: true });
       if (typesData) setArticleTypes(typesData);
 
-      // Fetch AI Global Settings from app_settings
       const { data: aiData } = await supabase.from('app_settings').select('article_ai_webhook_url, article_ai_webhook_url_test, article_ai_use_test').eq('id', 'global').single();
       if (aiData) {
         setArticleAiSettings({
@@ -263,10 +289,8 @@ function SettingsContent() {
     const swapIndex = direction === 'up' ? index - 1 : index + 1;
     [newSites[index], newSites[swapIndex]] = [newSites[swapIndex], newSites[index]];
 
-    // Optimistic UI
     setProfileSites(newSites);
 
-    // Save to DB (We'll update ranks for all to be safe)
     try {
       const updates = newSites.map((s, i) => 
         supabase.from('profile_sites').update({ rank: i + 1 }).eq('id', s.id)
@@ -274,7 +298,7 @@ function SettingsContent() {
       await Promise.all(updates);
     } catch (err: any) {
       toast.error("Failed to reorder");
-      fetchProfileSites(); // Revert
+      fetchProfileSites();
     }
   };
 
@@ -365,11 +389,6 @@ function SettingsContent() {
     }
   };
 
-
-
-
-
-  // Preview content wrapper
   const previewHtml = template.replace('[content]', `
     <p>This is a preview of how your message will look inside the template wrapper.</p>
     <ul>
@@ -401,6 +420,7 @@ function SettingsContent() {
           <TabsTrigger value="endpoints" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Article Settings</TabsTrigger>
           <TabsTrigger value="profiles" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Profiles</TabsTrigger>
           <TabsTrigger value="ai" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">AI Integrations</TabsTrigger>
+          <TabsTrigger value="webhooks" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Webhooks</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ai" className="space-y-6 mt-0 outline-none ring-0">
@@ -436,9 +456,6 @@ function SettingsContent() {
           </Card>
         </TabsContent>
 
-
-
-
         <TabsContent value="email" className="space-y-6 mt-0 outline-none ring-0">
           <Card className="shadow-sm border-gray-200 overflow-hidden">
             <CardHeader className="border-b bg-gray-50/30">
@@ -459,7 +476,6 @@ function SettingsContent() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
-                {/* Editor Side */}
                 <div className="flex flex-col h-full bg-gray-900 border-r border-gray-800">
                   <div className="px-4 py-2 border-b border-gray-800 bg-gray-950 flex items-center justify-between shrink-0">
                     <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">HTML Source</span>
@@ -475,7 +491,6 @@ function SettingsContent() {
                   </div>
                 </div>
 
-                {/* Preview Side */}
                 <div className="flex flex-col h-full bg-gray-100/30">
                   <div className="px-4 py-2 border-b bg-white">
                     <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Live Preview</span>
@@ -490,7 +505,6 @@ function SettingsContent() {
             </CardContent>
           </Card>
 
-          {/* Prewritten Templates Section */}
           <div className="pt-6 space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -529,7 +543,6 @@ function SettingsContent() {
         </TabsContent>
 
         <TabsContent value="endpoints" className="space-y-8 mt-0 outline-none ring-0">
-          {/* Article Categories Section */}
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -577,7 +590,6 @@ function SettingsContent() {
 
           <div className="h-px bg-gray-200" />
 
-          {/* AI Generation Widget */}
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-bold text-gray-900 flex items-center">
@@ -753,6 +765,217 @@ function SettingsContent() {
                 ))}
               </div>
             )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="webhooks" className="space-y-8 mt-0 outline-none ring-0">
+          <div className="grid grid-cols-1 gap-8">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                  <ShieldCheck className="w-5 h-5 mr-2 text-red-600" />
+                  Security & Authentication
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  Manage the shared secrets used to authenticate incoming webhook requests.
+                </p>
+              </div>
+
+              <Card className="shadow-sm border-gray-200">
+                <CardContent className="p-6">
+                  <div className="space-y-4 max-w-xl">
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2">
+                        <Key className="w-4 h-4 text-gray-400" />
+                        Global Webhook Secret
+                      </Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          type="password" 
+                          value={webhookSecret}
+                          onChange={(e) => setWebhookSecret(e.target.value)}
+                          placeholder="your-secret-key" 
+                          className="font-mono text-sm"
+                        />
+                        <Button onClick={handleSaveWebhookSecret} disabled={isSavingWebhookSecret} className="bg-gray-900 hover:bg-black shrink-0">
+                          {isSavingWebhookSecret ? "Saving..." : "Update Secret"}
+                        </Button>
+                      </div>
+                      <p className="text-[11px] text-gray-500">
+                        This secret must be passed in the <code>X-Webhook-Secret</code> header for all incoming requests.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="h-px bg-gray-200" />
+
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                    <Webhook className="w-5 h-5 mr-2 text-purple-600" />
+                    Registered Incoming Webhooks
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Reference documentation for active endpoints in this application.
+                  </p>
+                </div>
+              </div>
+
+              <Card className="shadow-sm border-gray-200 overflow-hidden">
+                <CardHeader className="bg-gray-50/50 border-b border-gray-200 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-purple-100 text-purple-700 p-2 rounded-lg">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-sm font-bold flex items-center gap-2">
+                          Articles Submission
+                          <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 text-[10px] h-5">ACTIVE</Badge>
+                        </CardTitle>
+                        <CardDescription className="text-xs">Submit new articles directly from n8n or external services.</CardDescription>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="font-mono text-[10px] bg-white">POST</Badge>
+                      <code className="text-[10px] bg-gray-100 px-2 py-1 rounded border">/api/webhooks/articles</code>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
+                    <div className="p-6 space-y-6">
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Endpoint Access</Label>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-[11px] mb-1">
+                            <span className="text-gray-500">Public URL</span>
+                            <button 
+                              onClick={() => {
+                                const url = `${window.location.origin}/api/webhooks/articles`;
+                                navigator.clipboard.writeText(url);
+                                toast.success("URL copied");
+                              }}
+                              className="text-blue-600 hover:underline flex items-center gap-1"
+                            >
+                              <Copy className="w-3 h-3" /> Copy URL
+                            </button>
+                          </div>
+                          <Input 
+                            readOnly 
+                            value={typeof window !== 'undefined' ? `${window.location.origin}/api/webhooks/articles` : "/api/webhooks/articles"} 
+                            className="bg-gray-50 font-mono text-xs border-gray-200 h-9" 
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Required Authentication</Label>
+                        <div className="p-4 bg-gray-950 rounded-xl border border-gray-800 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-gray-500 font-mono">Header Key</span>
+                            <span className="text-[10px] font-bold text-purple-400 font-mono">X-Webhook-Secret</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-gray-500 font-mono">Value</span>
+                            <span className="text-[10px] font-bold text-green-400 font-mono">••••••••••••</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-6 bg-gray-50/50 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Sample Payload (JSON)</Label>
+                        <Badge variant="outline" className="text-[9px] bg-white">Example</Badge>
+                      </div>
+                      <div className="relative group">
+                        <pre className="bg-white border border-gray-200 rounded-xl p-4 text-[11px] font-mono leading-relaxed text-gray-700 overflow-x-auto shadow-sm">
+                          {JSON.stringify({
+                            clientId: "UUID-HERE",
+                            title: "Amazing SEO Article",
+                            content: "<p>The content...</p>",
+                            type: "Blog Post",
+                            meta_title: "Optional SEO Title"
+                          }, null, 2)}
+                        </pre>
+                        <button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(JSON.stringify({
+                              clientId: "UUID-HERE",
+                              title: "Amazing SEO Article",
+                              content: "<p>The content...</p>",
+                              type: "Blog Post",
+                              meta_title: "Optional SEO Title"
+                            }, null, 2));
+                            toast.success("Payload copied");
+                          }}
+                          className="absolute top-3 right-3 p-2 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Copy className="w-3.5 h-3.5 text-gray-500" />
+                        </button>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="flex-1 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                          <p className="text-[10px] text-blue-700 leading-normal">
+                            <strong>Note:</strong> <code>clientId</code> must match an existing client ID in your database.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="h-px bg-gray-200" />
+
+              <div className="space-y-6 pb-12">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                    <FileText className="w-5 h-5 mr-2 text-blue-600" />
+                    Webhook Registry & Notes
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Save details about external webhooks (n8n, Zapier, etc.) so you don't forget them.
+                  </p>
+                </div>
+
+                <Card className="shadow-sm border-gray-200">
+                  <CardContent className="p-6 space-y-4">
+                    <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl flex gap-4 mb-4">
+                      <div className="bg-white p-2 rounded-lg h-fit flex items-center justify-center border border-amber-200">
+                        <Bot className="w-4 h-4 text-amber-600" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-bold text-amber-900">External Webhook: n8n Article Gen</h4>
+                        <p className="text-[11px] text-amber-700 leading-relaxed">
+                          This is the webhook we use to trigger the AI generation in n8n. It's currently configured in the "Article Settings" tab.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[11px] font-bold uppercase text-gray-400">Additional Webhook Notes</Label>
+                      <Textarea 
+                        value={webhookNotes}
+                        onChange={(e) => setWebhookNotes(e.target.value)}
+                        placeholder="Paste details about new webhooks here (URL, username, pass, etc.)"
+                        className="min-h-[150px] font-mono text-xs bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+                      />
+                      <div className="flex justify-end">
+                        <Button onClick={handleSaveWebhookNotes} disabled={isSavingWebhookNotes} size="sm" className="bg-blue-600 hover:bg-blue-700">
+                          {isSavingWebhookNotes ? "Saving..." : <><Save className="w-3.5 h-3.5 mr-2" /> Save Notes</>}
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
         </TabsContent>
       </Tabs>
