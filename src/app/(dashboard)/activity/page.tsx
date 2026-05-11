@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Activity, Clock, Search, Filter, Loader2, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { linkifyHtml } from "@/lib/utils";
 
 export default function ActivityPage() {
   const [logs, setLogs] = useState<any[]>([]);
@@ -123,7 +124,7 @@ export default function ActivityPage() {
                         </div>
                         <div 
                           className="text-gray-700 text-sm leading-relaxed" 
-                          dangerouslySetInnerHTML={{ __html: log.content }} 
+                          dangerouslySetInnerHTML={{ __html: linkifyHtml(log.content) }} 
                         />
                       </div>
                     </div>

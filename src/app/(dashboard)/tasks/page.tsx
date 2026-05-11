@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Trash2, Zap } from "lucide-react";
+import { Search, Plus, Trash2, Zap, Languages } from "lucide-react";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -21,9 +21,10 @@ export default function GlobalTasksPage() {
   const [search, setSearch] = useState("");
   const [tasks, setTasks] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [clientFilter, setClientFilter] = useState("All");
+  const [clientFilter, setClientFilter] = useState("");
   const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'open' | 'completed'>('open');
+  const [direction, setDirection] = useState<'ltr' | 'rtl'>('ltr');
   const { profile, isLoading: isAuthLoading } = useAuth();
   const isAdmin = profile?.role === 'admin';
 
@@ -32,6 +33,19 @@ export default function GlobalTasksPage() {
       fetchTasks();
     }
   }, [isAuthLoading, profile?.id, statusFilter]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('tasks-direction');
+    if (saved === 'rtl' || saved === 'ltr') {
+      setDirection(saved);
+    }
+  }, []);
+
+  const toggleDirection = () => {
+    const newDir = direction === 'ltr' ? 'rtl' : 'ltr';
+    setDirection(newDir);
+    localStorage.setItem('tasks-direction', newDir);
+  };
 
   const fetchTasks = async () => {
     setIsLoading(true);
@@ -80,7 +94,7 @@ export default function GlobalTasksPage() {
   const filteredTasks = tasks.filter(t => {
     const matchesSearch = t.title?.toLowerCase().includes(search.toLowerCase()) || 
                           t.client?.toLowerCase().includes(search.toLowerCase());
-    const matchesClient = clientFilter === "All" || t.client === clientFilter;
+    const matchesClient = clientFilter === "" || t.client === clientFilter;
     const matchesMyTasks = !showOnlyMyTasks || (
       (profile?.full_name && t.assignee === profile.full_name) || 
       (profile?.email && t.assignee === profile.email)
@@ -141,12 +155,22 @@ export default function GlobalTasksPage() {
             )}
           </Button>
 
-          <Select value={clientFilter} onValueChange={(val) => setClientFilter(val || "All")}>
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={toggleDirection}
+            className="h-10 px-3 bg-white text-gray-600 border-gray-200"
+          >
+            <Languages className={cn("w-4 h-4", direction === 'rtl' && "text-blue-600")} />
+            <span className="ml-2 text-[10px] font-bold uppercase">{direction}</span>
+          </Button>
+
+          <Select value={clientFilter} onValueChange={(val) => setClientFilter(val || "")}>
             <SelectTrigger className="w-[180px] h-10 bg-white font-medium border-gray-200">
               <SelectValue placeholder="Filter by client" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="All">Filter by client</SelectItem>
+              <SelectItem value="">Filter by client</SelectItem>
               {uniqueClients.map(c => (
                 <SelectItem key={c as string} value={c as string}>{c as string}</SelectItem>
               ))}
@@ -194,7 +218,7 @@ export default function GlobalTasksPage() {
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-6" dir={direction}>
         {isLoading ? (
           <div className="py-12 text-center text-gray-500">Loading tasks...</div>
         ) : (

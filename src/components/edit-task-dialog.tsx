@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/lib/supabase";
 import { logActivity } from "@/lib/activity-logger";
+import { linkifyHtml } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
@@ -540,8 +541,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                     [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4
                     [&_img]:max-w-full [&_img]:rounded-lg [&_img]:shadow-sm"
                   dangerouslySetInnerHTML={{ 
-                    __html: (description || "<p class='text-gray-400 italic'>No description provided.</p>")
-                      .replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" ') 
+                    __html: linkifyHtml(description || "<p class='text-gray-400 italic'>No description provided.</p>")
                   }}
                 />
               )}
@@ -581,7 +581,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                            </div>
                         </div>
                       ) : (
-                        <div className="text-[13px] text-gray-700 [&>p]:mb-2 last:[&>p]:mb-0 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&_img]:max-w-[150px] [&_img]:rounded-md [&_a]:text-blue-600 [&_a]:underline" dangerouslySetInnerHTML={{ __html: comment.text }} />
+                        <div className="text-[13px] text-gray-700 [&>p]:mb-2 last:[&>p]:mb-0 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&_img]:max-w-[150px] [&_img]:rounded-md [&_a]:text-blue-600 [&_a]:underline" dangerouslySetInnerHTML={{ __html: linkifyHtml(comment.text) }} />
                       )}
                       
                       {/* Interaction Actions */}

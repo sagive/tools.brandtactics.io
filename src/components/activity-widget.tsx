@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { formatDistanceToNow } from "date-fns";
 import { Activity, Clock, User, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { linkifyHtml } from "@/lib/utils";
 
 export function ActivityWidget() {
   const [logs, setLogs] = useState<any[]>([]);
@@ -115,7 +116,7 @@ export function ActivityWidget() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-900 leading-tight">
                         <span className="font-bold text-gray-900 mr-1 truncate inline-block max-w-[150px] align-bottom">{log.user_name}</span>
-                        <span className="text-gray-600" dangerouslySetInnerHTML={{ __html: log.content }} />
+                        <span className="text-gray-600" dangerouslySetInnerHTML={{ __html: linkifyHtml(log.content) }} />
                       </p>
                     </div>
                   </div>
