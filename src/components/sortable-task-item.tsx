@@ -104,21 +104,21 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
             </Select>
           </div>
 
-          <TooltipProvider delay={300}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Dialog>
+          <Dialog>
+            <TooltipProvider delay={300}>
+              <Tooltip>
+                <TooltipTrigger render={
                   <DialogTrigger className="text-gray-400 hover:text-blue-600 cursor-pointer flex items-center justify-center bg-transparent border-0 p-0 outline-none w-7 h-7 rounded-full hover:bg-gray-100 shrink-0">
                      <Pencil className="w-4 h-4" />
                   </DialogTrigger>
-                  <EditTaskDialog task={task} onTaskCreated={onUpdate} />
-                </Dialog>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                <p>Edit</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+                } />
+                <TooltipContent side="top">
+                  <p>Edit</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <EditTaskDialog task={task} onTaskCreated={onUpdate} />
+          </Dialog>
         </div>
         
         <Dialog defaultOpen={autoOpenTaskId === task.id}>

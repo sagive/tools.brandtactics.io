@@ -39,6 +39,11 @@ export default function GlobalTasksPage() {
     if (saved === 'rtl' || saved === 'ltr') {
       setDirection(saved);
     }
+
+    const savedMyTasks = localStorage.getItem('tasks-show-my-tasks');
+    if (savedMyTasks !== null) {
+      setShowOnlyMyTasks(savedMyTasks === 'true');
+    }
   }, []);
 
   const toggleDirection = () => {
@@ -138,7 +143,11 @@ export default function GlobalTasksPage() {
           <Button 
             variant={showOnlyMyTasks ? "default" : "outline"}
             size="sm"
-            onClick={() => setShowOnlyMyTasks(!showOnlyMyTasks)}
+            onClick={() => {
+              const newVal = !showOnlyMyTasks;
+              setShowOnlyMyTasks(newVal);
+              localStorage.setItem('tasks-show-my-tasks', String(newVal));
+            }}
             className={cn(
               "h-10 px-4 font-semibold transition-all relative",
               showOnlyMyTasks ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-white text-gray-600 border-gray-200"
