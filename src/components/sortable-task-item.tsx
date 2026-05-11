@@ -90,11 +90,11 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
              <div className="hidden md:flex items-center text-[11px] sm:text-xs text-gray-500 shrink-0 ml-auto gap-4 pr-1">
                
                {/* Client Box */}
-               <div className="flex items-center mr-2">
-                  <Badge variant="outline" className="text-[10px] text-blue-600 bg-blue-50 border-blue-200 uppercase tracking-wide truncate max-w-[100px] shrink-0 font-bold px-1.5 py-0">
+                <div className="flex items-center mr-2">
+                  <Badge variant="outline" className="text-[10px] text-blue-600 bg-blue-50 border-blue-200 uppercase tracking-wide truncate max-w-[130px] shrink-0 font-bold px-1.5 py-0">
                     {task.client}
                   </Badge>
-               </div>
+                </div>
 
                {/* Unified Actor Flow (Requester -> Assignee) */}
                <div className="flex items-center gap-1.5">
@@ -150,19 +150,18 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
                  </Tooltip>
                </TooltipProvider>
 
-               <TooltipProvider delay={300}>
-                 <Tooltip>
-                   <TooltipTrigger>
-                     <div className="flex items-center gap-1 cursor-default px-0.5 min-w-[65px]">
-                        <Gauge className="w-3.5 h-3.5 text-gray-400" />
-                        <span className={cn(
-                          "font-bold uppercase text-[9px] tracking-wider",
-                          task.priority === 'High' ? 'text-red-500' : task.priority === 'Medium' ? 'text-yellow-600' : 'text-gray-400'
-                        )}>
-                          {task.priority === 'Medium' ? 'NORMAL' : task.priority}
-                        </span>
-                     </div>
-                   </TooltipTrigger>
+                <TooltipProvider delay={300}>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <div className="flex items-center px-1">
+                        <div className={cn(
+                          "w-2.5 h-2.5 rounded-sm shrink-0",
+                          task.priority === 'High' ? 'bg-red-500' : 
+                          task.priority === 'Medium' ? 'bg-green-500' : 
+                          'bg-gray-400'
+                        )} />
+                      </div>
+                    </TooltipTrigger>
                    <TooltipContent side="top">
                      <p>Priority</p>
                    </TooltipContent>
@@ -177,12 +176,12 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
       {/* Right side actions and status */}
       <div className="flex items-center justify-between sm:justify-start gap-1 pl-7 sm:pl-0 shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
         
-        <div className="w-[120px] shrink-0">
+        <div className="w-[100px] shrink-0">
           <Select 
             value={status} 
             onValueChange={handleStatusChange}
           >
-            <SelectTrigger className={`h-6 text-[10px] sm:text-xs font-medium px-3 py-0 border-0 focus:ring-0 shadow-none rounded-full w-full ${
+            <SelectTrigger className={`h-6 text-[10px] sm:text-xs font-medium px-2 py-0 border-0 focus:ring-0 shadow-none rounded-full w-full ${
                 status === 'Stuck' ? 'bg-red-50 text-red-700 hover:bg-red-100' :
                 status === 'Working on it' ? 'bg-amber-100 text-black hover:bg-amber-200' :
                 status === 'Review' ? 'bg-purple-50 text-purple-700 hover:bg-purple-100' :
