@@ -71,7 +71,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-white border-b hover:bg-slate-50 group">
+    <div ref={setNodeRef} style={style} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-1 sm:p-1.5 bg-white border-b hover:bg-slate-50 group">
       
       {/* Mobile-friendly container for order handle & Title */}
       <div className="flex items-center flex-1 gap-2 min-w-0">
@@ -82,8 +82,8 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
         <Dialog defaultOpen={autoOpenTaskId === task.id}>
           <DialogTrigger className="flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 cursor-pointer min-w-0 bg-transparent border-0 text-left p-0 mx-0 outline-none w-full group/title">
             <span className="font-medium text-sm text-gray-900 truncate pr-2 block group-hover/title:text-blue-600 transition-colors">
-              {stripHtml(task.description || task.title).substring(0, 120)}
-              {stripHtml(task.description || task.title).length > 120 ? '...' : ''}
+              {stripHtml(task.description || task.title).substring(0, 75)}
+              {stripHtml(task.description || task.title).length > 75 ? '...' : ''}
             </span>
             
             {/* Metadata Area (Visible on tablets and up) */}
@@ -181,7 +181,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
             value={status} 
             onValueChange={handleStatusChange}
           >
-            <SelectTrigger className={`h-6 text-[10px] sm:text-xs font-medium px-2 py-0 border-0 focus:ring-0 shadow-none rounded-full w-full ${
+            <SelectTrigger className={`h-5 text-[10px] sm:text-xs font-medium px-2 py-0 border-0 focus:ring-0 shadow-none rounded-md w-full ${
                 status === 'Stuck' ? 'bg-red-50 text-red-700 hover:bg-red-100' :
                 status === 'Working on it' ? 'bg-amber-100 text-black hover:bg-amber-200' :
                 status === 'Review' ? 'bg-purple-50 text-purple-700 hover:bg-purple-100' :
