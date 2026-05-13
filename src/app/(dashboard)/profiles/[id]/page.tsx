@@ -196,13 +196,13 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-10 gap-8">
         {/* Left Column: Profile Card */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="lg:col-span-2 space-y-6">
           <Card className="rounded-xl border border-gray-300 overflow-hidden bg-white">
-            <CardContent className="p-10 text-center space-y-8">
+            <CardContent className="p-6 text-center space-y-6">
               <div className="relative inline-block mx-auto">
-                <div className="w-40 h-40 rounded-xl border border-gray-300 bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center overflow-hidden">
+                <div className="w-32 h-32 rounded-xl border border-gray-300 bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center overflow-hidden">
                   {formData.image_url ? (
                     <img key={formData.image_url} src={formData.image_url} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
@@ -290,7 +290,7 @@ export default function PersonaDetail({ params }: { params: Promise<{ id: string
         </div>
 
         {/* Right Column: Dynamic Data */}
-        <div className="lg:col-span-9 space-y-8">
+        <div className="lg:col-span-8 space-y-8">
           <Card className="rounded-xl border border-gray-300 bg-white min-h-[600px]">
             <CardContent className="p-8 space-y-8">
               {activeTab === 'notes' && <ProfileNotes profileId={id} />}

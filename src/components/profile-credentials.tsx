@@ -34,6 +34,7 @@ interface Credential {
   username: string;
   password: string;
   login_url: string;
+  two_factor?: string;
 }
 
 interface ProfileCredentialsProps {
@@ -78,6 +79,7 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
       username: "", 
       password: "", 
       login_url: "", 
+      two_factor: "",
       site_id: null 
     }]);
   };
@@ -114,7 +116,7 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
       }
 
       // 2. Filter out completely empty new rows
-      const validCreds = credentials.filter(c => c.username || c.password || c.login_url || (c.site_id && c.site_id !== "none"));
+      const validCreds = credentials.filter(c => c.username || c.password || c.login_url || c.two_factor || (c.site_id && c.site_id !== "none"));
       
       if (validCreds.length === 0 && deletedIds.length === 0) {
         setIsSaving(false);
@@ -217,6 +219,7 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
               <th className="px-4 py-3 text-[9px] font-black text-gray-400 uppercase tracking-widest">Platform</th>
               <th className="px-4 py-3 text-[9px] font-black text-gray-400 uppercase tracking-widest">Username</th>
               <th className="px-4 py-3 text-[9px] font-black text-gray-400 uppercase tracking-widest">Password</th>
+              <th className="px-4 py-3 text-[9px] font-black text-gray-400 uppercase tracking-widest">2FA</th>
               <th className="px-4 py-3 text-[9px] font-black text-gray-400 uppercase tracking-widest">Profile Link</th>
               <th className="w-10"></th>
             </tr>
@@ -261,6 +264,14 @@ export default function ProfileCredentials({ profileId }: ProfileCredentialsProp
                     onChange={(e) => updateCredential(index, "password", e.target.value)}
                     className="h-9 border-none bg-transparent font-mono text-xs focus:ring-0 shadow-none"
                     placeholder="Password"
+                  />
+                </td>
+                <td className="p-2 border-r border-gray-100">
+                  <Input 
+                    value={cred.two_factor || ""} 
+                    onChange={(e) => updateCredential(index, "two_factor", e.target.value)}
+                    className="h-9 border-none bg-transparent font-mono text-[10px] font-bold focus:ring-0 shadow-none"
+                    placeholder="2FA Key/Code"
                   />
                 </td>
                 <td className="p-2">
