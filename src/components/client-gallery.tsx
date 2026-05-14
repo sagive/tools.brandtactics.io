@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Plus, Download, Trash2, ImageIcon, Loader2, Maximize2, X, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -23,8 +24,10 @@ export default function ClientGallery({ clientId }: { clientId: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<Asset | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     fetchAssets();
   }, [clientId]);
 
@@ -188,7 +191,7 @@ export default function ClientGallery({ clientId }: { clientId: string }) {
       </div>
 
       {/* Lightbox / Zoom */}
-      {selectedImage && (
+      {selectedImage && mounted && createPortal(
         <div 
           className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center p-4 cursor-zoom-out"
           onClick={() => setSelectedImage(null)}
@@ -213,7 +216,8 @@ export default function ClientGallery({ clientId }: { clientId: string }) {
           <div className="absolute bottom-6 left-6 text-white font-medium text-sm bg-black/60 backdrop-blur-sm px-4 py-2 rounded-full border border-white/10">
             {selectedImage.file_name}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
       </CardContent>
     </Card>
