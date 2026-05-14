@@ -387,7 +387,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
   }
 
   return (
-    <div className="w-full space-y-6 relative min-h-[800px]">
+    <div className="w-full space-y-6 relative min-h-[800px]" dir={direction}>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">Client Strategy</h1>
@@ -438,7 +438,9 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
           <div className="flex items-center gap-3">
             <Select value={direction} onValueChange={(val: any) => val && handleDirectionChange(val)}>
               <SelectTrigger className="w-[140px] bg-white">
-                <SelectValue placeholder="Direction" />
+                <SelectValue placeholder="Direction">
+                  {direction === 'rtl' ? 'Right to Left' : 'Left to Right'}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ltr">Left to Right</SelectItem>
