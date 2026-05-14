@@ -28,7 +28,7 @@ import "react-quill-new/dist/quill.snow.css";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
-function SortableItemWrapper({ id, children }: { id: string, children: React.ReactNode }) {
+function SortableItemWrapper({ id, children, direction }: { id: string, children: React.ReactNode, direction?: string }) {
   const {
     attributes,
     listeners,
@@ -47,7 +47,7 @@ function SortableItemWrapper({ id, children }: { id: string, children: React.Rea
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="flex items-center gap-3 group/item py-1.5 px-3 rounded-lg hover:bg-gray-50/80 transition-all border border-transparent hover:border-gray-100 bg-white">
+    <div ref={setNodeRef} style={style} className="flex items-center gap-3 group/item py-1.5 px-3 rounded-lg hover:bg-gray-50/80 transition-all border border-transparent hover:border-gray-100 bg-white" dir={direction}>
       <div {...attributes} {...listeners} className="cursor-grab text-gray-300 hover:text-gray-500 touch-none flex items-center justify-center p-1 -ml-2 rtl:-mr-2 rtl:-ml-0">
         <GripVertical className="w-4 h-4" />
       </div>
@@ -456,7 +456,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
       </div>
 
       <Tabs defaultValue="links" className="w-full">
-        <TabsList className="bg-white border p-1 h-auto gap-1 mb-6">
+        <TabsList className="bg-white border p-1 h-auto gap-1 mb-6" dir={direction}>
           <TabsTrigger value="links" className="flex items-center gap-2 py-2 px-4 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
             <Layout className="w-4 h-4" />
             Grouped Links
@@ -483,7 +483,9 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
           <div className="grid grid-cols-1 gap-6">
             {repeaterData.map((group) => (
               <Card key={group.id} className="shadow-sm border-gray-200 overflow-hidden">
-                <CardHeader className={cn(
+                <CardHeader 
+                  dir={direction}
+                  className={cn(
                   "flex flex-row items-center justify-between bg-gray-50 gap-4 transition-all duration-200",
                   collapsedGroups[group.id] ? "py-2 border-b-0" : "pb-3 border-b border-gray-300"
                 )}>
@@ -565,7 +567,7 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                     >
                       <TooltipProvider>
                         {group.items.map((item) => (
-                          <SortableItemWrapper key={item.id} id={item.id}>
+                          <SortableItemWrapper key={item.id} id={item.id} direction={direction}>
                             <Tooltip>
                               <TooltipTrigger>
                                 <div className="flex items-center justify-center shrink-0">
