@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, Save, Bot, Loader2, Pencil, X, Share2, Globe, Lock, MessageSquare } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Bot, Loader2, Pencil, X, Share2, Globe, Lock, MessageSquare, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -59,6 +59,29 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
       setLinksCount(String(links.length));
     }
   }, [content]);
+
+  const handleDeleteComment = async () => {
+    if (!window.confirm("Are you sure you want to delete this comment?")) return;
+    
+    try {
+      const { error } = await supabase
+        .from('articles')
+        .update({
+          client_comment: null,
+          client_comment_at: null
+        })
+        .eq('id', articleId);
+
+      if (error) throw error;
+      
+      setClientComment("");
+      setClientCommentAt("");
+      toast.success("Comment deleted successfully!");
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Failed to delete comment: " + err.message);
+    }
+  };
   
   useEffect(() => {
     async function fetchInitialData() {
@@ -228,7 +251,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
       <div className={`flex flex-col gap-6 items-start ${direction === 'rtl' ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
         <div className="flex-1 min-w-0 space-y-6">
           {clientComment && (
-            <Card className="border-blue-200 bg-blue-50/50 shadow-sm overflow-hidden rounded-xl border-l-4 border-l-blue-600">
+            <Card className="border-blue-200 bg-blue-50/50 shadow-sm overflow-hidden rounded-xl border-l-4 border-l-blue-600" dir={direction}>
               <CardContent className="p-5 flex gap-4 items-start">
                 <div className="p-2 bg-blue-100 rounded-lg text-blue-700 shrink-0">
                   <MessageSquare className="w-5 h-5" />
@@ -238,11 +261,22 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                     <span className="font-bold text-sm text-blue-900">
                       Client Feedback from {clientName || "Client"}
                     </span>
-                    {clientCommentAt && (
-                      <span className="text-xs text-gray-500 font-medium">
-                        {new Date(clientCommentAt).toLocaleString()}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-3">
+                      {clientCommentAt && (
+                        <span className="text-xs text-gray-500 font-medium">
+                          {new Date(clientCommentAt).toLocaleString()}
+                        </span>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleDeleteComment}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0 rounded-md shrink-0"
+                        title="Delete Comment"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                   <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
                     {clientComment}

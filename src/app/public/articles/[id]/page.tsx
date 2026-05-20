@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Loader2, AlertCircle, CheckCircle2, MessageSquare, Send } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle2, MessageSquare, Send, Pencil } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
   const [error, setError] = useState<string | null>(null);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [isEditingComment, setIsEditingComment] = useState(false);
 
   useEffect(() => {
     if (article?.title) {
@@ -59,6 +60,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
 
       toast.success("Feedback submitted successfully!");
       setComment("");
+      setIsEditingComment(false);
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Failed to submit feedback");
@@ -307,19 +309,35 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
                   </div>
                 </div>
 
-                {article.client_comment ? (
-                  <div className="bg-white p-6 rounded-xl border border-blue-50 shadow-sm">
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="font-semibold text-gray-900 text-sm">
-                        Submitted by {article.clients?.name || "Client"}
-                      </span>
+                {article.client_comment && !isEditingComment ? (
+                  <div className="bg-white p-6 rounded-xl border border-blue-50 shadow-sm" dir={direction}>
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-gray-900 text-sm">
+                          Feedback from {article.clients?.name || "Client"}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setComment(article.client_comment);
+                            setIsEditingComment(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-700 font-semibold h-7 px-2 rounded-md text-xs flex items-center gap-1 hover:bg-blue-50"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          Edit
+                        </Button>
+                      </div>
                       {article.client_comment_at && (
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-gray-400 font-medium">
                           {new Date(article.client_comment_at).toLocaleString()}
                         </span>
                       )}
                     </div>
-                    <p className="text-gray-700 text-sm whitespace-pre-wrap">{article.client_comment}</p>
+                    <p className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed" dir={direction}>
+                      {article.client_comment}
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -341,23 +359,38 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
                       <span className="text-xs text-gray-400">
                         Special characters are filtered automatically.
                       </span>
-                      <Button
-                        onClick={submitComment}
-                        disabled={submitting || !comment.trim()}
-                        className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
-                      >
-                        {submitting ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Submitting...
-                          </>
-                        ) : (
-                          <>
-                            <Send className="w-4 h-4" />
-                            Submit Feedback
-                          </>
+                      <div className="flex items-center gap-2">
+                        {isEditingComment && (
+                          <Button
+                            variant="ghost"
+                            onClick={() => {
+                              setComment("");
+                              setIsEditingComment(false);
+                            }}
+                            disabled={submitting}
+                            className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full px-4 h-9 text-xs font-semibold"
+                          >
+                            Cancel
+                          </Button>
                         )}
-                      </Button>
+                        <Button
+                          onClick={submitComment}
+                          disabled={submitting || !comment.trim()}
+                          className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 h-9 text-sm font-semibold shadow-lg shadow-blue-200"
+                        >
+                          {submitting ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Submitting...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-4 h-4" />
+                              {isEditingComment ? "Update Feedback" : "Submit Feedback"}
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 )}
