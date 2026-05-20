@@ -330,7 +330,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
 
           {/* SEO Metadata Copy Box */}
           {(article.meta_title || article.meta_description) && (
-            <div className="mt-12 p-6 bg-gray-50/50 rounded-2xl border border-gray-100 space-y-4" dir="ltr">
+            <div className="mt-12 p-6 bg-gray-50/30 rounded-2xl border border-gray-300 space-y-4 shadow-sm" dir="ltr">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-gray-400">SEO Metadata</span>
               </div>
@@ -352,7 +352,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
                       Copy
                     </Button>
                   </div>
-                  <div className="p-3 bg-white border border-gray-100 rounded-lg text-sm text-gray-700 font-mono break-all leading-normal text-left">
+                  <div className="p-3 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 font-mono break-all leading-normal text-left shadow-sm">
                     {article.meta_title}
                   </div>
                 </div>
@@ -375,7 +375,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
                       Copy
                     </Button>
                   </div>
-                  <div className="p-3 bg-white border border-gray-100 rounded-lg text-sm text-gray-700 font-mono break-all leading-normal text-left">
+                  <div className="p-3 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 font-mono break-all leading-normal text-left shadow-sm">
                     {article.meta_description}
                   </div>
                 </div>
@@ -385,8 +385,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
 
           {/* Client Feedback Card */}
           <div className="mt-16 border-t border-gray-100 pt-10">
-            <Card className="border-blue-100 bg-blue-50/20 shadow-sm overflow-hidden rounded-2xl">
-              <CardContent className="p-8">
+            <div className="border border-blue-300 bg-blue-50/20 shadow-sm overflow-hidden rounded-2xl p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-2 bg-blue-100 rounded-lg text-blue-700">
                     <MessageSquare className="w-5 h-5" />
@@ -398,7 +397,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
                 </div>
 
                 {article.client_comment && !isEditingComment ? (
-                  <div className="bg-white p-6 rounded-xl border border-blue-50 shadow-sm" dir={direction}>
+                  <div className="bg-white p-6 rounded-xl border border-blue-200 shadow-sm" dir={direction}>
                     <div className="flex justify-between items-center mb-4">
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-gray-900 text-sm">
@@ -435,7 +434,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
                         onChange={handleCommentChange}
                         placeholder="Type your comment here..."
                         rows={4}
-                        className="w-full p-4 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+                        className="w-full p-4 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white shadow-inner"
                         maxLength={500}
                         disabled={submitting}
                       />
@@ -482,8 +481,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
                     </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+            </div>
           </div>
         </article>
       </main>
