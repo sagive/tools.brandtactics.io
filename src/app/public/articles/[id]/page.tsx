@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Loader2, AlertCircle, CheckCircle2, MessageSquare, Send, Pencil } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle2, MessageSquare, Send, Pencil, Copy } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -327,6 +327,61 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
             className="public-content"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
+
+          {/* SEO Metadata Copy Box */}
+          {(article.meta_title || article.meta_description) && (
+            <div className="mt-12 p-6 bg-gray-50/50 rounded-2xl border border-gray-100 space-y-4" dir="ltr">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-400">SEO Metadata</span>
+              </div>
+              
+              {article.meta_title && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-gray-500">Meta Title</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(article.meta_title);
+                        toast.success("Meta Title copied!");
+                      }}
+                      className="h-7 px-2.5 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-medium rounded-md flex items-center gap-1"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      Copy
+                    </Button>
+                  </div>
+                  <div className="p-3 bg-white border border-gray-100 rounded-lg text-sm text-gray-700 font-mono break-all leading-normal text-left">
+                    {article.meta_title}
+                  </div>
+                </div>
+              )}
+
+              {article.meta_description && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-gray-500">Meta Description</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(article.meta_description);
+                        toast.success("Meta Description copied!");
+                      }}
+                      className="h-7 px-2.5 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-medium rounded-md flex items-center gap-1"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      Copy
+                    </Button>
+                  </div>
+                  <div className="p-3 bg-white border border-gray-100 rounded-lg text-sm text-gray-700 font-mono break-all leading-normal text-left">
+                    {article.meta_description}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Client Feedback Card */}
           <div className="mt-16 border-t border-gray-100 pt-10">

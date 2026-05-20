@@ -311,12 +311,12 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                   </div>
                   <div className="space-y-2 pt-2">
                     <Label className="text-sm font-semibold text-gray-700">Content</Label>
-                    <div className="border border-gray-200 rounded-md overflow-hidden bg-white min-h-[500px]">
+                    <div className="border border-gray-200 rounded-md overflow-hidden bg-white min-h-[1000px]">
                       <JoditEditor
                         value={content}
                         config={{
                           readonly: false,
-                          height: 500,
+                          height: 1000,
                           direction: direction as any,
                           uploader: {
                             insertImageAsBase64URI: true
