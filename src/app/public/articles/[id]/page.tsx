@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Head from "next/head";
 import { supabase } from "@/lib/supabase";
-import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle2, MessageSquare, Send } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,59 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
   const [article, setArticle] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (article?.title) {
+      document.title = `${article.title} | BrandTactics`;
+    }
+  }, [article]);
+
+  const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    // Regex allows English, Hebrew, numbers, spaces, and basic safe punctuation
+    const sanitized = val.replace(/[^a-zA-Z0-9\s\u0590-\u05FF.,?!'""()-]/g, "");
+    setComment(sanitized);
+  };
+
+  const submitComment = async () => {
+    if (!comment.trim()) return;
+
+    try {
+      setSubmitting(true);
+      const res = await fetch("/api/articles/comment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          articleId: id,
+          comment: comment,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.error || "Failed to submit comment");
+      }
+
+      setArticle((prev: any) => ({
+        ...prev,
+        client_comment: result.comment,
+        client_comment_at: new Date().toISOString(),
+      }));
+
+      toast.success("Feedback submitted successfully!");
+      setComment("");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to submit feedback");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchArticle() {
@@ -91,10 +143,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
 
   return (
     <div className="min-h-screen bg-white" dir={direction}>
-      <Head>
-        <title>{article.title} | BrandTactics</title>
-        <meta name="robots" content="noindex, nofollow" />
-      </Head>
+
       {/* Premium Header */}
       <header className="border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -243,6 +292,78 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
             className="public-content"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
+
+          {/* Client Feedback Card */}
+          <div className="mt-16 border-t border-gray-100 pt-10">
+            <Card className="border-blue-100 bg-blue-50/20 shadow-sm overflow-hidden rounded-2xl">
+              <CardContent className="p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-blue-100 rounded-lg text-blue-700">
+                    <MessageSquare className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">Client Feedback</h2>
+                    <p className="text-xs text-gray-500">Provide comments or requests for this article</p>
+                  </div>
+                </div>
+
+                {article.client_comment ? (
+                  <div className="bg-white p-6 rounded-xl border border-blue-50 shadow-sm">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="font-semibold text-gray-900 text-sm">
+                        Submitted by {article.clients?.name || "Client"}
+                      </span>
+                      {article.client_comment_at && (
+                        <span className="text-xs text-gray-400">
+                          {new Date(article.client_comment_at).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-gray-700 text-sm whitespace-pre-wrap">{article.client_comment}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <textarea
+                        value={comment}
+                        onChange={handleCommentChange}
+                        placeholder="Type your comment here..."
+                        rows={4}
+                        className="w-full p-4 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+                        maxLength={500}
+                        disabled={submitting}
+                      />
+                      <div className="absolute bottom-3 right-3 text-xs text-gray-400 font-medium">
+                        {comment.length}/500
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-400">
+                        Special characters are filtered automatically.
+                      </span>
+                      <Button
+                        onClick={submitComment}
+                        disabled={submitting || !comment.trim()}
+                        className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+                      >
+                        {submitting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Submitting...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4" />
+                            Submit Feedback
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </article>
       </main>
 

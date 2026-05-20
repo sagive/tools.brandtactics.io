@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, Save, Bot, Loader2, Pencil, X, Share2, Globe, Lock } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Bot, Loader2, Pencil, X, Share2, Globe, Lock, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -34,6 +34,9 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
   const [metaTitle, setMetaTitle] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
   const [metaKeywords, setMetaKeywords] = useState("");
+  const [clientComment, setClientComment] = useState("");
+  const [clientCommentAt, setClientCommentAt] = useState("");
+  const [clientName, setClientName] = useState("");
   
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,7 +78,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
 
         const { data, error } = await supabase
           .from('articles')
-          .select('*')
+          .select('*, clients(name)')
           .eq('id', articleId)
           .single();
 
@@ -94,6 +97,9 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
           setMetaTitle(data.meta_title || "");
           setMetaDescription(data.meta_description || "");
           setMetaKeywords(data.meta_keywords || "");
+          setClientComment(data.client_comment || "");
+          setClientCommentAt(data.client_comment_at || "");
+          setClientName(data.clients?.name || "");
         }
       } catch (err: any) {
         toast.error("Failed to load article");
@@ -221,6 +227,31 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
 
       <div className={`flex flex-col gap-6 items-start ${direction === 'rtl' ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
         <div className="flex-1 min-w-0 space-y-6">
+          {clientComment && (
+            <Card className="border-blue-200 bg-blue-50/50 shadow-sm overflow-hidden rounded-xl border-l-4 border-l-blue-600">
+              <CardContent className="p-5 flex gap-4 items-start">
+                <div className="p-2 bg-blue-100 rounded-lg text-blue-700 shrink-0">
+                  <MessageSquare className="w-5 h-5" />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sm text-blue-900">
+                      Client Feedback from {clientName || "Client"}
+                    </span>
+                    {clientCommentAt && (
+                      <span className="text-xs text-gray-500 font-medium">
+                        {new Date(clientCommentAt).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                    {clientComment}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="shadow-sm">
             <CardContent className="p-6 space-y-4">
               {isEditing ? (
