@@ -100,7 +100,9 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
           </div>
           <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val || "All")}>
             <SelectTrigger className="w-full sm:w-[140px] bg-white">
-              <SelectValue placeholder="Status" />
+              <span data-slot="select-value" className="flex flex-1 text-start line-clamp-1">
+                {statusFilter === "All" ? "All Status" : statusFilter === "Draft" ? "Drafts" : "Published"}
+              </span>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Status</SelectItem>
@@ -111,7 +113,9 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
           {clientCategories.length > 0 && (
             <Select value={categoryFilter} onValueChange={(val) => setCategoryFilter(val || "All")}>
               <SelectTrigger className="w-full sm:w-[160px] bg-white">
-                <SelectValue placeholder="Category" />
+                <span data-slot="select-value" className="flex flex-1 text-start line-clamp-1">
+                  {categoryFilter === "All" ? "All Categories" : categoryFilter}
+                </span>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All">All Categories</SelectItem>
