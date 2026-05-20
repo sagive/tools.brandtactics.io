@@ -17,6 +17,17 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
   const [submitting, setSubmitting] = useState(false);
   const [isEditingComment, setIsEditingComment] = useState(false);
 
+  const { words, chars } = React.useMemo(() => {
+    if (!article?.content) return { words: 0, chars: 0 };
+    const cleanText = article.content
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const wordsCount = cleanText ? cleanText.split(' ').length : 0;
+    const charsCount = cleanText.length;
+    return { words: wordsCount, chars: charsCount };
+  }, [article?.content]);
+
   useEffect(() => {
     if (article?.title) {
       document.title = `${article.title} | BrandTactics`;
@@ -143,16 +154,6 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
 
   const direction = article.direction || "ltr";
 
-  const { words, chars } = React.useMemo(() => {
-    if (!article?.content) return { words: 0, chars: 0 };
-    const cleanText = article.content
-      .replace(/<[^>]*>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-    const wordsCount = cleanText ? cleanText.split(' ').length : 0;
-    const charsCount = cleanText.length;
-    return { words: wordsCount, chars: charsCount };
-  }, [article?.content]);
 
   return (
     <div className="min-h-screen bg-white" dir={direction}>
