@@ -44,6 +44,8 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
   const [wordCount, setWordCount] = useState(0);
 
   const [articleTypes, setArticleTypes] = useState<any[]>([]);
+  const [clientCategories, setClientCategories] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   useEffect(() => {
     if (content) {
@@ -101,7 +103,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
 
         const { data, error } = await supabase
           .from('articles')
-          .select('*, clients(name)')
+          .select('*, clients(name, article_categories)')
           .eq('id', articleId)
           .single();
 
@@ -123,6 +125,14 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
           setClientComment(data.client_comment || "");
           setClientCommentAt(data.client_comment_at || "");
           setClientName(data.clients?.name || "");
+          setSelectedCategories(data.categories || []);
+          if (data.clients?.article_categories) {
+            const cats = data.clients.article_categories
+              .split("\n")
+              .map((c: string) => c.trim())
+              .filter(Boolean);
+            setClientCategories(cats);
+          }
         }
       } catch (err: any) {
         toast.error("Failed to load article");
@@ -167,6 +177,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
         meta_title: metaTitle,
         meta_description: metaDescription,
         meta_keywords: metaKeywords,
+        categories: selectedCategories,
         updated_at: new Date().toISOString()
       }).eq('id', articleId);
 
@@ -548,6 +559,49 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                   {wordCount} words
                 </div>
               </div>
+
+              {clientCategories.length > 0 && (
+                <div className="space-y-2 pt-2 border-t border-gray-100 mt-2">
+                  <Label className="text-xs font-semibold text-gray-600">Categories</Label>
+                  {isEditing ? (
+                    <div className="space-y-1.5 pt-1 max-h-[150px] overflow-y-auto pr-2">
+                      {clientCategories.map((cat) => {
+                        const isChecked = selectedCategories.includes(cat);
+                        return (
+                          <div key={cat} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`cat-${cat}`} 
+                              checked={isChecked} 
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedCategories([...selectedCategories, cat]);
+                                } else {
+                                  setSelectedCategories(selectedCategories.filter(c => c !== cat));
+                                }
+                              }} 
+                            />
+                            <Label htmlFor={`cat-${cat}`} className="text-xs text-gray-700 cursor-pointer font-medium">
+                              {cat}
+                            </Label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {selectedCategories.length > 0 ? (
+                        selectedCategories.map((cat) => (
+                          <Badge key={cat} variant="secondary" className="bg-blue-50 text-blue-700 text-[10px] border-none font-medium">
+                            {cat}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-xs text-gray-400">No categories selected</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="pt-6 mt-6 border-t border-gray-100 space-y-4">
                 <CardTitle className="text-sm uppercase tracking-wider text-blue-600 font-bold">SEO Settings</CardTitle>

@@ -74,7 +74,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
       try {
         const { data, error } = await supabase
           .from('articles')
-          .select('*, clients(name)')
+          .select('*, clients(name, article_categories, hide_logo_in_preview, custom_logo_text, custom_bottom_text)')
           .eq('id', id)
           .single();
 
@@ -143,18 +143,37 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
 
   const direction = article.direction || "ltr";
 
+  const { words, chars } = React.useMemo(() => {
+    if (!article?.content) return { words: 0, chars: 0 };
+    const cleanText = article.content
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const wordsCount = cleanText ? cleanText.split(' ').length : 0;
+    const charsCount = cleanText.length;
+    return { words: wordsCount, chars: charsCount };
+  }, [article?.content]);
+
   return (
     <div className="min-h-screen bg-white" dir={direction}>
 
       {/* Premium Header */}
       <header className="border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-              BT
+          {article.clients?.hide_logo_in_preview ? (
+            article.clients?.custom_logo_text ? (
+              <span className="font-bold text-gray-900 tracking-tight text-lg">
+                {article.clients.custom_logo_text}
+              </span>
+            ) : <div />
+          ) : (
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                BT
+              </div>
+              <span className="font-bold text-gray-900 tracking-tight">BrandTactics</span>
             </div>
-            <span className="font-bold text-gray-900 tracking-tight">BrandTactics</span>
-          </div>
+          )}
           
           <div className="flex items-center gap-4">
             {article.client_approved ? (
@@ -189,11 +208,24 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
             <h1 className={`text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight mb-6 ${direction === 'rtl' ? 'text-right' : 'text-left'}`}>
               {article.title}
             </h1>
-            <div className="flex items-center gap-4 text-sm text-gray-500 border-t border-gray-50 pt-6">
-              <div className="flex flex-col">
-                <span className="font-semibold text-gray-900">BrandTactics Editorial</span>
-                <span>Published on {new Date(article.created_at).toLocaleDateString()}</span>
-              </div>
+            <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs font-semibold uppercase tracking-wider text-gray-400 border-t border-gray-100 pt-6">
+              <span>{new Date(article.created_at).toLocaleDateString()}</span>
+              <span className="text-gray-200">•</span>
+              <span>{words} Words</span>
+              <span className="text-gray-200">•</span>
+              <span>{chars} Characters</span>
+              {article.categories && article.categories.length > 0 && (
+                <>
+                  <span className="text-gray-200">•</span>
+                  <div className="flex flex-wrap gap-1">
+                    {article.categories.map((cat: string) => (
+                      <span key={cat} className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] font-semibold normal-case">
+                        {cat}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </header>
 
@@ -402,7 +434,13 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
 
       <footer className="bg-gray-50 border-t border-gray-100 py-12 mt-20">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <p className="text-gray-400 text-sm mb-4">This article was shared via BrandTactics Client Portal.</p>
+          {article.clients?.hide_logo_in_preview ? (
+            article.clients?.custom_bottom_text ? (
+              <p className="text-gray-400 text-sm mb-4">{article.clients.custom_bottom_text}</p>
+            ) : null
+          ) : (
+            <p className="text-gray-400 text-sm mb-4">This article was shared via BrandTactics Client Portal.</p>
+          )}
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-gray-100">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
             <span className="text-xs font-semibold text-gray-700 uppercase tracking-widest">Verified Article</span>

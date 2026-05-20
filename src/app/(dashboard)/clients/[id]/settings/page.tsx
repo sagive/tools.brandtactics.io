@@ -12,6 +12,7 @@ import { useAuth } from "@/components/auth-provider";
 import { format } from "date-fns";
 
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function ClientSettings({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
@@ -29,7 +30,11 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
     status: "Active",
     managerId: "",
     managerFee: "",
-    managerNotes: ""
+    managerNotes: "",
+    articleCategories: "",
+    hideLogoInPreview: false,
+    customLogoText: "",
+    customBottomText: ""
   });
   const [joinDate, setJoinDate] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
@@ -58,7 +63,11 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
             status: clientData.status || "Active",
             managerId: clientData.manager_id || "",
             managerFee: clientData.manager_fee !== null && clientData.manager_fee !== undefined ? clientData.manager_fee.toString() : "0",
-            managerNotes: clientData.manager_notes || ""
+            managerNotes: clientData.manager_notes || "",
+            articleCategories: clientData.article_categories || "",
+            hideLogoInPreview: clientData.hide_logo_in_preview || false,
+            customLogoText: clientData.custom_logo_text || "",
+            customBottomText: clientData.custom_bottom_text || ""
           });
           if (clientData.created_at) {
              setJoinDate(format(new Date(clientData.created_at), "MMM d, yyyy"));
@@ -96,7 +105,11 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
         status: formData.status,
         manager_id: formData.managerId || null,
         manager_fee: parseInt(formData.managerFee) || 0,
-        manager_notes: formData.managerNotes
+        manager_notes: formData.managerNotes,
+        article_categories: formData.articleCategories || null,
+        hide_logo_in_preview: formData.hideLogoInPreview,
+        custom_logo_text: formData.customLogoText || null,
+        custom_bottom_text: formData.customBottomText || null
       })
       .eq("id", id);
 
@@ -265,6 +278,64 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
                     className="min-h-[100px] resize-none"
                   />
                </div>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100 pt-8 mt-8">
+            <h3 className="text-sm font-bold text-gray-900 mb-6 uppercase tracking-wider">Articles Settings</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+               <div className="space-y-1 md:col-span-2">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Categories (one per line)</label>
+                  <Textarea 
+                    name="articleCategories" 
+                    value={formData.articleCategories} 
+                    onChange={handleChange}
+                    placeholder="e.g.&#10;Marketing&#10;Sales&#10;Tech Support"
+                    className="min-h-[120px] resize-y font-mono text-sm"
+                  />
+               </div>
+
+               <div className="space-y-2 md:col-span-2 pt-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="hide-logo" 
+                      checked={formData.hideLogoInPreview} 
+                      onCheckedChange={(checked) => {
+                        setFormData({ ...formData, hideLogoInPreview: !!checked });
+                        setIsDirty(true);
+                      }} 
+                    />
+                    <label htmlFor="hide-logo" className="text-xs font-bold text-gray-700 cursor-pointer uppercase tracking-wider">
+                      Hide BrandTactics Logo in Article Public Preview
+                    </label>
+                  </div>
+               </div>
+
+               {formData.hideLogoInPreview && (
+                 <>
+                   <div className="space-y-1">
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Custom Header text (leave empty for nothing)</label>
+                      <Input 
+                        name="customLogoText" 
+                        value={formData.customLogoText} 
+                        onChange={handleChange} 
+                        placeholder="e.g. Zap"
+                        className="h-10" 
+                      />
+                   </div>
+
+                   <div className="space-y-1">
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Custom Footer text (leave empty for nothing)</label>
+                      <Input 
+                        name="customBottomText" 
+                        value={formData.customBottomText} 
+                        onChange={handleChange} 
+                        placeholder="e.g. Shared by Zap Portal"
+                        className="h-10" 
+                      />
+                   </div>
+                 </>
+               )}
             </div>
           </div>
 

@@ -49,6 +49,8 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
   const [metaTitle, setMetaTitle] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
   const [metaKeywords, setMetaKeywords] = useState("");
+  const [clientCategories, setClientCategories] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   useEffect(() => {
     if (content) {
@@ -85,8 +87,17 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
       const { data: aiData } = await supabase.from('app_settings').select('article_ai_webhook_url, article_ai_webhook_url_test, article_ai_use_test').eq('id', 'global').single();
       if (aiData) setAiSettings(aiData);
 
-      const { data: cData } = await supabase.from('clients').select('name, description').eq('id', clientId).single();
-      if (cData) setClientData(cData);
+      const { data: cData } = await supabase.from('clients').select('name, description, article_categories').eq('id', clientId).single();
+      if (cData) {
+        setClientData(cData);
+        if (cData.article_categories) {
+          const cats = cData.article_categories
+            .split("\n")
+            .map((c: string) => c.trim())
+            .filter(Boolean);
+          setClientCategories(cats);
+        }
+      }
     }
     fetchData();
   }, []);
@@ -186,7 +197,8 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
         is_public: isPublic,
         meta_title: metaTitle,
         meta_description: metaDescription,
-        meta_keywords: metaKeywords
+        meta_keywords: metaKeywords,
+        categories: selectedCategories
       });
 
       if (error) throw error;
@@ -507,6 +519,35 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
                   {wordCount} words
                 </div>
               </div>
+
+              {clientCategories.length > 0 && (
+                <div className="space-y-2 pt-2 border-t border-gray-100 mt-2">
+                  <Label className="text-xs font-semibold text-gray-600">Categories</Label>
+                  <div className="space-y-1.5 pt-1 max-h-[150px] overflow-y-auto pr-2">
+                    {clientCategories.map((cat) => {
+                      const isChecked = selectedCategories.includes(cat);
+                      return (
+                        <div key={cat} className="flex items-center space-x-2">
+                          <Checkbox 
+                            id={`cat-${cat}`} 
+                            checked={isChecked} 
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedCategories([...selectedCategories, cat]);
+                              } else {
+                                setSelectedCategories(selectedCategories.filter(c => c !== cat));
+                              }
+                            }} 
+                          />
+                          <Label htmlFor={`cat-${cat}`} className="text-xs text-gray-700 cursor-pointer font-medium">
+                            {cat}
+                          </Label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               <div className="pt-6 mt-6 border-t border-gray-100 space-y-4">
                 <CardTitle className="text-sm uppercase tracking-wider text-blue-600 font-bold">SEO Settings</CardTitle>

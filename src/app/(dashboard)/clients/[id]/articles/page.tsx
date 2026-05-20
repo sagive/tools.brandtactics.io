@@ -21,6 +21,8 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
   
   const [articles, setArticles] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [clientCategories, setClientCategories] = useState<string[]>([]);
+  const [categoryFilter, setCategoryFilter] = useState("All");
 
   useEffect(() => {
     fetchArticles();
@@ -35,13 +37,30 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
       .order('created_at', { ascending: false });
       
     if (data) setArticles(data);
+
+    // Fetch client categories
+    const { data: clientData } = await supabase
+      .from('clients')
+      .select('article_categories')
+      .eq('id', clientId)
+      .single();
+
+    if (clientData?.article_categories) {
+      const cats = clientData.article_categories
+        .split("\n")
+        .map((c: string) => c.trim())
+        .filter(Boolean);
+      setClientCategories(cats);
+    }
+
     setIsLoading(false);
   };
 
   const filteredArticles = articles.filter(a => {
     const matchesSearch = a.title.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "All" || a.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesCategory = categoryFilter === "All" || (Array.isArray(a.categories) && a.categories.includes(categoryFilter));
+    return matchesSearch && matchesStatus && matchesCategory;
   });
 
   const handleDelete = async (articleId: string) => {
@@ -90,6 +109,19 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
               <SelectItem value="Published">Published</SelectItem>
             </SelectContent>
           </Select>
+          {clientCategories.length > 0 && (
+            <Select value={categoryFilter} onValueChange={(val) => setCategoryFilter(val || "All")}>
+              <SelectTrigger className="w-full sm:w-[160px] bg-white">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Categories</SelectItem>
+                {clientCategories.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         
         <div className="flex gap-3 w-full sm:w-auto">
@@ -141,6 +173,15 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
                         <a href={article.live_url} target="_blank" rel="noreferrer" className="text-[10px] text-blue-500 hover:underline mt-0.5 inline-block truncate max-w-[250px]">
                           {article.live_url}
                         </a>
+                      )}
+                      {article.categories && article.categories.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {article.categories.map((c: string) => (
+                            <span key={c} className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[9px] font-semibold">
+                              {c}
+                            </span>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </TableCell>
