@@ -910,7 +910,9 @@ function SettingsContent() {
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-gray-500 font-mono">Value</span>
-                            <span className="text-[10px] font-bold text-green-400 font-mono">••••••••••••</span>
+                            <span className="text-[10px] font-bold text-green-400 font-mono select-all">
+                              {webhookSecret || "Not configured"}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -1022,7 +1024,9 @@ function SettingsContent() {
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold text-gray-500 font-mono">Value</span>
-                            <span className="text-[10px] font-bold text-green-400 font-mono">••••••••••••</span>
+                            <span className="text-[10px] font-bold text-green-400 font-mono select-all">
+                              {webhookSecret || "Not configured"}
+                            </span>
                           </div>
                         </div>
                       </div>
