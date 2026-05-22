@@ -28,6 +28,56 @@ interface Profile {
   image_url: string;
   rank: number;
   gmail?: string;
+  profile_credentials?: {
+    username: string;
+    login_url?: string;
+    profile_sites: {
+      name: string;
+      rank?: number;
+    } | null;
+  }[];
+}
+
+function getFaviconUrl(siteName?: string, loginUrl?: string): string | null {
+  let domain = "";
+  
+  if (loginUrl) {
+    try {
+      let urlStr = loginUrl.trim();
+      if (!/^https?:\/\//i.test(urlStr)) {
+        urlStr = 'https://' + urlStr;
+      }
+      const url = new URL(urlStr);
+      domain = url.hostname.replace(/^www\./i, "");
+    } catch (e) {
+      // Ignore URL parsing errors
+    }
+  }
+  
+  if (!domain && siteName) {
+    const name = siteName.toLowerCase().trim();
+    if (name.includes("facebook")) domain = "facebook.com";
+    else if (name.includes("instagram")) domain = "instagram.com";
+    else if (name.includes("twitter") || name === "x" || name.includes("twitter/x")) domain = "x.com";
+    else if (name.includes("linkedin")) domain = "linkedin.com";
+    else if (name.includes("tiktok")) domain = "tiktok.com";
+    else if (name.includes("gmail") || name.includes("google")) domain = "google.com";
+    else if (name.includes("youtube")) domain = "youtube.com";
+    else if (name.includes("pinterest")) domain = "pinterest.com";
+    else if (name.includes("reddit")) domain = "reddit.com";
+    else if (name.includes("github")) domain = "github.com";
+    else {
+      if (name.includes(".")) {
+        domain = name;
+      }
+    }
+  }
+  
+  if (domain) {
+    return `https://www.google.com/s2/favicons?sz=64&domain=${domain}`;
+  }
+  
+  return null;
 }
 
 export default function ProfilesPage() {
@@ -53,7 +103,11 @@ export default function ProfilesPage() {
           *,
           profile_credentials (
             username,
-            profile_sites (name)
+            login_url,
+            profile_sites (
+              name,
+              rank
+            )
           )
         `)
         .order("rank", { ascending: true })
@@ -191,54 +245,114 @@ export default function ProfilesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-          {filteredProfiles.map((profile) => (
-            <Card key={profile.id} className="group relative overflow-hidden bg-white rounded-sm border-gray-300 transition-all duration-300 hover:border-blue-600 border flex flex-col cursor-pointer shadow-none">
-              <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-all">
-                <DropdownMenu>
-                  <DropdownMenuTrigger onClick={(e) => e.stopPropagation()}>
-                    <Button variant="secondary" size="icon" className="h-7 w-7 rounded-sm bg-white border border-gray-300 shadow-none">
-                      <MoreVertical className="w-3.5 h-3.5 text-gray-600" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 rounded-sm p-1 border-gray-300 shadow-none">
-                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(profile); }} className="rounded-sm py-2 cursor-pointer font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50">
-                      <Edit2 className="w-4 h-4 mr-3" /> Edit Persona
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDelete(profile.id); }} className="rounded-sm py-2 cursor-pointer font-medium text-red-600 hover:bg-red-50">
-                      <Trash2 className="w-4 h-4 mr-3" /> Delete Persona
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+          {filteredProfiles.map((profile) => {
+            const sortedCredentials = [...(profile.profile_credentials || [])].sort((a, b) => {
+              const rankA = a.profile_sites?.rank ?? 9999;
+              const rankB = b.profile_sites?.rank ?? 9999;
+              return rankA - rankB;
+            });
+            
+            const displayCredentials = sortedCredentials.length > 6 
+              ? sortedCredentials.slice(0, 5) 
+              : sortedCredentials;
+            
+            const remainingCount = sortedCredentials.length > 6 
+              ? sortedCredentials.length - 5 
+              : 0;
 
-              <Link href={`/profiles/${profile.id}`} className="flex-1 flex flex-col">
-                <CardContent className="p-0 flex-1 flex flex-col">
-                  {/* Header Image Area */}
-                  <div className="relative w-full aspect-square bg-gray-100 overflow-hidden group-hover:scale-101 transition-transform duration-500">
-                    {profile.image_url ? (
-                      <img src={profile.image_url} alt={profile.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-blue-50">
-                        <User className="w-10 h-10 text-blue-200" />
+            return (
+              <Card key={profile.id} className="group relative overflow-hidden bg-white rounded-sm border-gray-300 transition-all duration-300 hover:border-blue-600 border flex flex-col cursor-pointer shadow-none">
+                <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-all">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger onClick={(e) => e.stopPropagation()}>
+                      <Button variant="secondary" size="icon" className="h-7 w-7 rounded-sm bg-white border border-gray-300 shadow-none">
+                        <MoreVertical className="w-3.5 h-3.5 text-gray-600" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48 rounded-sm p-1 border-gray-300 shadow-none">
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(profile); }} className="rounded-sm py-2 cursor-pointer font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50">
+                        <Edit2 className="w-4 h-4 mr-3" /> Edit Persona
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDelete(profile.id); }} className="rounded-sm py-2 cursor-pointer font-medium text-red-600 hover:bg-red-50">
+                        <Trash2 className="w-4 h-4 mr-3" /> Delete Persona
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <Link href={`/profiles/${profile.id}`} className="flex-1 flex flex-col">
+                  <CardContent className="p-0 flex-1 flex flex-col h-full">
+                    {/* Header Image Area */}
+                    <div className="relative w-full aspect-square bg-gray-100 overflow-hidden group-hover:scale-101 transition-transform duration-500">
+                      {profile.image_url ? (
+                        <img src={profile.image_url} alt={profile.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-blue-50">
+                          <User className="w-10 h-10 text-blue-200" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Content Area */}
+                    <div className="p-3 text-center space-y-0.5">
+                      <h3 className="text-[11px] font-black text-gray-900 group-hover:text-blue-600 transition-colors uppercase tracking-tight truncate px-1">
+                        {profile.name}
+                      </h3>
+                      {profile.gmail && (
+                        <p className="text-[9px] font-bold text-gray-400 truncate px-1">
+                          {profile.gmail}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Favicons Row */}
+                    {profile.profile_credentials && profile.profile_credentials.length > 0 && (
+                      <div className="px-3 pb-3 pt-1 flex items-center justify-center gap-1 flex-wrap mt-auto">
+                        {displayCredentials.map((cred, idx) => {
+                          const faviconUrl = getFaviconUrl(cred.profile_sites?.name, cred.login_url);
+                          const siteInitial = (cred.profile_sites?.name || cred.username || "?").charAt(0).toUpperCase();
+                          
+                          return (
+                            <div 
+                              key={idx} 
+                              className="w-5 h-5 rounded-full bg-white border border-gray-200 flex items-center justify-center overflow-hidden shadow-sm transition-all hover:scale-110 hover:border-blue-300"
+                              title={cred.profile_sites?.name || cred.username}
+                            >
+                              {faviconUrl ? (
+                                <img 
+                                  src={faviconUrl} 
+                                  alt={cred.profile_sites?.name || "account"} 
+                                  className="w-3.5 h-3.5 object-contain"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    const parent = target.parentElement;
+                                    if (parent) {
+                                      parent.innerHTML = `<span class="text-[8px] font-black text-gray-500">${siteInitial}</span>`;
+                                    }
+                                  }}
+                                />
+                              ) : (
+                                <span className="text-[8px] font-black text-gray-500">{siteInitial}</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                        
+                        {remainingCount > 0 && (
+                          <div 
+                            className="w-5 h-5 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden shadow-sm text-[8px] font-black text-gray-600 uppercase tracking-tighter"
+                            title={`${remainingCount} more accounts`}
+                          >
+                            +{remainingCount}
+                          </div>
+                        )}
                       </div>
                     )}
-                  </div>
-
-                  {/* Content Area */}
-                  <div className="p-3 text-center space-y-0.5">
-                    <h3 className="text-[11px] font-black text-gray-900 group-hover:text-blue-600 transition-colors uppercase tracking-tight truncate px-1">
-                      {profile.name}
-                    </h3>
-                    {profile.gmail && (
-                      <p className="text-[9px] font-bold text-gray-400 truncate px-1">
-                        {profile.gmail}
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Link>
-            </Card>
-          ))}
+                  </CardContent>
+                </Link>
+              </Card>
+            );
+          })}
         </div>
       )}
 
