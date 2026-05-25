@@ -75,6 +75,7 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
   };
 
   const draftCount = articles.filter(a => a.status === "Draft").length;
+  const sentCount = articles.filter(a => a.status === "Sent to publisher").length;
   const publishedCount = articles.filter(a => a.status === "Published").length;
 
   return (
@@ -83,6 +84,7 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
       <div className="flex gap-2 mb-4">
         <Badge variant="outline" className="bg-white">{articles.length} Total</Badge>
         <Badge variant="secondary" className="bg-gray-100 text-gray-700">{draftCount} Drafts</Badge>
+        <Badge variant="secondary" className="bg-indigo-50 text-indigo-700">{sentCount} Sent to publisher</Badge>
         <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">{publishedCount} Published</Badge>
       </div>
 
@@ -99,14 +101,21 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
             />
           </div>
           <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val || "All")}>
-            <SelectTrigger className="w-full sm:w-[140px] bg-white">
+            <SelectTrigger className="w-full sm:w-[160px] bg-white">
               <span data-slot="select-value" className="flex flex-1 text-start line-clamp-1">
-                {statusFilter === "All" ? "All Status" : statusFilter === "Draft" ? "Drafts" : "Published"}
+                {statusFilter === "All" 
+                  ? "All Status" 
+                  : statusFilter === "Draft" 
+                  ? "Drafts" 
+                  : statusFilter === "Sent to publisher"
+                  ? "Sent to publisher"
+                  : "Published"}
               </span>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Status</SelectItem>
               <SelectItem value="Draft">Drafts</SelectItem>
+              <SelectItem value="Sent to publisher">Sent to publisher</SelectItem>
               <SelectItem value="Published">Published</SelectItem>
             </SelectContent>
           </Select>
@@ -144,10 +153,10 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
         <Table>
           <TableHeader className="bg-gray-50/50">
             <TableRow>
-              <TableHead className="w-full min-w-[300px]">Article Title</TableHead>
-              <TableHead className="w-32">Type</TableHead>
-              <TableHead className="w-32">Status</TableHead>
-              <TableHead className="w-40">Last Updated</TableHead>
+              <TableHead className="w-full min-w-[300px] pl-6">Article Title</TableHead>
+              <TableHead className="w-32 text-center">Type</TableHead>
+              <TableHead className="w-32 text-center">Status</TableHead>
+              <TableHead className="w-40 text-center">Last Updated</TableHead>
               <TableHead className="w-16"></TableHead>
             </TableRow>
           </TableHeader>
@@ -167,7 +176,7 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
             ) : (
               filteredArticles.map((article) => (
                 <TableRow key={article.id} className="hover:bg-gray-50/50">
-                  <TableCell className="font-medium text-gray-900 hover:text-blue-600 transition-colors">
+                  <TableCell className="font-medium text-gray-900 hover:text-blue-600 transition-colors pl-6">
                     <div className="flex flex-col">
                       <Link href={`/clients/${clientId}/articles/${article.id}`}>
                         <span className="cursor-pointer">{article.title}</span>
@@ -188,21 +197,23 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
                       {article.type || "-"}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <Badge variant="secondary" className={
                       article.status === 'Published' 
                       ? 'bg-emerald-50 text-emerald-700' 
+                      : article.status === 'Sent to publisher'
+                      ? 'bg-indigo-50 text-indigo-700'
                       : 'bg-gray-100 text-gray-700'
                     }>
                       {article.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-gray-500 text-sm">
+                  <TableCell className="text-gray-500 text-sm text-center">
                     {article.updated_at 
                       ? format(new Date(article.updated_at), "MMM d, yyyy") 
                       : "Recently Added"}

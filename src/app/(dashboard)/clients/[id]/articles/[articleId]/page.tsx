@@ -454,12 +454,19 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Draft">Draft</SelectItem>
+                      <SelectItem value="Sent to publisher">Sent to publisher</SelectItem>
                       <SelectItem value="Published">Published</SelectItem>
                     </SelectContent>
                   </Select>
                 ) : (
                   <div>
-                    <Badge variant="secondary" className={status === 'Published' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-700'}>
+                    <Badge variant="secondary" className={
+                      status === 'Published' 
+                      ? 'bg-emerald-50 text-emerald-700' 
+                      : status === 'Sent to publisher'
+                      ? 'bg-indigo-50 text-indigo-700'
+                      : 'bg-gray-100 text-gray-700'
+                    }>
                       {status}
                     </Badge>
                   </div>

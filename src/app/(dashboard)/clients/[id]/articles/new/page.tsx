@@ -246,11 +246,12 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
         </div>
         <div className="ml-auto flex items-center gap-3">
           <Select value={status} onValueChange={(val) => setStatus(val || "Draft")}>
-            <SelectTrigger className="w-32 bg-white">
+            <SelectTrigger className="w-44 bg-white">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Draft">Draft</SelectItem>
+              <SelectItem value="Sent to publisher">Sent to publisher</SelectItem>
               <SelectItem value="Published">Published</SelectItem>
             </SelectContent>
           </Select>
