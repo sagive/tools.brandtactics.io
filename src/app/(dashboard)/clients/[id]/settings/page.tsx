@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Save, CheckCircle2, CircleDot } from "lucide-react";
+import { Loader2, Save, CheckCircle2, CircleDot, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth-provider";
@@ -13,6 +13,12 @@ import { format } from "date-fns";
 
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+
+interface ClientManager {
+  managerId: string;
+  managerFee: string;
+  roleDescription: string;
+}
 
 export default function ClientSettings({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
@@ -36,6 +42,7 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
     customLogoText: "",
     customBottomText: ""
   });
+  const [clientManagers, setClientManagers] = useState<ClientManager[]>([]);
   const [joinDate, setJoinDate] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -69,6 +76,23 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
             customLogoText: clientData.custom_logo_text || "",
             customBottomText: clientData.custom_bottom_text || ""
           });
+
+          let parsedManagers: ClientManager[] = [];
+          if (clientData.client_managers && Array.isArray(clientData.client_managers)) {
+            parsedManagers = clientData.client_managers.map((m: any) => ({
+              managerId: m.manager_id || "",
+              managerFee: m.manager_fee !== null && m.manager_fee !== undefined ? m.manager_fee.toString() : "0",
+              roleDescription: m.role_description || ""
+            }));
+          } else if (clientData.manager_id) {
+            parsedManagers = [{
+              managerId: clientData.manager_id,
+              managerFee: clientData.manager_fee !== null && clientData.manager_fee !== undefined ? clientData.manager_fee.toString() : "0",
+              roleDescription: "Account Manager"
+            }];
+          }
+          setClientManagers(parsedManagers);
+
           if (clientData.created_at) {
              setJoinDate(format(new Date(clientData.created_at), "MMM d, yyyy"));
           }
@@ -88,9 +112,37 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
     setIsDirty(true);
   };
 
+  const handleAddManagerRow = () => {
+    setClientManagers([
+      ...clientManagers,
+      { managerId: "", managerFee: "0", roleDescription: "" }
+    ]);
+    setIsDirty(true);
+  };
+
+  const handleRemoveManagerRow = (index: number) => {
+    setClientManagers(clientManagers.filter((_, i) => i !== index));
+    setIsDirty(true);
+  };
+
+  const handleManagerRowChange = (index: number, field: keyof ClientManager, value: string) => {
+    const updated = [...clientManagers];
+    updated[index] = { ...updated[index], [field]: value };
+    setClientManagers(updated);
+    setIsDirty(true);
+  };
+
   const handleSave = async () => {
     if (!isAdmin) return;
     setIsSaving(true);
+
+    const managersToSave = clientManagers
+      .filter(m => m.managerId && m.managerId !== "none")
+      .map(m => ({
+        manager_id: m.managerId,
+        manager_fee: parseInt(m.managerFee) || 0,
+        role_description: m.roleDescription
+      }));
     
     const { error } = await supabase
       .from("clients")
@@ -103,8 +155,9 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
         type: formData.type,
         monthly_fee: parseInt(formData.monthlyFee) || 0,
         status: formData.status,
-        manager_id: formData.managerId || null,
-        manager_fee: parseInt(formData.managerFee) || 0,
+        manager_id: managersToSave[0]?.manager_id || null,
+        manager_fee: managersToSave[0]?.manager_fee || 0,
+        client_managers: managersToSave,
         manager_notes: formData.managerNotes,
         article_categories: formData.articleCategories || null,
         hide_logo_in_preview: formData.hideLogoInPreview,
@@ -234,50 +287,109 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
           </div>
 
           <div className="border-t border-gray-100 pt-8 mt-8">
-            <h3 className="text-sm font-bold text-gray-900 mb-6 uppercase tracking-wider">Client Manager</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-               <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Assigned Manager</label>
-                  <Select 
-                    value={formData.managerId} 
-                    onValueChange={(val) => { setFormData({ ...formData, managerId: val || "" }); setIsDirty(true); }}
-                  >
-                    <SelectTrigger className="h-10 w-full">
-                      <SelectValue placeholder="Select manager" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No Manager</SelectItem>
-                      {users.map(u => (
-                        <SelectItem key={u.id} value={u.id}>{u.full_name || u.email}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-               </div>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Client Managers</h3>
+                <p className="text-[11px] text-gray-400 mt-1">Assign team members, their fees, and role descriptions for this client.</p>
+              </div>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                onClick={handleAddManagerRow}
+                className="text-blue-600 border-blue-200 hover:bg-blue-50/50 font-bold text-xs"
+              >
+                <Plus className="w-3.5 h-3.5 mr-1" />
+                Add Manager
+              </Button>
+            </div>
 
-               <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Manager Fee ($)</label>
-                  <div className="relative">
-                    <Input 
-                      name="managerFee" 
-                      type="number" 
-                      value={formData.managerFee} 
-                      onChange={handleChange} 
-                      className="h-10 pr-12" 
-                    />
-                    <span className="absolute right-3 top-2.5 text-xs font-bold text-gray-400">USD</span>
+            <div className="space-y-4 mb-6">
+              {clientManagers.length === 0 ? (
+                <div className="text-center py-6 border border-dashed border-gray-200 rounded-xl text-gray-400 text-xs">
+                  No managers assigned yet. Click "Add Manager" to assign one.
+                </div>
+              ) : (
+                clientManagers.map((mgr, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-gray-50/50 p-4 rounded-xl border border-gray-100 relative group">
+                    {/* Field: Assigned Manager */}
+                    <div className="space-y-1 md:col-span-4">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Assigned Manager</label>
+                      <Select 
+                        value={mgr.managerId || "none"} 
+                        onValueChange={(val) => handleManagerRowChange(index, "managerId", val || "")}
+                      >
+                        <SelectTrigger className="h-10 w-full bg-white">
+                          <SelectValue placeholder="Select manager">
+                            {mgr.managerId && mgr.managerId !== "none"
+                              ? (users.find(u => u.id === mgr.managerId)?.full_name || users.find(u => u.id === mgr.managerId)?.email || mgr.managerId)
+                              : undefined}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No Manager</SelectItem>
+                          {users.map(u => (
+                            <SelectItem key={u.id} value={u.id}>{u.full_name || u.email}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Field: Manager Fee */}
+                    <div className="space-y-1 md:col-span-3">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Manager Fee ($)</label>
+                      <div className="relative">
+                        <Input 
+                          type="number" 
+                          value={mgr.managerFee} 
+                          onChange={(e) => handleManagerRowChange(index, "managerFee", e.target.value)} 
+                          className="h-10 pr-12 bg-white" 
+                        />
+                        <span className="absolute right-3 top-2.5 text-xs font-bold text-gray-400">USD</span>
+                      </div>
+                    </div>
+
+                    {/* Field: Role Description */}
+                    <div className="space-y-1 md:col-span-4">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Manager Role Description</label>
+                      <Input 
+                        type="text" 
+                        value={mgr.roleDescription} 
+                        onChange={(e) => handleManagerRowChange(index, "roleDescription", e.target.value)} 
+                        placeholder="e.g. Account Lead, SEO Support..."
+                        className="h-10 bg-white" 
+                      />
+                    </div>
+
+                    {/* Remove Action Button */}
+                    <div className="md:col-span-1 flex justify-center pb-1">
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleRemoveManagerRow(index)}
+                        className="text-gray-400 hover:text-red-600 hover:bg-red-50 h-8 w-8 rounded-lg transition-colors"
+                        title="Remove Manager"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-               </div>
+                ))
+              )}
+            </div>
 
-               <div className="space-y-1 lg:col-span-3">
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Manager Notes</label>
-                  <Textarea 
-                    name="managerNotes" 
-                    value={formData.managerNotes} 
-                    onChange={handleChange}
-                    placeholder="Internal notes about manager performance or setup..."
-                    className="min-h-[100px] resize-none"
-                  />
-               </div>
+            <div className="grid grid-cols-1 gap-8">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Manager Notes</label>
+                <Textarea 
+                  name="managerNotes" 
+                  value={formData.managerNotes} 
+                  onChange={handleChange}
+                  placeholder="Internal notes about manager performance or setup..."
+                  className="min-h-[100px] resize-none"
+                />
+              </div>
             </div>
           </div>
 
