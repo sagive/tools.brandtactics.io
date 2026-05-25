@@ -75,25 +75,47 @@ export async function POST(req: Request) {
     let resendData = null;
 
     if (resend) {
-      const htmlContent = `
-        <div style="font-family: sans-serif; max-width: 600px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: white;">
-          <h2 style="color: #2563eb; margin-top: 0;">You've been invited!</h2>
-          <div style="background: #f8fafc; padding: 24px; border-radius: 8px; border: 1px solid #f1f5f9; color: #334155; line-height: 1.6;">
-            <p>You have been invited to join the BrandTactics portal as a <strong>${role || 'viewer'}</strong>.</p>
-            <p>Click the button below to set your password and access your account.</p>
-            <div style="text-align: center; margin-top: 24px;">
-              <a href="${inviteUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Accept Invitation</a>
-            </div>
-            <p style="font-size: 11px; margin-top: 24px; color: #94a3b8;">Or copy and paste this link: <br/> ${inviteUrl}</p>
-          </div>
+      const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+      const { data: settings } = await supabaseAdmin
+        .from('app_settings')
+        .select('email_scenarios, email_template')
+        .eq('id', 'global')
+        .single();
+
+      let subject = "You're invited to BrandTactics";
+      let bodyHtml = `
+        <p>You have been invited to join the BrandTactics portal as a <strong>${role || 'viewer'}</strong>.</p>
+        <p>Click the button below to set your password and access your account.</p>
+        <div style="text-align: center; margin-top: 24px;">
+          <a href="${inviteUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Accept Invitation</a>
         </div>
+        <p style="font-size: 11px; margin-top: 24px; color: #94a3b8;">Or copy and paste this link: <br/> ${inviteUrl}</p>
       `;
+
+      if (settings?.email_scenarios?.team_invite) {
+        const scenario = settings.email_scenarios.team_invite;
+        if (scenario.subject) {
+          subject = scenario.subject;
+        }
+        if (scenario.body) {
+          bodyHtml = scenario.body
+            .replace(/\[role\]/g, role || 'viewer')
+            .replace(/\[invite_link\]/g, inviteUrl);
+        }
+      }
+
+      // Wrap with global email template if defined
+      let htmlTemplate = '<div>[content]</div>';
+      if (settings?.email_template) {
+        htmlTemplate = settings.email_template;
+      }
+      const finalHtml = htmlTemplate.replace('[content]', bodyHtml);
 
       const response = await resend.emails.send({
         from: 'BrandTactics <updates@tools.brandtactics.io>',
         to: [email],
-        subject: "You're invited to BrandTactics",
-        html: htmlContent,
+        subject: subject,
+        html: finalHtml,
       });
 
       if (response.error) {

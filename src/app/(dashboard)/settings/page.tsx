@@ -123,6 +123,40 @@ function SettingsContent() {
   const [isSavingWebhookSecret, setIsSavingWebhookSecret] = useState(false);
   const [isSavingWebhookNotes, setIsSavingWebhookNotes] = useState(false);
 
+  const [emailScenarios, setEmailScenarios] = useState({
+    task_assignment: {
+      subject: "You've been assigned a new task: [task_title]",
+      body: `<p><strong>[assigner_name]</strong> assigned you the task: <strong>[task_title]</strong></p><br/><p>Click below to view and manage this task in your dashboard:</p><p><a href="[task_link]" style="display: inline-block; padding: 12px 24px; background-color: #4640A0; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 10px;">View Task</a></p>`
+    },
+    magic_link: {
+      subject: "Your BrandTactics Login Link",
+      body: `<p>Hello [user_name],</p><p>You requested a magic link to sign in to the BrandTactics staff portal.</p><p><strong>This link will only work once and will expire in 1 hour.</strong></p><br/><div style="text-align: center;"><a href="[login_link]" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Sign In Now</a></div><p style="font-size: 11px; margin-top: 24px; color: #94a3b8;">If you didn't request this, you can safely ignore this email.</p>`
+    },
+    team_invite: {
+      subject: "You're invited to BrandTactics",
+      body: `<p>You have been invited to join the BrandTactics portal as a <strong>[role]</strong>.</p><p>Click the button below to set your password and access your account.</p><br/><div style="text-align: center;"><a href="[invite_link]" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Accept Invitation</a></div><p style="font-size: 11px; margin-top: 24px; color: #94a3b8;">Or copy and paste this link: <br/> [invite_link]</p>`
+    }
+  });
+  const [isSavingScenarios, setIsSavingScenarios] = useState(false);
+
+  const handleSaveScenarios = async () => {
+    setIsSavingScenarios(true);
+    try {
+      const { error } = await supabase.from('app_settings').update({ email_scenarios: emailScenarios }).eq('id', 'global');
+      if (error) throw error;
+      toast.success("Email scenarios saved successfully.");
+    } catch (err: any) {
+      toast.error("Failed to save email scenarios");
+    } finally {
+      setIsSavingScenarios(false);
+    }
+  };
+
+  const copyPlaceholder = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.info(`Copied placeholder: ${text}`);
+  };
+
   const handleSaveWebhookNotes = async () => {
     setIsSavingWebhookNotes(true);
     try {
@@ -183,6 +217,22 @@ function SettingsContent() {
           if (data.gemini_api_key) setGeminiApiKey(data.gemini_api_key);
           if (data.webhook_secret) setWebhookSecret(data.webhook_secret);
           if (data.webhook_notes) setWebhookNotes(data.webhook_notes);
+          if (data.email_scenarios) {
+            setEmailScenarios({
+              task_assignment: {
+                subject: data.email_scenarios.task_assignment?.subject || emailScenarios.task_assignment.subject,
+                body: data.email_scenarios.task_assignment?.body || emailScenarios.task_assignment.body,
+              },
+              magic_link: {
+                subject: data.email_scenarios.magic_link?.subject || emailScenarios.magic_link.subject,
+                body: data.email_scenarios.magic_link?.body || emailScenarios.magic_link.body,
+              },
+              team_invite: {
+                subject: data.email_scenarios.team_invite?.subject || emailScenarios.team_invite.subject,
+                body: data.email_scenarios.team_invite?.body || emailScenarios.team_invite.body,
+              }
+            });
+          }
         } else if (error) {
           console.warn("Could not fetch some settings, likely due to missing columns. Falling back to defaults.", error);
           // Try a safer fetch for just the core columns if the main one failed
@@ -435,7 +485,7 @@ function SettingsContent() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-gray-100/50 border border-gray-200 p-1 rounded-lg">
-          <TabsTrigger value="email" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Email Template</TabsTrigger>
+          <TabsTrigger value="email" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Email Settings</TabsTrigger>
           <TabsTrigger value="endpoints" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Article Settings</TabsTrigger>
           <TabsTrigger value="profiles" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Profiles</TabsTrigger>
           <TabsTrigger value="ai" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">AI Integrations</TabsTrigger>
@@ -558,6 +608,159 @@ function SettingsContent() {
                 ))}
               </div>
             )}
+          </div>
+
+          <div className="pt-10 border-t border-gray-200 mt-10 space-y-6">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                <Zap className="w-5 h-5 mr-2 text-blue-600" />
+                Email Scenarios
+              </h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Customize the templates for automatic system emails sent during key actions.
+              </p>
+            </div>
+
+            <div className="space-y-8">
+              {/* Task Assignment Scenario */}
+              <Card className="shadow-sm border-gray-200">
+                <CardHeader>
+                  <CardTitle className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                    1. Task Assignment Notification
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Sent when a task is assigned or reassigned to a user.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-gray-500 uppercase">Email Subject</Label>
+                    <Input 
+                      value={emailScenarios.task_assignment.subject} 
+                      onChange={(e) => setEmailScenarios(prev => ({
+                        ...prev,
+                        task_assignment: { ...prev.task_assignment, subject: e.target.value }
+                      }))}
+                      placeholder="e.g., You've been assigned a new task: [task_title]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-gray-500 uppercase">Email Body</Label>
+                    <div className="border rounded-md overflow-hidden bg-white border-gray-200">
+                      <ReactQuill 
+                        theme="snow" 
+                        value={emailScenarios.task_assignment.body} 
+                        onChange={(val) => setEmailScenarios(prev => ({
+                          ...prev,
+                          task_assignment: { ...prev.task_assignment, body: val }
+                        }))}
+                        className="[&_.ql-editor]:min-h-[150px] [&_.ql-editor]:text-sm [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" 
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">Available Variables (Click to Copy):</span>
+                      <code className="text-[10px] bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded cursor-pointer hover:bg-gray-200" onClick={() => copyPlaceholder('[assigner_name]')}>[assigner_name]</code>
+                      <code className="text-[10px] bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded cursor-pointer hover:bg-gray-200" onClick={() => copyPlaceholder('[task_title]')}>[task_title]</code>
+                      <code className="text-[10px] bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded cursor-pointer hover:bg-gray-200" onClick={() => copyPlaceholder('[task_link]')}>[task_link]</code>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Magic Link Scenario */}
+              <Card className="shadow-sm border-gray-200">
+                <CardHeader>
+                  <CardTitle className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                    2. Magic Link Login Email
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Sent when a user requests a magic link to log in.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-gray-500 uppercase">Email Subject</Label>
+                    <Input 
+                      value={emailScenarios.magic_link.subject} 
+                      onChange={(e) => setEmailScenarios(prev => ({
+                        ...prev,
+                        magic_link: { ...prev.magic_link, subject: e.target.value }
+                      }))}
+                      placeholder="e.g., Your BrandTactics Login Link"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-gray-500 uppercase">Email Body</Label>
+                    <div className="border rounded-md overflow-hidden bg-white border-gray-200">
+                      <ReactQuill 
+                        theme="snow" 
+                        value={emailScenarios.magic_link.body} 
+                        onChange={(val) => setEmailScenarios(prev => ({
+                          ...prev,
+                          magic_link: { ...prev.magic_link, body: val }
+                        }))}
+                        className="[&_.ql-editor]:min-h-[150px] [&_.ql-editor]:text-sm [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" 
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">Available Variables (Click to Copy):</span>
+                      <code className="text-[10px] bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded cursor-pointer hover:bg-gray-200" onClick={() => copyPlaceholder('[user_name]')}>[user_name]</code>
+                      <code className="text-[10px] bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded cursor-pointer hover:bg-gray-200" onClick={() => copyPlaceholder('[login_link]')}>[login_link]</code>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Team Invite Scenario */}
+              <Card className="shadow-sm border-gray-200">
+                <CardHeader>
+                  <CardTitle className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                    3. Team Invitation Email
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Sent when inviting a new user to join the platform.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-gray-500 uppercase">Email Subject</Label>
+                    <Input 
+                      value={emailScenarios.team_invite.subject} 
+                      onChange={(e) => setEmailScenarios(prev => ({
+                        ...prev,
+                        team_invite: { ...prev.team_invite, subject: e.target.value }
+                      }))}
+                      placeholder="e.g., You've been invited to BrandTactics"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-gray-500 uppercase">Email Body</Label>
+                    <div className="border rounded-md overflow-hidden bg-white border-gray-200">
+                      <ReactQuill 
+                        theme="snow" 
+                        value={emailScenarios.team_invite.body} 
+                        onChange={(val) => setEmailScenarios(prev => ({
+                          ...prev,
+                          team_invite: { ...prev.team_invite, body: val }
+                        }))}
+                        className="[&_.ql-editor]:min-h-[150px] [&_.ql-editor]:text-sm [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" 
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">Available Variables (Click to Copy):</span>
+                      <code className="text-[10px] bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded cursor-pointer hover:bg-gray-200" onClick={() => copyPlaceholder('[role]')}>[role]</code>
+                      <code className="text-[10px] bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded cursor-pointer hover:bg-gray-200" onClick={() => copyPlaceholder('[invite_link]')}>[invite_link]</code>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-end pt-4">
+                <Button onClick={handleSaveScenarios} disabled={isSavingScenarios} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md">
+                  {isSavingScenarios ? "Saving Scenarios..." : <><Save className="w-4 h-4 mr-2" /> Save Scenarios</>}
+                </Button>
+              </div>
+            </div>
           </div>
         </TabsContent>
 

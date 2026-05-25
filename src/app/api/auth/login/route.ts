@@ -66,26 +66,47 @@ export async function POST(req: Request) {
 
     // 3. Send Email via Resend
     if (resend) {
-      const htmlContent = `
-        <div style="font-family: sans-serif; max-width: 600px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: white;">
-          <h2 style="color: #2563eb; margin-top: 0;">Login to BrandTactics</h2>
-          <div style="background: #f8fafc; padding: 24px; border-radius: 8px; border: 1px solid #f1f5f9; color: #334155; line-height: 1.6;">
-            <p>Hello ${userRecord.full_name || 'there'},</p>
-            <p>You requested a magic link to sign in to the BrandTactics staff portal.</p>
-            <p><strong>This link will only work once and will expire in 1 hour.</strong></p>
-            <div style="text-align: center; margin-top: 24px;">
-              <a href="${loginUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Sign In Now</a>
-            </div>
-            <p style="font-size: 11px; margin-top: 24px; color: #94a3b8;">If you didn't request this, you can safely ignore this email.</p>
-          </div>
+      const { data: settings } = await supabaseAdmin
+        .from('app_settings')
+        .select('email_scenarios, email_template')
+        .eq('id', 'global')
+        .single();
+
+      let subject = "Your BrandTactics Login Link";
+      let bodyHtml = `
+        <p>Hello ${userRecord.full_name || 'there'},</p>
+        <p>You requested a magic link to sign in to the BrandTactics staff portal.</p>
+        <p><strong>This link will only work once and will expire in 1 hour.</strong></p>
+        <div style="text-align: center; margin-top: 24px;">
+          <a href="${loginUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Sign In Now</a>
         </div>
+        <p style="font-size: 11px; margin-top: 24px; color: #94a3b8;">If you didn't request this, you can safely ignore this email.</p>
       `;
+
+      if (settings?.email_scenarios?.magic_link) {
+        const scenario = settings.email_scenarios.magic_link;
+        if (scenario.subject) {
+          subject = scenario.subject;
+        }
+        if (scenario.body) {
+          bodyHtml = scenario.body
+            .replace(/\[user_name\]/g, userRecord.full_name || 'there')
+            .replace(/\[login_link\]/g, loginUrl);
+        }
+      }
+
+      // Wrap with global email template if defined
+      let htmlTemplate = '<div>[content]</div>';
+      if (settings?.email_template) {
+        htmlTemplate = settings.email_template;
+      }
+      const finalHtml = htmlTemplate.replace('[content]', bodyHtml);
 
       await resend.emails.send({
         from: 'BrandTactics <updates@tools.brandtactics.io>',
         to: [email],
-        subject: "Your BrandTactics Login Link",
-        html: htmlContent,
+        subject: subject,
+        html: finalHtml,
       });
     } else {
       console.log(`[SIMULATION] Login link for ${email}: ${loginUrl}`);

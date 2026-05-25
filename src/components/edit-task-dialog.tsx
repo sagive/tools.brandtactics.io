@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,6 +52,9 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
   const [editingCommentText, setEditingCommentText] = useState("");
   const { profile } = useAuth();
   
+  const pathname = usePathname();
+  const pathnameClientId = pathname?.match(/\/clients\/([a-f0-9-]{36})/i)?.[1] || null;
+
   const [title, setTitle] = useState(task?.title || "");
   const [description, setDescription] = useState(task?.description || (defaultDescription ? `<p>${defaultDescription}</p>` : ""));
   const [status, setStatus] = useState(task?.status || "Pending");
@@ -58,15 +62,18 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
   const [assignee, setAssignee] = useState(task?.assignee || "");
   const [requester, setRequester] = useState(task?.requester || "");
   const [comments, setComments] = useState<any[]>(task?.comments || []);
-  const [clientId, setClientId] = useState(task?.client_id || defaultClientId || "");
+  const [clientId, setClientId] = useState(task?.client_id || defaultClientId || pathnameClientId || "");
   const [isEditingDesc, setIsEditingDesc] = useState(!isEditing);
   
-  // Sync clientId with defaultClientId when it changes (for new tasks)
+  // Sync clientId with defaultClientId or pathnameClientId when they change (for new tasks)
   useEffect(() => {
-    if (!isEditing && defaultClientId && !clientId) {
-      setClientId(defaultClientId);
+    if (!isEditing) {
+      const target = defaultClientId || pathnameClientId;
+      if (target) {
+        setClientId(target);
+      }
     }
-  }, [defaultClientId, isEditing, clientId]);
+  }, [defaultClientId, pathnameClientId, isEditing]);
 
   const [dueDate, setDueDate] = useState<string>(task?.end_date ? new Date(task.end_date).toISOString().split('T')[0] : "");
   const [clients, setClients] = useState<any[]>([]);
@@ -87,14 +94,25 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
           if (parsed.priority) setPriority(parsed.priority);
           if (parsed.assignee) setAssignee(parsed.assignee);
           if (parsed.requester) setRequester(parsed.requester);
-          if (parsed.clientId && !defaultClientId) setClientId(parsed.clientId);
           if (parsed.dueDate) setDueDate(parsed.dueDate);
+          
+          const target = defaultClientId || pathnameClientId;
+          if (target) {
+            setClientId(target);
+          } else if (parsed.clientId) {
+            setClientId(parsed.clientId);
+          }
         } catch (e) {
           console.error("Failed to parse saved task choices", e);
         }
+      } else {
+        const target = defaultClientId || pathnameClientId;
+        if (target) {
+          setClientId(target);
+        }
       }
     }
-  }, [isEditing, defaultClientId]);
+  }, [isEditing, defaultClientId, pathnameClientId]);
 
   // Save to localStorage whenever these change (only for new tasks)
   useEffect(() => {
@@ -241,7 +259,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
           fetch('/api/notify-assignment', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: targetUser.email, assignerName, taskTitle: title, taskUrl })
+            body: JSON.stringify({ email: targetUser.email, assignerName, taskTitle: generatedTitle, taskUrl })
           }).catch(err => console.error("Failed to trigger assignment email", err));
         }
       }
@@ -421,7 +439,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
           fetch('/api/notify-assignment', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: targetUser.email, assignerName, taskTitle: title, taskUrl })
+            body: JSON.stringify({ email: targetUser.email, assignerName, taskTitle: generatedTitle, taskUrl })
           }).catch(err => console.error("Failed to trigger assignment email", err));
         }
       }
