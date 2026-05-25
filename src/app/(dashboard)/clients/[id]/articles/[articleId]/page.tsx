@@ -225,25 +225,68 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
           <p className="text-sm text-gray-500">View or edit article details.</p>
         </div>
         <div className="flex items-center gap-3">
-          {isPublic && (
-            <Button 
-              variant="outline" 
-              className="text-indigo-600 border-indigo-200"
-              onClick={() => {
-                const url = `${window.location.origin}/public/articles/${articleId}`;
-                navigator.clipboard.writeText(url);
-                toast.success("Share link copied to clipboard!");
-              }}
-            >
-              <Share2 className="w-4 h-4 mr-2" />
-              Copy Share Link
-            </Button>
-          )}
           {!isEditing ? (
-            <Button onClick={() => setIsEditing(true)} variant="outline" className="text-blue-600 border-blue-200">
-              <Pencil className="w-4 h-4 mr-2" />
-              Edit Article
-            </Button>
+            <>
+              {isPublic ? (
+                <div className="flex items-center gap-1 bg-indigo-50 border border-indigo-100 rounded-lg p-0.5">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="text-indigo-700 hover:text-indigo-800 hover:bg-indigo-100/50 font-semibold text-xs h-8"
+                    onClick={() => {
+                      const url = `${window.location.origin}/public/articles/${articleId}`;
+                      navigator.clipboard.writeText(url);
+                      toast.success("Share link copied to clipboard!");
+                    }}
+                  >
+                    <Share2 className="w-3.5 h-3.5 mr-1.5" />
+                    Copy Share Link
+                  </Button>
+                  <div className="h-4 w-px bg-indigo-200" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-500 hover:text-red-600 hover:bg-red-50 font-medium text-xs h-8 px-2.5"
+                    onClick={async () => {
+                      try {
+                        const { error } = await supabase.from('articles').update({ is_public: false }).eq('id', articleId);
+                        if (error) throw error;
+                        setIsPublic(false);
+                        toast.success("Article sharing disabled (Private)");
+                      } catch (err: any) {
+                        toast.error("Failed to disable sharing");
+                      }
+                    }}
+                  >
+                    Make Private
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  className="text-indigo-600 border-indigo-200 hover:bg-indigo-50/30 hover:text-indigo-700 transition-all font-semibold"
+                  onClick={async () => {
+                    try {
+                      const { error } = await supabase.from('articles').update({ is_public: true }).eq('id', articleId);
+                      if (error) throw error;
+                      setIsPublic(true);
+                      const url = `${window.location.origin}/public/articles/${articleId}`;
+                      navigator.clipboard.writeText(url);
+                      toast.success("Article is now public! Share link copied.");
+                    } catch (err: any) {
+                      toast.error("Failed to enable sharing");
+                    }
+                  }}
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share Article
+                </Button>
+              )}
+              <Button onClick={() => setIsEditing(true)} variant="outline" className="text-blue-600 border-blue-200">
+                <Pencil className="w-4 h-4 mr-2" />
+                Edit Article
+              </Button>
+            </>
           ) : (
             <>
               <Button onClick={() => setIsEditing(false)} variant="ghost">

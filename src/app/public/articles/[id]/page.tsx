@@ -107,6 +107,27 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
     fetchArticle();
   }, [id]);
 
+  const copyAsHtml = () => {
+    if (!article?.content) return;
+    navigator.clipboard.writeText(article.content);
+    toast.success("HTML content copied to clipboard!");
+  };
+
+  const copyArticle = () => {
+    if (!article) return;
+    const titleText = `${article.title}\n\n`;
+    let text = '';
+    if (typeof document !== 'undefined') {
+      const temp = document.createElement("div");
+      temp.innerHTML = article.content;
+      text = temp.innerText || temp.textContent || "";
+    } else {
+      text = article.content.replace(/<[^>]*>/g, ' ');
+    }
+    navigator.clipboard.writeText(titleText + text.trim());
+    toast.success("Article text copied to clipboard!");
+  };
+
   const handleApprove = async () => {
     try {
       setLoading(true);
@@ -176,16 +197,35 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
             </div>
           )}
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={copyAsHtml}
+              className="rounded-full px-4 border-indigo-100 hover:border-indigo-200 bg-indigo-50/30 text-indigo-700 hover:bg-indigo-50/50 hover:text-indigo-800 transition-all font-semibold flex items-center gap-1.5 text-xs h-9"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              Copy as HTML
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={copyArticle}
+              className="rounded-full px-4 border-gray-200 hover:bg-gray-50 text-gray-700 transition-all font-semibold flex items-center gap-1.5 text-xs h-9"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              Copy Article
+            </Button>
+
             {article.client_approved ? (
-              <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-100 py-1.5 px-4 rounded-full flex items-center gap-1.5">
+              <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-100 py-1.5 px-4 rounded-full flex items-center gap-1.5 h-9 text-xs font-semibold">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 Approved by Client
               </Badge>
             ) : (
               <Button 
                 onClick={handleApprove}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-6 shadow-lg shadow-emerald-200 transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-6 shadow-lg shadow-emerald-100 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 h-9 text-sm font-semibold"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 Approve Article

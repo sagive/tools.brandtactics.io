@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, Bot, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Bot, Loader2, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -171,7 +171,7 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
     return words.length;
   };
 
-  const handleSave = async () => {
+  const handleSave = async (shouldShare = false) => {
     if (!title) {
       toast.error("Title is required.");
       return;
@@ -181,7 +181,7 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
     const wordCount = calculateLength(content);
 
     try {
-      const { error } = await supabase.from('articles').insert({
+      const { data, error } = await supabase.from('articles').insert({
         client_id: clientId,
         title,
         live_url: liveUrl,
@@ -194,16 +194,24 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
         status,
         direction,
         client_approved: isApproved,
-        is_public: isPublic,
+        is_public: shouldShare ? true : isPublic,
         meta_title: metaTitle,
         meta_description: metaDescription,
         meta_keywords: metaKeywords,
         categories: selectedCategories
-      });
+      }).select().single();
 
       if (error) throw error;
-      toast.success("Article saved successfully!");
-      router.push(`/clients/${clientId}/articles`);
+
+      if (shouldShare && data) {
+        const url = `${window.location.origin}/public/articles/${data.id}`;
+        navigator.clipboard.writeText(url);
+        toast.success("Article created and share link copied to clipboard!");
+        router.push(`/clients/${clientId}/articles/${data.id}`);
+      } else {
+        toast.success("Article saved successfully!");
+        router.push(`/clients/${clientId}/articles`);
+      }
     } catch (err: any) {
       toast.error("Failed to save article: " + (err.message || "Ensure the database schema is applied."));
     } finally {
@@ -246,9 +254,13 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
               <SelectItem value="Published">Published</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700">
+          <Button onClick={() => handleSave(false)} disabled={isSaving} variant="outline" className="border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-semibold shadow-sm">
             {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-            Save Article
+            Save Draft
+          </Button>
+          <Button onClick={() => handleSave(true)} disabled={isSaving} className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-md flex items-center gap-1.5 transition-all">
+            {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Share2 className="w-4 h-4" />}
+            Create & Share
           </Button>
         </div>
       </div>
