@@ -6,8 +6,10 @@ import { DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/compone
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { BellIcon, Link2, List, Bold, Italic, Underline, Strikethrough, SmilePlus, X, Send, Trash2, Pencil } from "lucide-react";
+import { BellIcon, Link2, List, Bold, Italic, Underline, Strikethrough, SmilePlus, X, Send, Trash2, Pencil, ChevronDownIcon } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -60,6 +62,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
   const [status, setStatus] = useState(task?.status || "Pending");
   const [priority, setPriority] = useState(task?.priority || "Medium");
   const [assignee, setAssignee] = useState(task?.assignee || "");
+  const [assignees, setAssignees] = useState<string[]>([]);
   const [requester, setRequester] = useState(task?.requester || "");
   const [comments, setComments] = useState<any[]>(task?.comments || []);
   const [clientId, setClientId] = useState(task?.client_id || defaultClientId || pathnameClientId || "");
@@ -92,7 +95,11 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
           if (parsed.title) setTitle(parsed.title);
           if (parsed.status) setStatus(parsed.status);
           if (parsed.priority) setPriority(parsed.priority);
-          if (parsed.assignee) setAssignee(parsed.assignee);
+          if (parsed.assignee) {
+            const list = parsed.assignee.split(',').filter(Boolean);
+            setAssignees(list);
+            setAssignee(list[0] || "");
+          }
           if (parsed.requester) setRequester(parsed.requester);
           if (parsed.dueDate) setDueDate(parsed.dueDate);
           
@@ -117,10 +124,10 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
   // Save to localStorage whenever these change (only for new tasks)
   useEffect(() => {
     if (!isEditing) {
-      const choices = { title, status, priority, assignee, requester, clientId, dueDate };
+      const choices = { title, status, priority, assignee: assignees.join(','), requester, clientId, dueDate };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(choices));
     }
-  }, [isEditing, title, status, priority, assignee, requester, clientId, dueDate]);
+  }, [isEditing, title, status, priority, assignees, requester, clientId, dueDate]);
 
   const handleResetFields = () => {
     setTitle("");
@@ -128,6 +135,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
     setStatus("Pending");
     setPriority("Medium");
     setAssignee("");
+    setAssignees([]);
     setRequester("");
     setClientId(defaultClientId || "");
     setDueDate("");
@@ -405,48 +413,62 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
 
     setIsCreating(true);
     try {
-      const { data, error } = await supabase.from('tasks').insert([{
+      const assigneesList = assignees.length > 0 ? assignees : [""];
+      const tasksToInsert = assigneesList.map(item => ({
         title: generatedTitle,
         description,
         status,
         priority,
-        assignee,
+        assignee: item,
         requester,
         end_date: dueDate || null,
         client_id: clientId,
-        comments
-      }]).select().single();
+        comments: comments || []
+      }));
+
+      const { data, error } = await supabase.from('tasks').insert(tasksToInsert).select();
       
       if (error) throw error;
-      toast.success("Task created successfully");
+      
+      toast.success(
+        assignees.length > 1 
+          ? `Successfully created ${assignees.length} tasks` 
+          : "Task created successfully"
+      );
+      
       onTaskCreated?.();
 
       const clientName = clients.find(c => c.id === clientId)?.name || "Client";
-      logActivity({
-        userName: profile?.full_name || profile?.email || "Someone",
-        clientId: clientId,
-        actionType: 'task_created',
-        content: `created task <b>"${generatedTitle}"</b> for <b>${clientName}</b>`
-      });
-      
-      // Check if there is an assignee to notify
-      if (assignee) {
-        const targetUser = users.find(u => u.full_name === assignee || u.email === assignee);
-        if (targetUser && targetUser.email) {
-          const assignerName = profile?.full_name || profile?.email || "Someone";
-          const taskUrl = `${window.location.origin}/clients/${clientId}/tasks?task=${data.id}`;
-          
-          fetch('/api/notify-assignment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: targetUser.email, assignerName, taskTitle: generatedTitle, taskUrl })
-          }).catch(err => console.error("Failed to trigger assignment email", err));
-        }
+      const assignerName = profile?.full_name || profile?.email || "Someone";
+
+      if (data && Array.isArray(data)) {
+        data.forEach(taskRow => {
+          logActivity({
+            userName: assignerName,
+            clientId: clientId,
+            actionType: 'task_created',
+            content: `created task <b>"${generatedTitle}"</b> for <b>${clientName}</b>`
+          });
+
+          // Check if there is an assignee to notify
+          if (taskRow.assignee) {
+            const targetUser = users.find(u => u.full_name === taskRow.assignee || u.email === taskRow.assignee);
+            if (targetUser && targetUser.email) {
+              const taskUrl = `${window.location.origin}/clients/${clientId}/tasks?task=${taskRow.id}`;
+              
+              fetch('/api/notify-assignment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: targetUser.email, assignerName, taskTitle: generatedTitle, taskUrl })
+              }).catch(err => console.error("Failed to trigger assignment email", err));
+            }
+          }
+        });
       }
       
-      // Keep dialog open but reset content (except title as requested)
-      // setTitle(""); 
+      // Keep dialog open but reset content
       setDescription("");
+      setAssignees([]);
       
     } catch (err: any) {
       toast.error(err.message || "Failed to create task");
@@ -751,24 +773,73 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
 
               <div className="space-y-2">
                 <Label className="text-gray-600 text-[13px] font-medium">Assigned to</Label>
-                <Select 
-                  value={assignee}
-                  onValueChange={(val) => { 
-                    setAssignee(val); 
-                    updateField("assignee", val); 
-                  }}
-                >
-                  <SelectTrigger className="bg-white px-2 w-full">
-                    <SelectValue placeholder="Pick User" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {users.map(u => (
-                      <SelectItem key={u.id} value={u.full_name || u.email}>
-                        <span className="truncate">{u.full_name || u.email}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {isEditing ? (
+                  <Select 
+                    value={assignee}
+                    onValueChange={(val) => { 
+                      setAssignee(val); 
+                      updateField("assignee", val); 
+                    }}
+                  >
+                    <SelectTrigger className="bg-white px-2 w-full">
+                      <SelectValue placeholder="Pick User" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {users.map(u => (
+                        <SelectItem key={u.id} value={u.full_name || u.email}>
+                          <span className="truncate">{u.full_name || u.email}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Popover>
+                    <PopoverTrigger className="flex h-10 w-full items-center justify-between rounded-lg border border-input bg-transparent px-3 py-2 text-sm text-gray-900 shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring">
+                      <span className="truncate">
+                        {assignees.length === 0 
+                          ? "Pick Users" 
+                          : assignees.length === 1 
+                          ? assignees[0] 
+                          : `${assignees.length} people selected`}
+                      </span>
+                      <ChevronDownIcon className="w-4 h-4 text-muted-foreground" />
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-56 p-2 bg-white rounded-lg border shadow-md max-h-60 overflow-y-auto z-[9999]">
+                      <div className="space-y-2">
+                        {users.map(u => {
+                          const nameOrEmail = u.full_name || u.email;
+                          const isChecked = assignees.includes(nameOrEmail);
+                          return (
+                            <div 
+                              key={u.id} 
+                              onClick={(e) => {
+                                if (isChecked) {
+                                  setAssignees(assignees.filter(a => a !== nameOrEmail));
+                                } else {
+                                  setAssignees([...assignees, nameOrEmail]);
+                                }
+                              }}
+                              className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-gray-50 cursor-pointer transition-colors"
+                            >
+                              <Checkbox 
+                                checked={isChecked}
+                                onClick={(e) => e.stopPropagation()} 
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setAssignees([...assignees, nameOrEmail]);
+                                  } else {
+                                    setAssignees(assignees.filter(a => a !== nameOrEmail));
+                                  }
+                                }}
+                              />
+                              <span className="text-xs font-semibold text-gray-700 truncate">{nameOrEmail}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
               </div>
             </div>
 
