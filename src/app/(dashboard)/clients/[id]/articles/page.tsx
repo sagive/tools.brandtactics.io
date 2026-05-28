@@ -154,6 +154,7 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
           <TableHeader className="bg-gray-50/50">
             <TableRow>
               <TableHead className="w-full min-w-[300px] pl-6">Article Title</TableHead>
+              <TableHead className="w-32 text-center">Length (Words)</TableHead>
               <TableHead className="w-32 text-center">Type</TableHead>
               <TableHead className="w-32 text-center">Status</TableHead>
               <TableHead className="w-40 text-center">Last Updated</TableHead>
@@ -196,6 +197,11 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
                         </div>
                       )}
                     </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
+                      {article.content_length || "-"}
+                    </span>
                   </TableCell>
                   <TableCell className="text-center">
                     <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
