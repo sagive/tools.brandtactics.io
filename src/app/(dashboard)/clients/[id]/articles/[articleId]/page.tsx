@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, Save, Bot, Loader2, Pencil, X, Share2, Globe, Lock, MessageSquare, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Bot, Loader2, Pencil, X, Share2, Globe, Lock, MessageSquare, Trash2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -243,6 +243,22 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                     <Share2 className="w-3.5 h-3.5 mr-1.5" />
                     Copy Share Link
                   </Button>
+                  <div className="h-4 w-px bg-indigo-200" />
+                  <a 
+                    href={`${window.location.origin}/public/articles/${articleId}`} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="flex"
+                  >
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className="text-indigo-700 hover:text-indigo-800 hover:bg-indigo-100/50 h-8 w-8 rounded-md flex items-center justify-center"
+                      title="Open in new tab"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </Button>
+                  </a>
                   <div className="h-4 w-px bg-indigo-200" />
                   <Button
                     variant="ghost"
