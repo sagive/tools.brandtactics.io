@@ -78,6 +78,19 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
   const sentCount = articles.filter(a => a.status === "Sent to publisher").length;
   const publishedCount = articles.filter(a => a.status === "Published").length;
 
+
+  // get article length
+  const getArticleLength = (article: any) => {
+    if (!article.content) return 0;
+    const tmp = document.createElement("DIV");
+    tmp.innerHTML = article.content;
+    const text = tmp.textContent || tmp.innerText || "";
+    const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+    return words.length;
+  };
+
+
+
   return (
     <div className="space-y-6">
       {/* Stats Badges */}
@@ -200,7 +213,7 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
                   </TableCell>
                   <TableCell className="text-center">
                     <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
-                      {article.content_length || "-"}
+                      {getArticleLength(article)}
                     </span>
                   </TableCell>
                   <TableCell className="text-center">
