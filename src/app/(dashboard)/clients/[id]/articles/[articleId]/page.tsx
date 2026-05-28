@@ -203,6 +203,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
     <div className="w-full px-4 lg:px-8 pb-10">
       <style dangerouslySetInnerHTML={{ __html: `
         .article-content { direction: ${direction}; text-align: ${direction === 'rtl' ? 'right' : 'left'}; }
+        .article-content a { color: #2563eb !important; text-decoration: underline !important; font-weight: 500; }
         .article-content p { margin-bottom: 1.5rem !important; }
         .article-content h1, 
         .article-content h2, 
@@ -380,6 +381,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                               line-height: 1.6 !important;
                               color: #374151 !important;
                             }
+                            a { color: #2563eb !important; text-decoration: underline !important; }
                             p { margin-bottom: 24px !important; }
                             h1 { font-size: 32px !important; margin-top: 40px !important; margin-bottom: 20px !important; font-weight: 800 !important; }
                             h2 { font-size: 28px !important; margin-top: 36px !important; margin-bottom: 18px !important; font-weight: 700 !important; }
@@ -416,6 +418,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                       line-height: 1.6;
                       color: #374151;
                     }
+                    .article-preview-content a { color: #2563eb !important; text-decoration: underline !important; font-weight: 500; }
                     .article-preview-content p { margin-bottom: 24px; }
                     .article-preview-content h1 { font-size: 32px; margin-top: 40px; margin-bottom: 20px; font-weight: 800; }
                     .article-preview-content h2 { font-size: 28px; margin-top: 36px; margin-bottom: 18px; font-weight: 700; }

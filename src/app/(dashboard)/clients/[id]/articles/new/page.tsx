@@ -223,6 +223,7 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
     <div className="w-full px-4 lg:px-8 pb-10">
       <style dangerouslySetInnerHTML={{ __html: `
         .article-content { direction: ${direction}; text-align: ${direction === 'rtl' ? 'right' : 'left'}; }
+        .article-content a { color: #2563eb !important; text-decoration: underline !important; font-weight: 500; }
         .article-content p { margin-bottom: 1.5rem !important; }
         .article-content h1, 
         .article-content h2, 
@@ -322,6 +323,7 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
                             line-height: 1.6 !important;
                             color: #374151 !important;
                           }
+                          a { color: #2563eb !important; text-decoration: underline !important; }
                           p { margin-bottom: 24px !important; }
                           h1 { font-size: 32px !important; margin-top: 40px !important; margin-bottom: 20px !important; font-weight: 800 !important; }
                           h2 { font-size: 28px !important; margin-top: 36px !important; margin-bottom: 18px !important; font-weight: 700 !important; }
