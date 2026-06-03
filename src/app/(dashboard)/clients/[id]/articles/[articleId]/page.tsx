@@ -378,6 +378,9 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                           readonly: false,
                           height: 1000,
                           direction: direction as any,
+                          cleanHTML: {
+                            denyTags: false
+                          },
                           uploader: {
                             insertImageAsBase64URI: true
                           },
