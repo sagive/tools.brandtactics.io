@@ -141,6 +141,8 @@ export default function ClientDescription({ params }: { params: Promise<{ id: st
               .description-preview-content h3 { font-size: 24px; margin-top: 32px; margin-bottom: 16px; font-weight: 700; }
               .description-preview-content h4 { font-size: 20px; margin-top: 28px; margin-bottom: 14px; font-weight: 600; }
               .description-preview-content img { max-width: 100%; border-radius: 8px; margin: 20px 0; }
+              .description-preview-content ul { list-style-type: disc !important; }
+              .description-preview-content ol { list-style-type: decimal !important; }
               .description-preview-content ul, .description-preview-content ol { margin-bottom: 24px; padding-inline-start: 40px; }
               .description-preview-content li { margin-bottom: 8px; }
               .description-preview-content table { border-collapse: collapse; width: 100%; margin-bottom: 24px; border: 1px solid #e5e7eb; }

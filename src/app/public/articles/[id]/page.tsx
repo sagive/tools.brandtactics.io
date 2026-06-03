@@ -378,7 +378,13 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
               margin: 3.5rem 0;
               box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
             }
-            .public-content ul, .public-content ol { 
+            .public-content ul { 
+              list-style-type: disc !important;
+              margin-bottom: 2rem; 
+              padding-inline-start: 2.5rem; 
+            }
+            .public-content ol { 
+              list-style-type: decimal !important;
               margin-bottom: 2rem; 
               padding-inline-start: 2.5rem; 
             }

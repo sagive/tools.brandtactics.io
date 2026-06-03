@@ -530,6 +530,8 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                     .article-preview-content h3 { font-size: 24px; margin-top: 32px; margin-bottom: 16px; font-weight: 700; }
                     .article-preview-content h4 { font-size: 20px; margin-top: 28px; margin-bottom: 14px; font-weight: 600; }
                     .article-preview-content img { max-width: 100%; border-radius: 8px; margin: 20px 0; }
+                    .article-preview-content ul { list-style-type: disc !important; }
+                    .article-preview-content ol { list-style-type: decimal !important; }
                     .article-preview-content ul, .article-preview-content ol { margin-bottom: 24px; padding-inline-start: 40px; }
                     .article-preview-content li { margin-bottom: 8px; }
                     .article-preview-content table { border-collapse: collapse; width: 100%; margin-bottom: 24px; border: 1px solid #e5e7eb; }

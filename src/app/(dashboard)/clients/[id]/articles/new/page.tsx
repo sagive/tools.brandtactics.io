@@ -307,6 +307,8 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
         .article-content h5, 
         .article-content h6 { margin-top: 2rem !important; margin-bottom: 1rem !important; font-weight: 700 !important; }
         .article-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 2rem 0; }
+        .article-content ul { list-style-type: disc !important; }
+        .article-content ol { list-style-type: decimal !important; }
         .article-content ul, .article-content ol { margin-bottom: 1.5rem !important; padding-${direction === 'rtl' ? 'left' : 'right'}: 2rem !important; }
         .article-content li { margin-bottom: 0.5rem !important; }
       `}} />
