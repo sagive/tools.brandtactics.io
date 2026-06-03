@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   robots: {
@@ -12,5 +13,10 @@ export default function PublicLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <>{children}</>;
+  return (
+    <>
+      <Script src="https://cdn.tailwindcss.com" strategy="beforeInteractive" />
+      {children}
+    </>
+  );
 }

@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import Script from "next/script";
 const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
 export default function NewClientArticle({ params }: { params: Promise<{ id: string }> }) {
@@ -53,9 +54,16 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const newPreviewRef = React.useRef<HTMLDivElement>(null);
   const [scripts, setScripts] = useState("");
+  const [tailwindLoaded, setTailwindLoaded] = useState(false);
 
   useEffect(() => {
-    if (content && newPreviewRef.current) {
+    if (typeof window !== "undefined" && (window as any).tailwind) {
+      setTailwindLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (content && newPreviewRef.current && tailwindLoaded) {
       const foundScripts = newPreviewRef.current.querySelectorAll("script");
       foundScripts.forEach((oldScript) => {
         const newScript = document.createElement("script");
@@ -66,7 +74,7 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
         oldScript.parentNode?.replaceChild(newScript, oldScript);
       });
     }
-  }, [content, scripts]);
+  }, [content, scripts, tailwindLoaded]);
 
   useEffect(() => {
     if (content) {
@@ -638,6 +646,10 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
           </Card>
         </div>
       </div>
+      <Script 
+        src="https://cdn.tailwindcss.com" 
+        onLoad={() => setTailwindLoaded(true)} 
+      />
     </div>
   );
 }
