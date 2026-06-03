@@ -301,43 +301,47 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-12 lg:py-20">
+      {/* Full-width Hero Header Section */}
+      <section className="w-full border-b border-gray-200/80 bg-gray-50/40 py-16 lg:py-20 relative overflow-hidden" style={{
+        backgroundImage: 'radial-gradient(#e5e7eb 1.5px, transparent 1.5px)',
+        backgroundSize: '24px 24px'
+      }}>
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="flex items-center gap-2 mb-4">
+             <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-none font-medium">
+              {article.type || "Article"}
+            </Badge>
+            {article.clients?.name && (
+              <span className="text-sm text-gray-400 font-medium">for {article.clients.name}</span>
+            )}
+          </div>
+          <h1 className={`text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight mb-6 ${direction === 'rtl' ? 'text-right' : 'text-left'}`}>
+            {article.title}
+          </h1>
+          <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs font-semibold uppercase tracking-wider text-gray-400 border-t border-gray-200/60 pt-6">
+            <span>{new Date(article.created_at).toLocaleDateString()}</span>
+            <span className="text-gray-200">•</span>
+            <span>{words} Words</span>
+            <span className="text-gray-200">•</span>
+            <span>{chars} Characters</span>
+            {article.categories && article.categories.length > 0 && (
+              <>
+                <span className="text-gray-200">•</span>
+                <div className="flex flex-wrap gap-1">
+                  {article.categories.map((cat: string) => (
+                    <span key={cat} className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] font-semibold normal-case">
+                      {cat}
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <main className="max-w-4xl mx-auto px-6 py-12 lg:py-16">
         <article>
-          <header className="mb-12 p-8 lg:p-12 rounded-3xl border border-gray-200/60 bg-gray-50/40 relative overflow-hidden" style={{
-            backgroundImage: 'radial-gradient(#e5e7eb 1.5px, transparent 1.5px)',
-            backgroundSize: '24px 24px'
-          }}>
-            <div className="flex items-center gap-2 mb-4">
-               <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-none font-medium">
-                {article.type || "Article"}
-              </Badge>
-              {article.clients?.name && (
-                <span className="text-sm text-gray-400 font-medium">for {article.clients.name}</span>
-              )}
-            </div>
-            <h1 className={`text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight mb-6 ${direction === 'rtl' ? 'text-right' : 'text-left'}`}>
-              {article.title}
-            </h1>
-            <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs font-semibold uppercase tracking-wider text-gray-400 border-t border-gray-100 pt-6">
-              <span>{new Date(article.created_at).toLocaleDateString()}</span>
-              <span className="text-gray-200">•</span>
-              <span>{words} Words</span>
-              <span className="text-gray-200">•</span>
-              <span>{chars} Characters</span>
-              {article.categories && article.categories.length > 0 && (
-                <>
-                  <span className="text-gray-200">•</span>
-                  <div className="flex flex-wrap gap-1">
-                    {article.categories.map((cat: string) => (
-                      <span key={cat} className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] font-semibold normal-case">
-                        {cat}
-                      </span>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          </header>
 
           <style dangerouslySetInnerHTML={{ __html: `
             .public-content { 
