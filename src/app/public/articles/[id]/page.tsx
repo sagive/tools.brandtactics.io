@@ -302,9 +302,12 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
       </header>
 
       {/* Full-width Hero Header Section */}
-      <section className="w-full border-b border-gray-200/80 bg-gray-50/40 py-16 lg:py-20 relative overflow-hidden" style={{
-        backgroundImage: 'radial-gradient(#e5e7eb 1.5px, transparent 1.5px)',
-        backgroundSize: '24px 24px'
+      <section className="w-full border-b border-gray-200/80 bg-slate-50/50 py-16 lg:py-20 relative overflow-hidden" style={{
+        backgroundImage: `
+          linear-gradient(to right, rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(148, 163, 184, 0.08) 1px, transparent 1px)
+        `,
+        backgroundSize: '32px 32px'
       }}>
         <div className="max-w-4xl mx-auto px-6">
           <div className="flex items-center gap-2 mb-4">
