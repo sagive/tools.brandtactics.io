@@ -110,8 +110,8 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
 
   useEffect(() => {
     if (!loading && article?.content && contentRef.current) {
-      const scripts = contentRef.current.querySelectorAll("script");
-      scripts.forEach((oldScript) => {
+      const foundScripts = contentRef.current.querySelectorAll("script");
+      foundScripts.forEach((oldScript) => {
         const newScript = document.createElement("script");
         Array.from(oldScript.attributes).forEach((attr) => {
           newScript.setAttribute(attr.name, attr.value);
@@ -120,11 +120,12 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
         oldScript.parentNode?.replaceChild(newScript, oldScript);
       });
     }
-  }, [loading, article?.content]);
+  }, [loading, article?.content, article?.scripts]);
 
   const copyAsHtml = () => {
     if (!article?.content) return;
-    navigator.clipboard.writeText(article.content);
+    const scriptsString = article.scripts ? `\n\n${article.scripts}` : '';
+    navigator.clipboard.writeText(article.content + scriptsString);
     toast.success("HTML content copied to clipboard!");
   };
 
@@ -381,8 +382,15 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
           <div 
             ref={contentRef}
             className="public-content"
-            dangerouslySetInnerHTML={{ __html: article.content }}
-          />
+          >
+            <div dangerouslySetInnerHTML={{ __html: article.content }} />
+            {article.scripts && (
+              <div 
+                dangerouslySetInnerHTML={{ __html: article.scripts }}
+                style={{ display: "none" }}
+              />
+            )}
+          </div>
 
           {/* SEO Metadata Copy Box */}
           {(article.meta_title || article.meta_description) && (

@@ -47,11 +47,12 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
   const [clientCategories, setClientCategories] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const previewRef = React.useRef<HTMLDivElement>(null);
+  const [scripts, setScripts] = useState("");
 
   useEffect(() => {
     if (!isEditing && content && previewRef.current) {
-      const scripts = previewRef.current.querySelectorAll("script");
-      scripts.forEach((oldScript) => {
+      const foundScripts = previewRef.current.querySelectorAll("script");
+      foundScripts.forEach((oldScript) => {
         const newScript = document.createElement("script");
         Array.from(oldScript.attributes).forEach((attr) => {
           newScript.setAttribute(attr.name, attr.value);
@@ -60,7 +61,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
         oldScript.parentNode?.replaceChild(newScript, oldScript);
       });
     }
-  }, [isEditing, content]);
+  }, [isEditing, content, scripts]);
 
   useEffect(() => {
     if (content) {
@@ -141,6 +142,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
           setClientCommentAt(data.client_comment_at || "");
           setClientName(data.clients?.name || "");
           setSelectedCategories(data.categories || []);
+          setScripts(data.scripts || "");
           if (data.clients?.article_categories) {
             const cats = data.clients.article_categories
               .split("\n")
@@ -193,6 +195,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
         meta_description: metaDescription,
         meta_keywords: metaKeywords,
         categories: selectedCategories,
+        scripts,
         updated_at: new Date().toISOString()
       }).eq('id', articleId);
 
@@ -443,6 +446,16 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                       />
                     </div>
                   </div>
+
+                  <div className="space-y-2 pt-4">
+                    <Label className="text-sm font-semibold text-gray-700">Custom Scripts</Label>
+                    <Textarea
+                      value={scripts}
+                      onChange={(e) => setScripts(e.target.value)}
+                      placeholder="Paste script tags here (e.g. <script src='...'></script> or custom JS)..."
+                      className="font-mono text-sm bg-gray-50/50 min-h-[150px]"
+                    />
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -464,12 +477,17 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                     .article-preview-content table { border-collapse: collapse; width: 100%; margin-bottom: 24px; border: 1px solid #e5e7eb; }
                     .article-preview-content table td, .article-preview-content table th { border: 1px solid #e5e7eb; padding: 12px; }
                   `}} />
-                  <div className="article-preview-content" dir={direction}>
+                  <div className="article-preview-content" dir={direction} ref={previewRef}>
                     <div 
-                      ref={previewRef}
                       dangerouslySetInnerHTML={{ __html: content }} 
                       className="text-gray-800 leading-relaxed" 
                     />
+                    {scripts && (
+                      <div 
+                        dangerouslySetInnerHTML={{ __html: scripts }}
+                        style={{ display: "none" }}
+                      />
+                    )}
                   </div>
                 </div>
               )}

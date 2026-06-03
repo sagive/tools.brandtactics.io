@@ -52,11 +52,12 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
   const [clientCategories, setClientCategories] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const newPreviewRef = React.useRef<HTMLDivElement>(null);
+  const [scripts, setScripts] = useState("");
 
   useEffect(() => {
     if (content && newPreviewRef.current) {
-      const scripts = newPreviewRef.current.querySelectorAll("script");
-      scripts.forEach((oldScript) => {
+      const foundScripts = newPreviewRef.current.querySelectorAll("script");
+      foundScripts.forEach((oldScript) => {
         const newScript = document.createElement("script");
         Array.from(oldScript.attributes).forEach((attr) => {
           newScript.setAttribute(attr.name, attr.value);
@@ -65,7 +66,7 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
         oldScript.parentNode?.replaceChild(newScript, oldScript);
       });
     }
-  }, [content]);
+  }, [content, scripts]);
 
   useEffect(() => {
     if (content) {
@@ -213,7 +214,8 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
         meta_title: metaTitle,
         meta_description: metaDescription,
         meta_keywords: metaKeywords,
-        categories: selectedCategories
+        categories: selectedCategories,
+        scripts
       }).select().single();
 
       if (error) throw error;
@@ -368,6 +370,15 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
                       onBlur={(newContent) => setContent(newContent)}
                     />
                   </div>
+                  <div className="space-y-2 pt-4">
+                    <Label className="text-sm font-semibold text-gray-700">Custom Scripts</Label>
+                    <Textarea
+                      value={scripts}
+                      onChange={(e) => setScripts(e.target.value)}
+                      placeholder="Paste script tags here (e.g. <script src='...'></script> or custom JS)..."
+                      className="font-mono text-sm bg-gray-50/50 min-h-[150px]"
+                    />
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-6 pt-2 select-none border-t border-indigo-50 mt-4">
@@ -452,9 +463,16 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
                       <div className="border border-indigo-100 rounded-md overflow-hidden bg-white shadow-sm ring-1 ring-indigo-50">
                         <div 
                           ref={newPreviewRef}
-                          dangerouslySetInnerHTML={{ __html: content }} 
                           className="p-6 text-gray-800 leading-relaxed article-content" 
-                        />
+                        >
+                          <div dangerouslySetInnerHTML={{ __html: content }} />
+                          {scripts && (
+                            <div 
+                              dangerouslySetInnerHTML={{ __html: scripts }}
+                              style={{ display: "none" }}
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
