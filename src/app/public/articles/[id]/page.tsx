@@ -303,7 +303,10 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
 
       <main className="max-w-4xl mx-auto px-6 py-12 lg:py-20">
         <article>
-          <header className="mb-12">
+          <header className="mb-12 p-8 lg:p-12 rounded-3xl border border-gray-200/60 bg-gray-50/40 relative overflow-hidden" style={{
+            backgroundImage: 'radial-gradient(#e5e7eb 1.5px, transparent 1.5px)',
+            backgroundSize: '24px 24px'
+          }}>
             <div className="flex items-center gap-2 mb-4">
                <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-none font-medium">
                 {article.type || "Article"}
