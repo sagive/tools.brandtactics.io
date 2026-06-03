@@ -16,6 +16,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [isEditingComment, setIsEditingComment] = useState(false);
+  const contentRef = React.useRef<HTMLDivElement>(null);
 
   const { words, chars } = React.useMemo(() => {
     if (!article?.content) return { words: 0, chars: 0 };
@@ -106,6 +107,20 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
     }
     fetchArticle();
   }, [id]);
+
+  useEffect(() => {
+    if (!loading && article?.content && contentRef.current) {
+      const scripts = contentRef.current.querySelectorAll("script");
+      scripts.forEach((oldScript) => {
+        const newScript = document.createElement("script");
+        Array.from(oldScript.attributes).forEach((attr) => {
+          newScript.setAttribute(attr.name, attr.value);
+        });
+        newScript.textContent = oldScript.textContent;
+        oldScript.parentNode?.replaceChild(newScript, oldScript);
+      });
+    }
+  }, [loading, article?.content]);
 
   const copyAsHtml = () => {
     if (!article?.content) return;
@@ -364,6 +379,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
           `}} />
 
           <div 
+            ref={contentRef}
             className="public-content"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />

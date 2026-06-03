@@ -51,6 +51,21 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
   const [metaKeywords, setMetaKeywords] = useState("");
   const [clientCategories, setClientCategories] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const newPreviewRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (content && newPreviewRef.current) {
+      const scripts = newPreviewRef.current.querySelectorAll("script");
+      scripts.forEach((oldScript) => {
+        const newScript = document.createElement("script");
+        Array.from(oldScript.attributes).forEach((attr) => {
+          newScript.setAttribute(attr.name, attr.value);
+        });
+        newScript.textContent = oldScript.textContent;
+        oldScript.parentNode?.replaceChild(newScript, oldScript);
+      });
+    }
+  }, [content]);
 
   useEffect(() => {
     if (content) {
@@ -436,6 +451,7 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
                       <Label className="text-sm font-semibold text-gray-700">Generated Content Preview</Label>
                       <div className="border border-indigo-100 rounded-md overflow-hidden bg-white shadow-sm ring-1 ring-indigo-50">
                         <div 
+                          ref={newPreviewRef}
                           dangerouslySetInnerHTML={{ __html: content }} 
                           className="p-6 text-gray-800 leading-relaxed article-content" 
                         />

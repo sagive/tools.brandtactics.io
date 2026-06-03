@@ -46,6 +46,21 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
   const [articleTypes, setArticleTypes] = useState<any[]>([]);
   const [clientCategories, setClientCategories] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const previewRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isEditing && content && previewRef.current) {
+      const scripts = previewRef.current.querySelectorAll("script");
+      scripts.forEach((oldScript) => {
+        const newScript = document.createElement("script");
+        Array.from(oldScript.attributes).forEach((attr) => {
+          newScript.setAttribute(attr.name, attr.value);
+        });
+        newScript.textContent = oldScript.textContent;
+        oldScript.parentNode?.replaceChild(newScript, oldScript);
+      });
+    }
+  }, [isEditing, content]);
 
   useEffect(() => {
     if (content) {
@@ -451,6 +466,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                   `}} />
                   <div className="article-preview-content" dir={direction}>
                     <div 
+                      ref={previewRef}
                       dangerouslySetInnerHTML={{ __html: content }} 
                       className="text-gray-800 leading-relaxed" 
                     />
