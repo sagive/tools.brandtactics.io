@@ -343,7 +343,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
         </div>
       </section>
 
-      <main className="max-w-4xl mx-auto px-6 py-12 lg:py-16">
+      <main className="max-w-4xl mx-auto px-6">
         <article>
 
           <style dangerouslySetInnerHTML={{ __html: `
