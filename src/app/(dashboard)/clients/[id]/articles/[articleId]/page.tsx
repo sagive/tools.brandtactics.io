@@ -59,15 +59,65 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
 
   useEffect(() => {
     if (!isEditing && content && previewRef.current && tailwindLoaded) {
-      const foundScripts = previewRef.current.querySelectorAll("script");
-      foundScripts.forEach((oldScript) => {
+      const foundScripts = Array.from(previewRef.current.querySelectorAll("script"));
+      if (foundScripts.length === 0) return;
+
+      // Temporarily patch addEventListener
+      const originalDocAdd = document.addEventListener;
+      const originalWinAdd = window.addEventListener;
+      
+      document.addEventListener = function(type: string, listener: any, options?: any) {
+        if (type === "DOMContentLoaded") {
+          listener(new Event("DOMContentLoaded"));
+        } else {
+          originalDocAdd.call(document, type, listener, options);
+        }
+      } as any;
+
+      window.addEventListener = function(type: string, listener: any, options?: any) {
+        if (type === "load") {
+          listener(new Event("load"));
+        } else {
+          originalWinAdd.call(window, type, listener, options);
+        }
+      } as any;
+
+      let index = 0;
+      function runNext() {
+        if (index >= foundScripts.length) {
+          // Restore original functions
+          document.addEventListener = originalDocAdd;
+          window.addEventListener = originalWinAdd;
+          return;
+        }
+
+        const oldScript = foundScripts[index];
         const newScript = document.createElement("script");
         Array.from(oldScript.attributes).forEach((attr) => {
           newScript.setAttribute(attr.name, attr.value);
         });
-        newScript.textContent = oldScript.textContent;
-        oldScript.parentNode?.replaceChild(newScript, oldScript);
-      });
+
+        const src = oldScript.getAttribute("src");
+        if (src) {
+          newScript.onload = () => {
+            index++;
+            runNext();
+          };
+          newScript.onerror = () => {
+            console.error(`Failed to load script: ${src}`);
+            index++;
+            runNext();
+          };
+          oldScript.parentNode?.replaceChild(newScript, oldScript);
+        } else {
+          newScript.textContent = oldScript.textContent;
+          oldScript.parentNode?.replaceChild(newScript, oldScript);
+          index++;
+          runNext();
+        }
+      }
+
+      runNext();
     }
   }, [isEditing, content, scripts, tailwindLoaded]);
 
