@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, Bot, Loader2, Share2 } from "lucide-react";
+import { ArrowLeft, Save, Bot, Loader2, Share2, RotateCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -37,6 +37,43 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
   const [aiSettings, setAiSettings] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingMeta, setIsGeneratingMeta] = useState(false);
+
+  const generateMeta = async (currentTitle: string, currentContent: string) => {
+    try {
+      const res = await fetch("/api/generate-meta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: currentTitle, content: currentContent })
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to generate metadata");
+      }
+      const data = await res.json();
+      return data;
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to generate SEO metadata");
+      return null;
+    }
+  };
+
+  const handleRecreateMeta = async () => {
+    if (!title) {
+      toast.error("Please enter a title first");
+      return;
+    }
+    setIsGeneratingMeta(true);
+    toast.info("Generating SEO metadata with Gemini...");
+    const data = await generateMeta(title, content);
+    if (data) {
+      setMetaTitle(data.meta_title);
+      setMetaDescription(data.meta_description);
+      toast.success("SEO metadata generated successfully!");
+    }
+    setIsGeneratingMeta(false);
+  };
   
   const [isAiMode, setIsAiMode] = useState(false);
   const [prompt, setPrompt] = useState("");
@@ -254,6 +291,25 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
     setIsSaving(true);
     const wordCount = calculateLength(content);
 
+    let finalMetaTitle = metaTitle;
+    let finalMetaDescription = metaDescription;
+
+    // Auto-generate if a link is generated (shouldShare, isPublic, or liveUrl are present) and meta values are empty
+    if ((shouldShare || isPublic || liveUrl) && (!metaTitle.trim() || !metaDescription.trim())) {
+      toast.info("Auto-generating empty SEO metadata...");
+      const data = await generateMeta(title, content);
+      if (data) {
+        if (!metaTitle.trim()) {
+          finalMetaTitle = data.meta_title;
+          setMetaTitle(data.meta_title);
+        }
+        if (!metaDescription.trim()) {
+          finalMetaDescription = data.meta_description;
+          setMetaDescription(data.meta_description);
+        }
+      }
+    }
+
     try {
       const { data, error } = await supabase.from('articles').insert({
         client_id: clientId,
@@ -269,8 +325,8 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
         direction,
         client_approved: isApproved,
         is_public: shouldShare ? true : isPublic,
-        meta_title: metaTitle,
-        meta_description: metaDescription,
+        meta_title: finalMetaTitle,
+        meta_description: finalMetaDescription,
         meta_keywords: metaKeywords,
         categories: selectedCategories,
         scripts
@@ -662,7 +718,20 @@ export default function NewClientArticle({ params }: { params: Promise<{ id: str
               )}
 
               <div className="pt-6 mt-6 border-t border-gray-100 space-y-4">
-                <CardTitle className="text-sm uppercase tracking-wider text-blue-600 font-bold">SEO Settings</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm uppercase tracking-wider text-blue-600 font-bold">SEO Settings</CardTitle>
+                  <Button 
+                    type="button"
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={handleRecreateMeta}
+                    disabled={isGeneratingMeta}
+                    className="h-8 w-8 text-blue-600 hover:bg-blue-50"
+                    title="Regenerate Meta Title & Description with Gemini"
+                  >
+                    {isGeneratingMeta ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCw className="w-4 h-4" />}
+                  </Button>
+                </div>
                 
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold text-gray-600">Meta Title</Label>

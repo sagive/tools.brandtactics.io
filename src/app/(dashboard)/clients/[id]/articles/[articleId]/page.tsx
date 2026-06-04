@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, Save, Bot, Loader2, Pencil, X, Share2, Globe, Lock, MessageSquare, Trash2, ExternalLink } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Bot, Loader2, Pencil, X, Share2, Globe, Lock, MessageSquare, Trash2, ExternalLink, RotateCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -43,6 +43,43 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [wordCount, setWordCount] = useState(0);
+  const [isGeneratingMeta, setIsGeneratingMeta] = useState(false);
+
+  const generateMeta = async (currentTitle: string, currentContent: string) => {
+    try {
+      const res = await fetch("/api/generate-meta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: currentTitle, content: currentContent })
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to generate metadata");
+      }
+      const data = await res.json();
+      return data;
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to generate SEO metadata");
+      return null;
+    }
+  };
+
+  const handleRecreateMeta = async () => {
+    if (!title) {
+      toast.error("Please enter a title first");
+      return;
+    }
+    setIsGeneratingMeta(true);
+    toast.info("Generating SEO metadata with Gemini...");
+    const data = await generateMeta(title, content);
+    if (data) {
+      setMetaTitle(data.meta_title);
+      setMetaDescription(data.meta_description);
+      toast.success("SEO metadata generated successfully!");
+    }
+    setIsGeneratingMeta(false);
+  };
 
   const [articleTypes, setArticleTypes] = useState<any[]>([]);
   const [clientCategories, setClientCategories] = useState<string[]>([]);
@@ -236,6 +273,25 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
     setIsSaving(true);
     const wordCount = calculateLength(content);
 
+    let finalMetaTitle = metaTitle;
+    let finalMetaDescription = metaDescription;
+
+    // Auto-generate if a link is generated (isPublic or liveUrl are present) and meta values are empty
+    if ((isPublic || liveUrl) && (!metaTitle.trim() || !metaDescription.trim())) {
+      toast.info("Auto-generating empty SEO metadata...");
+      const data = await generateMeta(title, content);
+      if (data) {
+        if (!metaTitle.trim()) {
+          finalMetaTitle = data.meta_title;
+          setMetaTitle(data.meta_title);
+        }
+        if (!metaDescription.trim()) {
+          finalMetaDescription = data.meta_description;
+          setMetaDescription(data.meta_description);
+        }
+      }
+    }
+
     try {
       const { error } = await supabase.from('articles').update({
         title,
@@ -249,8 +305,8 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
         direction,
         client_approved: isApproved,
         is_public: isPublic,
-        meta_title: metaTitle,
-        meta_description: metaDescription,
+        meta_title: finalMetaTitle,
+        meta_description: finalMetaDescription,
         meta_keywords: metaKeywords,
         categories: selectedCategories,
         scripts,
@@ -360,7 +416,29 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                   className="text-indigo-600 border-indigo-200 hover:bg-indigo-50/30 hover:text-indigo-700 transition-all font-semibold"
                   onClick={async () => {
                     try {
-                      const { error } = await supabase.from('articles').update({ is_public: true }).eq('id', articleId);
+                      let finalMetaTitle = metaTitle;
+                      let finalMetaDescription = metaDescription;
+                      
+                      if (!metaTitle.trim() || !metaDescription.trim()) {
+                        toast.info("Auto-generating empty SEO metadata...");
+                        const data = await generateMeta(title, content);
+                        if (data) {
+                          if (!metaTitle.trim()) {
+                            finalMetaTitle = data.meta_title;
+                            setMetaTitle(data.meta_title);
+                          }
+                          if (!metaDescription.trim()) {
+                            finalMetaDescription = data.meta_description;
+                            setMetaDescription(data.meta_description);
+                          }
+                        }
+                      }
+
+                      const { error } = await supabase.from('articles').update({ 
+                        is_public: true,
+                        meta_title: finalMetaTitle,
+                        meta_description: finalMetaDescription
+                      }).eq('id', articleId);
                       if (error) throw error;
                       setIsPublic(true);
                       const url = `${window.location.origin}/public/articles/${articleId}`;
@@ -770,7 +848,19 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
               )}
 
               <div className="pt-6 mt-6 border-t border-gray-100 space-y-4">
-                <CardTitle className="text-sm uppercase tracking-wider text-blue-600 font-bold">SEO Settings</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm uppercase tracking-wider text-blue-600 font-bold">SEO Settings</CardTitle>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={handleRecreateMeta}
+                    disabled={isGeneratingMeta}
+                    className="h-8 w-8 text-blue-600 hover:bg-blue-50"
+                    title="Regenerate Meta Title & Description with Gemini"
+                  >
+                    {isGeneratingMeta ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCw className="w-4 h-4" />}
+                  </Button>
+                </div>
                 
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold text-gray-600">Meta Title</Label>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Loader2, AlertCircle, CheckCircle2, MessageSquare, Send, Pencil, Copy } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle2, MessageSquare, Send, Pencil, Copy, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -194,6 +194,85 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
     toast.success("Article text copied to clipboard!");
   };
 
+  const downloadHtml = () => {
+    if (!article) return;
+    
+    const wordsCount = article.content
+      ? article.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().split(' ').length
+      : 0;
+
+    const htmlContent = `<!DOCTYPE html>
+<html lang="${article.direction === 'rtl' ? 'he' : 'en'}" dir="${article.direction || 'ltr'}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${article.meta_title || article.title}</title>
+  <meta name="description" content="${article.meta_description || ''}">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.8;
+      color: #374151;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      direction: ${article.direction || 'ltr'};
+    }
+    h1, h2, h3, h4, h5, h6 {
+      color: #111827;
+      font-weight: 800;
+      margin-top: 2.5rem;
+      margin-bottom: 1.25rem;
+      line-height: 1.25;
+    }
+    h1 { font-size: 2.5rem; }
+    h2 { font-size: 1.8rem; }
+    h3 { font-size: 1.4rem; }
+    p { margin-bottom: 1.5rem; }
+    a { color: #2563eb; text-decoration: underline; text-underline-offset: 4px; }
+    img { max-width: 100%; height: auto; border-radius: 12px; margin: 2rem 0; }
+    ul { list-style-type: disc; margin-bottom: 1.5rem; padding-inline-start: 2rem; }
+    ol { list-style-type: decimal; margin-bottom: 1.5rem; padding-inline-start: 2rem; }
+    li { margin-bottom: 0.5rem; }
+    blockquote { border-inline-start: 4px solid #2563eb; padding-inline-start: 1.25rem; font-style: italic; color: #4b5563; margin: 2rem 0; }
+    table { border-collapse: collapse; width: 100%; margin: 2rem 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+    th, td { border: 1px solid #e5e7eb; padding: 12px 16px; text-align: ${article.direction === 'rtl' ? 'right' : 'left'}; }
+    thead tr { background-color: #374151; color: #ffffff; }
+    tbody tr:nth-of-type(even) { background-color: #f9fafb; }
+  </style>
+</head>
+<body>
+  <header style="margin-bottom: 3rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 1.5rem;">
+    <h1 style="margin-top: 0; margin-bottom: 0.5rem;">${article.title}</h1>
+    <div style="font-size: 0.875rem; color: #6b7280; display: flex; gap: 1rem;">
+      <span>Published on: ${new Date(article.created_at).toLocaleDateString()}</span>
+      <span>•</span>
+      <span>${wordsCount} Words</span>
+    </div>
+  </header>
+  <main>
+    ${article.content}
+  </main>
+  ${article.scripts ? `<div style="display: none;">${article.scripts}</div>` : ''}
+</body>
+</html>`;
+
+    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const sanitizedTitle = (article.title || "article")
+      .toLowerCase()
+      .replace(/[^a-z0-9\u0590-\u05FF]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+    a.href = url;
+    a.download = `${sanitizedTitle}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Article downloaded successfully!");
+  };
+
   const handleApprove = async () => {
     try {
       setLoading(true);
@@ -282,6 +361,15 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
               <Copy className="w-3.5 h-3.5" />
               Copy Article
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={downloadHtml}
+              className="rounded-full px-4 border-blue-100 hover:border-blue-200 bg-blue-50/30 text-blue-700 hover:bg-blue-50/50 hover:text-blue-800 transition-all font-semibold flex items-center gap-1.5 text-xs h-9"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Download HTML
+            </Button>
 
             {article.client_approved ? (
               <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-100 py-1.5 px-4 rounded-full flex items-center gap-1.5 h-9 text-xs font-semibold">
@@ -294,7 +382,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
                 className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-6 shadow-lg shadow-emerald-100 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 h-9 text-sm font-semibold"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                Approve Article
+                Approve
               </Button>
             )}
           </div>
