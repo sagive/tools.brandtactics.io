@@ -517,7 +517,7 @@ function SettingsContent() {
                     This key acts globally for features utilizing the AI helper on tasks. Note: Make sure to add the 'gemini_api_key' column to the 'app_settings' table in Supabase!
                   </p>
                 </div>
-                <Button onClick={handleSaveApiKey} disabled={isSavingApiKey} className="bg-blue-600 hover:bg-blue-700">
+                <Button onClick={handleSaveApiKey} disabled={isSavingApiKey} className="bg-blue-600 hover:bg-blue-700 text-white">
                   {isSavingApiKey ? "Saving..." : <><Save className="w-4 h-4 mr-2" /> Save Settings</>}
                 </Button>
               </div>
@@ -538,7 +538,7 @@ function SettingsContent() {
                     Customize the HTML wrapper for client email updates. Use exactly <code>[content]</code> where you want the body injected.
                   </CardDescription>
                 </div>
-                <Button onClick={handleSaveTemplate} className="bg-blue-600 hover:bg-blue-700">
+                <Button onClick={handleSaveTemplate} className="bg-blue-600 hover:bg-blue-700 text-white">
                   <Save className="w-4 h-4 mr-2" /> Save Template
                 </Button>
               </div>
@@ -857,7 +857,7 @@ function SettingsContent() {
                         Use Test Endpoint
                       </Label>
                     </div>
-                    <Button onClick={handleSaveArticleAiSettings} className="bg-blue-600 hover:bg-blue-700 shadow-lg">
+                    <Button onClick={handleSaveArticleAiSettings} className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
                       <Save className="w-4 h-4 mr-2" /> Save Config
                     </Button>
                   </div>
@@ -1028,7 +1028,7 @@ function SettingsContent() {
                           <Button variant="outline" size="icon" onClick={generateRandomSecret} className="shrink-0 border-gray-200 hover:bg-gray-50" title="Generate Random Secret">
                             <RotateCw className="w-4 h-4" />
                           </Button>
-                          <Button onClick={handleSaveWebhookSecret} disabled={isSavingWebhookSecret} className="bg-gray-900 hover:bg-black shrink-0">
+                          <Button onClick={handleSaveWebhookSecret} disabled={isSavingWebhookSecret} className="bg-gray-900 hover:bg-black shrink-0 text-white">
                             {isSavingWebhookSecret ? "Saving..." : "Update Secret"}
                           </Button>
                         </div>
@@ -1310,7 +1310,7 @@ function SettingsContent() {
                         className="min-h-[150px] font-mono text-xs bg-gray-50 border-gray-200 focus:bg-white transition-colors"
                       />
                       <div className="flex justify-end">
-                        <Button onClick={handleSaveWebhookNotes} disabled={isSavingWebhookNotes} size="sm" className="bg-blue-600 hover:bg-blue-700">
+                        <Button onClick={handleSaveWebhookNotes} disabled={isSavingWebhookNotes} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
                           {isSavingWebhookNotes ? "Saving..." : <><Save className="w-3.5 h-3.5 mr-2" /> Save Notes</>}
                         </Button>
                       </div>

@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(req: Request) {
   try {
@@ -9,8 +13,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing or invalid rawText' }, { status: 400 });
     }
 
-    // 1. Fetch Gemini API Key from app_settings
-    const { data: settings, error: settingsError } = await supabase
+    // 1. Fetch Gemini API Key from app_settings using admin privilege to bypass RLS
+    const { data: settings, error: settingsError } = await supabaseAdmin
       .from('app_settings')
       .select('gemini_api_key')
       .eq('id', 'global')

@@ -239,7 +239,8 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
     blockquote { border-inline-start: 4px solid #2563eb; padding-inline-start: 1.25rem; font-style: italic; color: #4b5563; margin: 2rem 0; }
     table { border-collapse: collapse; width: 100%; margin: 2rem 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
     th, td { border: 1px solid #e5e7eb; padding: 12px 16px; text-align: ${article.direction === 'rtl' ? 'right' : 'left'}; }
-    thead tr { background-color: #374151; color: #ffffff; }
+    th { color: #111827; font-weight: 700; }
+    thead tr { background-color: #f3f4f6; color: #111827; }
     tbody tr:nth-of-type(even) { background-color: #f9fafb; }
   </style>
 </head>
@@ -508,9 +509,14 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
             }
 
             .public-content thead tr {
-                background-color: #374151;
-                color: #ffffff;
+                background-color: #f3f4f6;
+                color: #111827;
                 text-align: ${direction === 'rtl' ? 'right' : 'left'};
+            }
+
+            .public-content th {
+                color: #111827;
+                font-weight: 700;
             }
 
             .public-content th,
@@ -531,7 +537,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
             }
 
             .public-content tbody tr:last-of-type {
-                border-bottom: 2px solid #374151;
+                border-bottom: 2px solid #e5e7eb;
             }
           `}} />
 
