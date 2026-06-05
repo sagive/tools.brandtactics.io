@@ -163,7 +163,18 @@ export default function ClientDescription({ params }: { params: Promise<{ id: st
                     height: 500,
                     direction: isRtl ? 'rtl' : 'ltr',
                     uploader: {
-                      insertImageAsBase64URI: true
+                      insertImageAsBase64URI: false,
+                      url: `/api/articles/upload?clientId=${id}`,
+                      isSuccess: function (resp: any) {
+                        return resp.success;
+                      },
+                      process: function (resp: any) {
+                        return {
+                          files: resp.files || [],
+                          path: '',
+                          baseurl: ''
+                        };
+                      }
                     },
                     placeholder: 'Describe this client in detail...',
                     style: {

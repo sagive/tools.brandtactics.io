@@ -536,7 +536,18 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                             denyTags: false
                           },
                           uploader: {
-                            insertImageAsBase64URI: true
+                            insertImageAsBase64URI: false,
+                            url: `/api/articles/upload?clientId=${clientId}`,
+                            isSuccess: function (resp: any) {
+                              return resp.success;
+                            },
+                            process: function (resp: any) {
+                              return {
+                                files: resp.files || [],
+                                path: '',
+                                baseurl: ''
+                              };
+                            }
                           },
                           placeholder: 'Start writing your article...',
                           style: {
