@@ -46,12 +46,31 @@ export async function POST(request: Request) {
       direction = 'ltr',
       meta_title,
       meta_description,
-      meta_keywords
+      meta_keywords,
+      category,
+      categories,
+      categoty
     } = body;
 
     // 3. Validation
     if (!clientId || !title || !content) {
       return NextResponse.json({ error: 'Missing required fields: clientId, title, content' }, { status: 400 });
+    }
+
+    // Process categories / category (100% optional)
+    let finalCategories: string[] = [];
+    if (Array.isArray(categories)) {
+      finalCategories = categories.filter((c: any) => typeof c === 'string' && c.trim() !== '');
+    } else if (typeof categories === 'string' && categories.trim() !== '') {
+      finalCategories = [categories.trim()];
+    } else if (Array.isArray(category)) {
+      finalCategories = category.filter((c: any) => typeof c === 'string' && c.trim() !== '');
+    } else if (typeof category === 'string' && category.trim() !== '') {
+      finalCategories = [category.trim()];
+    } else if (Array.isArray(categoty)) {
+      finalCategories = categoty.filter((c: any) => typeof c === 'string' && c.trim() !== '');
+    } else if (typeof categoty === 'string' && categoty.trim() !== '') {
+      finalCategories = [categoty.trim()];
     }
 
     // 4. Word count calculation (robust)
@@ -87,6 +106,7 @@ export async function POST(request: Request) {
         meta_title: meta_title || null,
         meta_description: meta_description || null,
         meta_keywords: meta_keywords || null,
+        categories: finalCategories,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })

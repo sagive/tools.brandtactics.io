@@ -1134,6 +1134,7 @@ function SettingsContent() {
                             content: "<p>The article content in HTML...</p>",
                             type: "Blog Post",
                             direction: "ltr",
+                            category: "SEO (Optional)",
                             meta_title: "SEO Optimized Title",
                             meta_description: "A compelling description for search engines.",
                             meta_keywords: "seo, keywords, article"
@@ -1147,6 +1148,7 @@ function SettingsContent() {
                               content: "<p>The article content in HTML...</p>",
                               type: "Blog Post",
                               direction: "ltr",
+                              category: "SEO",
                               meta_title: "SEO Optimized Title",
                               meta_description: "A compelling description for search engines.",
                               meta_keywords: "seo, keywords, article"
