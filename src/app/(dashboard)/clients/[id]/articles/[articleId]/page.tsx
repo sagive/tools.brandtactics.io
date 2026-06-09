@@ -74,8 +74,9 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
     toast.info("Generating SEO metadata with Gemini...");
     const data = await generateMeta(title, content);
     if (data) {
-      setMetaTitle(data.meta_title);
-      setMetaDescription(data.meta_description);
+      setMetaTitle(data.meta_title || "");
+      setMetaDescription(data.meta_description || "");
+      setMetaKeywords(data.meta_keywords || "");
       toast.success("SEO metadata generated successfully!");
     }
     setIsGeneratingMeta(false);
@@ -275,19 +276,24 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
 
     let finalMetaTitle = metaTitle;
     let finalMetaDescription = metaDescription;
+    let finalMetaKeywords = metaKeywords;
 
     // Auto-generate if a link is generated (isPublic or liveUrl are present) and meta values are empty
-    if ((isPublic || liveUrl) && (!metaTitle.trim() || !metaDescription.trim())) {
+    if ((isPublic || liveUrl) && (!metaTitle.trim() || !metaDescription.trim() || !metaKeywords.trim())) {
       toast.info("Auto-generating empty SEO metadata...");
       const data = await generateMeta(title, content);
       if (data) {
         if (!metaTitle.trim()) {
-          finalMetaTitle = data.meta_title;
-          setMetaTitle(data.meta_title);
+          finalMetaTitle = data.meta_title || "";
+          setMetaTitle(data.meta_title || "");
         }
         if (!metaDescription.trim()) {
-          finalMetaDescription = data.meta_description;
-          setMetaDescription(data.meta_description);
+          finalMetaDescription = data.meta_description || "";
+          setMetaDescription(data.meta_description || "");
+        }
+        if (!metaKeywords.trim()) {
+          finalMetaKeywords = data.meta_keywords || "";
+          setMetaKeywords(data.meta_keywords || "");
         }
       }
     }
@@ -307,7 +313,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
         is_public: isPublic,
         meta_title: finalMetaTitle,
         meta_description: finalMetaDescription,
-        meta_keywords: metaKeywords,
+        meta_keywords: finalMetaKeywords,
         categories: selectedCategories,
         scripts,
         updated_at: new Date().toISOString()

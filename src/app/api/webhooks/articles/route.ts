@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { generateSeoMeta } from '@/lib/seo';
 
 /**
  * Webhook for external article submissions (e.g., from n8n)
@@ -23,8 +24,8 @@ export async function POST(request: Request) {
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch secret from DB
-    const { data: settings } = await supabaseAdmin.from('app_settings').select('webhook_secret').eq('id', 'global').single();
+    // Fetch secret and API key from DB in a single query
+    const { data: settings } = await supabaseAdmin.from('app_settings').select('webhook_secret, gemini_api_key').eq('id', 'global').single();
     const expectedSecret = settings?.webhook_secret || process.env.WEBHOOK_SECRET;
 
     if (!expectedSecret) {
@@ -92,6 +93,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid clientId: Client does not exist' }, { status: 400 });
     }
 
+    // Auto-generate missing metadata if Gemini API Key is available
+    let finalMetaTitle = meta_title || null;
+    let finalMetaDescription = meta_description || null;
+    let finalMetaKeywords = meta_keywords || null;
+
+    if ((!finalMetaTitle || !finalMetaDescription || !finalMetaKeywords) && settings?.gemini_api_key) {
+      try {
+        const seoResult = await generateSeoMeta(title, content, settings.gemini_api_key);
+        if (!finalMetaTitle) finalMetaTitle = seoResult.meta_title;
+        if (!finalMetaDescription) finalMetaDescription = seoResult.meta_description;
+        if (!finalMetaKeywords) finalMetaKeywords = seoResult.meta_keywords;
+      } catch (seoErr) {
+        console.error('Failed to auto-generate SEO meta in webhook:', seoErr);
+        // Gracefully continue without failing the submission
+      }
+    }
+
     // 6. Insert into Database
     const { data, error } = await supabaseAdmin
       .from('articles')
@@ -103,9 +121,9 @@ export async function POST(request: Request) {
         direction,
         length: wordCount,
         status: 'Draft',
-        meta_title: meta_title || null,
-        meta_description: meta_description || null,
-        meta_keywords: meta_keywords || null,
+        meta_title: finalMetaTitle,
+        meta_description: finalMetaDescription,
+        meta_keywords: finalMetaKeywords,
         categories: finalCategories,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
