@@ -1163,7 +1163,7 @@ function SettingsContent() {
                       <div className="flex gap-3">
                         <div className="flex-1 p-3 bg-blue-50 border border-blue-100 rounded-lg">
                           <p className="text-[10px] text-blue-700 leading-normal">
-                            <strong>Note:</strong> <code>clientId</code> must match an existing client ID in your database.
+                            <strong>Note:</strong> <code>clientId</code> must match an existing client ID. You can also optionally pass a <code>category</code> (string) or <code>categories</code> (array of strings) to assign categories.
                           </p>
                         </div>
                       </div>
