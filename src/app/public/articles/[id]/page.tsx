@@ -247,9 +247,21 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
   const buildExportHtmlDocument = (cleanContent: string, cleanScripts: string) => {
     if (!article) return "";
 
-    const wordsCount = cleanContent
-      ? cleanContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().split(' ').length
-      : 0;
+    const chartStyles = `
+    .bt-article-export .relative.h-72.w-full,
+    .bt-article-export .relative[class*="h-72"][class*="w-full"] {
+      position: relative;
+      width: 100%;
+      height: 18rem;
+      min-height: 18rem;
+    }
+    .bt-article-export .relative.h-72.w-full > canvas,
+    .bt-article-export .relative[class*="h-72"][class*="w-full"] > canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100%;
+    }`;
 
     return `<!DOCTYPE html>
 <html lang="${article.direction === 'rtl' ? 'he' : 'en'}" dir="${article.direction || 'ltr'}">
@@ -292,18 +304,11 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
     th { color: #111827; font-weight: 700; }
     thead tr { background-color: #f3f4f6; color: #111827; }
     tbody tr:nth-of-type(even) { background-color: #f9fafb; }
+    ${chartStyles}
   </style>
 </head>
-<body>
-  <header style="margin-bottom: 3rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 1.5rem;">
-    <h1 style="margin-top: 0; margin-bottom: 0.5rem;">${article.title}</h1>
-    <div style="font-size: 0.875rem; color: #6b7280; display: flex; gap: 1rem;">
-      <span>Published on: ${new Date(article.created_at).toLocaleDateString()}</span>
-      <span>•</span>
-      <span>${wordsCount} Words</span>
-    </div>
-  </header>
-  <main>
+<body class="bt-article-export">
+  <main class="bt-article-content">
     ${cleanContent}
   </main>
   ${cleanScripts ? `<div style="display: none;">${cleanScripts}</div>` : ''}
@@ -314,9 +319,21 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
   const buildExportHtmlFragment = (cleanContent: string, cleanScripts: string) => {
     if (!article) return "";
 
-    const wordsCount = cleanContent
-      ? cleanContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().split(' ').length
-      : 0;
+    const chartStyles = `
+    .bt-article-export .relative.h-72.w-full,
+    .bt-article-export .relative[class*="h-72"][class*="w-full"] {
+      position: relative;
+      width: 100%;
+      height: 18rem;
+      min-height: 18rem;
+    }
+    .bt-article-export .relative.h-72.w-full > canvas,
+    .bt-article-export .relative[class*="h-72"][class*="w-full"] > canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100%;
+    }`;
 
     return `<div class="bt-article-export" dir="${article.direction || 'ltr'}">
   <style>
@@ -356,30 +373,8 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
     .bt-article-export th { color: #111827; font-weight: 700; }
     .bt-article-export thead tr { background-color: #f3f4f6; color: #111827; }
     .bt-article-export tbody tr:nth-of-type(even) { background-color: #f9fafb; }
-    .bt-article-export .bt-article-header {
-      margin-bottom: 3rem;
-      border-bottom: 1px solid #e5e7eb;
-      padding-bottom: 1.5rem;
-    }
-    .bt-article-export .bt-article-title {
-      margin-top: 0;
-      margin-bottom: 0.5rem;
-    }
-    .bt-article-export .bt-article-meta {
-      font-size: 0.875rem;
-      color: #6b7280;
-      display: flex;
-      gap: 1rem;
-    }
+    ${chartStyles}
   </style>
-  <div class="bt-article-header">
-    <h1 class="bt-article-title">${article.title}</h1>
-    <div class="bt-article-meta">
-      <span>Published on: ${new Date(article.created_at).toLocaleDateString()}</span>
-      <span>•</span>
-      <span>${wordsCount} Words</span>
-    </div>
-  </div>
   <div class="bt-article-content">
     ${cleanContent}
   </div>
