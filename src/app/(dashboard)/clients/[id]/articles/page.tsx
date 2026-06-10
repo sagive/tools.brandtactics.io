@@ -1,104 +1,244 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Download, Trash2, Edit } from "lucide-react";
+import { Search, Plus, Download, Trash2, Edit, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { format } from "date-fns";
 
+const PAGE_SIZE = 25;
+const ARTICLE_LIST_COLUMNS = "id, title, live_url, type, length, status, updated_at, created_at, categories";
+
+type ArticleStatusFilter = "All" | "Draft" | "Sent to publisher" | "Published";
+
+type ArticleListItem = {
+  id: string;
+  title: string;
+  live_url: string | null;
+  type: string | null;
+  length: number | null;
+  status: string | null;
+  updated_at: string | null;
+  created_at: string | null;
+  categories: string[] | null;
+};
+
+type ArticleCounts = {
+  total: number;
+  draft: number;
+  sent: number;
+  published: number;
+};
+
 export default function ClientArticles({ params }: { params: Promise<{ id: string }> }) {
   const { id: clientId } = React.use(params);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<ArticleStatusFilter>("Draft");
   
-  const [articles, setArticles] = useState<any[]>([]);
+  const [articles, setArticles] = useState<ArticleListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [clientCategories, setClientCategories] = useState<string[]>([]);
   const [categoryFilter, setCategoryFilter] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [articleCounts, setArticleCounts] = useState<ArticleCounts>({
+    total: 0,
+    draft: 0,
+    sent: 0,
+    published: 0,
+  });
 
   useEffect(() => {
-    fetchArticles();
-  }, [clientId]);
+    const timer = window.setTimeout(() => {
+      setCurrentPage(1);
+      setDebouncedSearch(search.trim());
+    }, 350);
 
-  const fetchArticles = async () => {
-    setIsLoading(true);
-    const { data, error } = await supabase
-      .from('articles')
-      .select('*')
-      .eq('client_id', clientId)
-      .order('created_at', { ascending: false });
-      
-    if (data) setArticles(data);
+    return () => window.clearTimeout(timer);
+  }, [search]);
 
-    // Fetch client categories
-    const { data: clientData } = await supabase
-      .from('clients')
-      .select('article_categories')
-      .eq('id', clientId)
-      .single();
+  useEffect(() => {
+    let isActive = true;
 
-    if (clientData?.article_categories) {
-      const cats = clientData.article_categories
-        .split("\n")
-        .map((c: string) => c.trim())
-        .filter(Boolean);
-      setClientCategories(cats);
+    async function fetchClientCategories() {
+      const { data: clientData, error } = await supabase
+        .from('clients')
+        .select('article_categories')
+        .eq('id', clientId)
+        .single();
+
+      if (!isActive) return;
+
+      if (error) {
+        console.error("Failed to fetch article categories", error);
+        setClientCategories([]);
+        setCategoryFilter("All");
+        return;
+      }
+
+      if (clientData?.article_categories) {
+        const cats = clientData.article_categories
+          .split("\n")
+          .map((c: string) => c.trim())
+          .filter(Boolean);
+
+        setClientCategories(cats);
+        setCategoryFilter((prev) => prev === "All" || cats.includes(prev) ? prev : "All");
+      } else {
+        setClientCategories([]);
+        setCategoryFilter("All");
+      }
     }
 
-    setIsLoading(false);
-  };
+    fetchClientCategories();
 
-  const filteredArticles = articles.filter(a => {
-    const matchesSearch = a.title.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === "All" || a.status === statusFilter;
-    const matchesCategory = categoryFilter === "All" || (Array.isArray(a.categories) && a.categories.includes(categoryFilter));
-    return matchesSearch && matchesStatus && matchesCategory;
-  });
+    return () => {
+      isActive = false;
+    };
+  }, [clientId]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function fetchArticleCounts() {
+      const [totalResult, draftResult, sentResult, publishedResult] = await Promise.all([
+        supabase.from('articles').select('id', { count: 'exact', head: true }).eq('client_id', clientId),
+        supabase.from('articles').select('id', { count: 'exact', head: true }).eq('client_id', clientId).eq('status', 'Draft'),
+        supabase.from('articles').select('id', { count: 'exact', head: true }).eq('client_id', clientId).eq('status', 'Sent to publisher'),
+        supabase.from('articles').select('id', { count: 'exact', head: true }).eq('client_id', clientId).eq('status', 'Published'),
+      ]);
+
+      if (!isActive) return;
+
+      const firstError = totalResult.error || draftResult.error || sentResult.error || publishedResult.error;
+      if (firstError) {
+        console.error("Failed to fetch article counts", firstError);
+        return;
+      }
+
+      setArticleCounts({
+        total: totalResult.count ?? 0,
+        draft: draftResult.count ?? 0,
+        sent: sentResult.count ?? 0,
+        published: publishedResult.count ?? 0,
+      });
+    }
+
+    fetchArticleCounts();
+
+    return () => {
+      isActive = false;
+    };
+  }, [clientId, refreshKey]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function fetchArticles() {
+      setIsLoading(true);
+
+      const from = (currentPage - 1) * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      let query = supabase
+        .from('articles')
+        .select(ARTICLE_LIST_COLUMNS, { count: 'exact' })
+        .eq('client_id', clientId)
+        .order('created_at', { ascending: false });
+
+      if (statusFilter !== "All") {
+        query = query.eq('status', statusFilter);
+      }
+
+      if (categoryFilter !== "All") {
+        query = query.contains('categories', [categoryFilter]);
+      }
+
+      if (debouncedSearch) {
+        query = query.ilike('title', `%${debouncedSearch}%`);
+      }
+
+      const { data, error, count } = await query.range(from, to);
+
+      if (!isActive) return;
+
+      if (error) {
+        console.error("Failed to fetch articles", error);
+        toast.error("Failed to load articles");
+        setArticles([]);
+        setTotalCount(0);
+      } else {
+        const nextTotal = count ?? 0;
+        const lastPage = Math.max(1, Math.ceil(nextTotal / PAGE_SIZE));
+
+        if (currentPage > lastPage) {
+          setCurrentPage(lastPage);
+          return;
+        }
+
+        setArticles(data ?? []);
+        setTotalCount(nextTotal);
+      }
+
+      setIsLoading(false);
+    }
+
+    fetchArticles();
+
+    return () => {
+      isActive = false;
+    };
+  }, [clientId, currentPage, debouncedSearch, statusFilter, categoryFilter, refreshKey]);
 
   const handleDelete = async (articleId: string) => {
     if (!confirm("Are you sure you want to delete this article?")) return;
     try {
       const { error } = await supabase.from('articles').delete().eq('id', articleId);
       if (error) throw error;
+      const shouldMoveBack = articles.length === 1 && currentPage > 1;
       setArticles(prev => prev.filter(a => a.id !== articleId));
+      setTotalCount(prev => Math.max(0, prev - 1));
+      if (shouldMoveBack) {
+        setCurrentPage(prev => Math.max(1, prev - 1));
+      }
+      setRefreshKey(prev => prev + 1);
       toast.success("Article deleted");
-    } catch (err: any) {
+    } catch (error) {
+      console.error("Failed to delete article", error);
       toast.error("Failed to delete article");
     }
   };
 
-  const draftCount = articles.filter(a => a.status === "Draft").length;
-  const sentCount = articles.filter(a => a.status === "Sent to publisher").length;
-  const publishedCount = articles.filter(a => a.status === "Published").length;
-
-
-  // get article length
-  const getArticleLength = (article: any) => {
-    if (!article.content) return 0;
-    const tmp = document.createElement("DIV");
-    tmp.innerHTML = article.content;
-    const text = tmp.textContent || tmp.innerText || "";
-    const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-    return words.length;
+  const handleStatusFilterChange = (value: string | null) => {
+    setCurrentPage(1);
+    setStatusFilter((value || "All") as ArticleStatusFilter);
   };
 
+  const handleCategoryFilterChange = (value: string | null) => {
+    setCurrentPage(1);
+    setCategoryFilter(value || "All");
+  };
 
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const startResult = totalCount === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const endResult = Math.min(currentPage * PAGE_SIZE, totalCount);
 
   return (
     <div className="space-y-6">
       {/* Stats Badges */}
       <div className="flex gap-2 mb-4">
-        <Badge variant="outline" className="bg-white">{articles.length} Total</Badge>
-        <Badge variant="secondary" className="bg-gray-100 text-gray-700">{draftCount} Drafts</Badge>
-        <Badge variant="secondary" className="bg-indigo-50 text-indigo-700">{sentCount} Sent to publisher</Badge>
-        <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">{publishedCount} Published</Badge>
+        <Badge variant="outline" className="bg-white">{articleCounts.total} Total</Badge>
+        <Badge variant="secondary" className="bg-gray-100 text-gray-700">{articleCounts.draft} Drafts</Badge>
+        <Badge variant="secondary" className="bg-indigo-50 text-indigo-700">{articleCounts.sent} Sent to publisher</Badge>
+        <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">{articleCounts.published} Published</Badge>
       </div>
 
       {/* Toolbar */}
@@ -113,7 +253,7 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val || "All")}>
+          <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
             <SelectTrigger className="w-full sm:w-[160px] bg-white">
               <span data-slot="select-value" className="flex flex-1 text-start line-clamp-1">
                 {statusFilter === "All" 
@@ -133,7 +273,7 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
             </SelectContent>
           </Select>
           {clientCategories.length > 0 && (
-            <Select value={categoryFilter} onValueChange={(val) => setCategoryFilter(val || "All")}>
+            <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
               <SelectTrigger className="w-full sm:w-[160px] bg-white">
                 <span data-slot="select-value" className="flex flex-1 text-start line-clamp-1">
                   {categoryFilter === "All" ? "All Categories" : categoryFilter}
@@ -177,18 +317,18 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-gray-500">
+                <TableCell colSpan={6} className="h-24 text-center text-gray-500">
                   Loading articles...
                 </TableCell>
               </TableRow>
-            ) : filteredArticles.length === 0 ? (
+            ) : articles.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-gray-500">
+                <TableCell colSpan={6} className="h-24 text-center text-gray-500">
                   No articles found.
                 </TableCell>
               </TableRow>
             ) : (
-              filteredArticles.map((article) => (
+              articles.map((article) => (
                 <TableRow key={article.id} className="hover:bg-gray-50/50">
                   <TableCell className="font-medium text-gray-900 hover:text-blue-600 transition-colors pl-6">
                     <div className="flex flex-col">
@@ -213,7 +353,7 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
                   </TableCell>
                   <TableCell className="text-center">
                     <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
-                      {getArticleLength(article)}
+                      {article.length ?? 0}
                     </span>
                   </TableCell>
                   <TableCell className="text-center">
@@ -266,8 +406,35 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
           </TableBody>
         </Table>
         {!isLoading && (
-          <div className="p-4 border-t bg-gray-50/50 text-sm text-gray-500 flex items-center justify-between">
-            Showing 1 to {filteredArticles.length} of {filteredArticles.length} results
+          <div className="p-4 border-t bg-gray-50/50 text-sm text-gray-500 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+            <span>
+              Showing {startResult} to {endResult} of {totalCount} results
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 bg-white"
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              >
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 bg-white"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              >
+                Next
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
           </div>
         )}
       </Card>
