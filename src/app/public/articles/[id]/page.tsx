@@ -255,6 +255,31 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
       node.replaceWith(replacement);
     });
 
+    // Keep chart wrappers from expanding indefinitely when Tailwind sizing is absent.
+    temp.querySelectorAll("div").forEach((node) => {
+      const classList = Array.from(node.classList);
+      const hasChartWrapperClasses =
+        node.classList.contains("relative") &&
+        classList.some((cls) => cls.includes("h-72")) &&
+        classList.some((cls) => cls.includes("w-full"));
+
+      if (!hasChartWrapperClasses) return;
+
+      const wrapper = node as HTMLDivElement;
+      wrapper.style.position = "relative";
+      wrapper.style.width = "100%";
+      wrapper.style.height = "18rem";
+      wrapper.style.minHeight = "18rem";
+
+      wrapper.querySelectorAll("canvas").forEach((canvasNode) => {
+        const canvas = canvasNode as HTMLCanvasElement;
+        canvas.style.display = "block";
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+        canvas.style.maxWidth = "100%";
+      });
+    });
+
     return temp.innerHTML.trim();
   };
 
