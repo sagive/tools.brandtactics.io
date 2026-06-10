@@ -172,10 +172,52 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
     }
   }, [loading, article?.content, article?.scripts]);
 
+  const normalizeHtmlForClipboard = (rawHtml: string) => {
+    let normalized = rawHtml.trim();
+
+    // Some saved records are JSON-escaped HTML strings; unescape when possible.
+    if (
+      (normalized.startsWith('"') && normalized.endsWith('"')) ||
+      normalized.includes('\\"') ||
+      normalized.includes('\\n')
+    ) {
+      try {
+        const parsed = JSON.parse(normalized);
+        if (typeof parsed === "string") {
+          normalized = parsed.trim();
+        }
+      } catch {
+        // Keep raw value if it isn't valid JSON.
+      }
+    }
+
+    // Repair quoted/comma-joined HTML fragments like "<p...>","<span...>".
+    if (/^"\s*</.test(normalized) || /"\s*,\s*"/.test(normalized) || />\s*,\s*</.test(normalized)) {
+      normalized = normalized
+        .replace(/^"\s*/, "")
+        .replace(/\s*"$/, "")
+        .replace(/"\s*,\s*"/g, "")
+        .replace(/>\s*,\s*</g, "><")
+        .replace(/"\s*</g, "<")
+        .replace(/>\s*"/g, ">")
+        .trim();
+    }
+
+    if (typeof document === "undefined") {
+      return normalized;
+    }
+
+    const temp = document.createElement("div");
+    temp.innerHTML = normalized;
+    return temp.innerHTML.trim();
+  };
+
   const copyAsHtml = () => {
     if (!article?.content) return;
-    const scriptsString = article.scripts ? `\n\n${article.scripts}` : '';
-    navigator.clipboard.writeText(article.content + scriptsString);
+    const cleanContent = normalizeHtmlForClipboard(article.content);
+    const cleanScripts = article.scripts ? normalizeHtmlForClipboard(article.scripts) : "";
+    const scriptsString = cleanScripts ? `\n\n${cleanScripts}` : "";
+    navigator.clipboard.writeText(cleanContent + scriptsString);
     toast.success("HTML content copied to clipboard!");
   };
 
@@ -196,9 +238,12 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
 
   const downloadHtml = () => {
     if (!article) return;
+
+    const cleanContent = article.content ? normalizeHtmlForClipboard(article.content) : "";
+    const cleanScripts = article.scripts ? normalizeHtmlForClipboard(article.scripts) : "";
     
-    const wordsCount = article.content
-      ? article.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().split(' ').length
+    const wordsCount = cleanContent
+      ? cleanContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().split(' ').length
       : 0;
 
     const htmlContent = `<!DOCTYPE html>
@@ -254,9 +299,9 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
     </div>
   </header>
   <main>
-    ${article.content}
+    ${cleanContent}
   </main>
-  ${article.scripts ? `<div style="display: none;">${article.scripts}</div>` : ''}
+  ${cleanScripts ? `<div style="display: none;">${cleanScripts}</div>` : ''}
 </body>
 </html>`;
 
