@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Download, Trash2, Edit, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Plus, Download, Trash2, Edit, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
@@ -14,7 +14,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 
 const PAGE_SIZE = 25;
-const ARTICLE_LIST_COLUMNS = "id, title, live_url, type, length, status, updated_at, created_at, categories";
+const ARTICLE_LIST_COLUMNS = "id, title, live_url, type, length, status, updated_at, created_at, categories, is_public";
 
 type ArticleStatusFilter = "All" | "Draft" | "Sent to publisher" | "Published";
 
@@ -28,6 +28,7 @@ type ArticleListItem = {
   updated_at: string | null;
   created_at: string | null;
   categories: string[] | null;
+  is_public: boolean | null;
 };
 
 type ArticleCounts = {
@@ -311,7 +312,7 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
               <TableHead className="w-32 text-center">Type</TableHead>
               <TableHead className="w-32 text-center">Status</TableHead>
               <TableHead className="w-40 text-center">Last Updated</TableHead>
-              <TableHead className="w-16"></TableHead>
+              <TableHead className="w-28"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -379,6 +380,36 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
+                      {article.is_public ? (
+                        <a
+                          href={`/public/articles/${article.id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex"
+                        >
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors"
+                            title="Open public link"
+                            aria-label="Open public link"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </Button>
+                        </a>
+                      ) : (
+                        <span title="No public link" className="inline-flex">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-gray-300 opacity-35 hover:bg-transparent cursor-not-allowed rounded-lg"
+                            aria-label="No public link"
+                            disabled
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </Button>
+                        </span>
+                      )}
                       <Link href={`/clients/${clientId}/articles/${article.id}`}>
                         <Button 
                           variant="ghost" 
