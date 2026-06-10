@@ -241,27 +241,25 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
       node.replaceWith(fragment);
     });
 
+    // Replace semantic layout wrappers with plain divs so host-site styles do not collide.
+    temp.querySelectorAll("main, article").forEach((node) => {
+      const replacement = document.createElement("div");
+      Array.from(node.attributes).forEach((attr) => {
+        if (attr.name !== "class") {
+          replacement.setAttribute(attr.name, attr.value);
+        }
+      });
+      while (node.firstChild) {
+        replacement.appendChild(node.firstChild);
+      }
+      node.replaceWith(replacement);
+    });
+
     return temp.innerHTML.trim();
   };
 
   const buildExportHtmlDocument = (cleanContent: string, cleanScripts: string) => {
     if (!article) return "";
-
-    const chartStyles = `
-    .bt-article-export .relative.h-72.w-full,
-    .bt-article-export .relative[class*="h-72"][class*="w-full"] {
-      position: relative;
-      width: 100%;
-      height: 18rem;
-      min-height: 18rem;
-    }
-    .bt-article-export .relative.h-72.w-full > canvas,
-    .bt-article-export .relative[class*="h-72"][class*="w-full"] > canvas {
-      display: block;
-      width: 100% !important;
-      height: 100% !important;
-      max-width: 100%;
-    }`;
 
     return `<!DOCTYPE html>
 <html lang="${article.direction === 'rtl' ? 'he' : 'en'}" dir="${article.direction || 'ltr'}">
@@ -272,113 +270,21 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
   <title>${article.meta_title || article.title}</title>
   <meta name="description" content="${article.meta_description || ''}">
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      line-height: 1.8;
-      color: #374151;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 40px 20px;
-      direction: ${article.direction || 'ltr'};
-    }
-    h1, h2, h3, h4, h5, h6 {
-      color: #111827;
-      font-weight: 800;
-      margin-top: 2.5rem;
-      margin-bottom: 1.25rem;
-      line-height: 1.25;
-    }
-    h1 { font-size: 2.5rem; }
-    h2 { font-size: 1.8rem; }
-    h3 { font-size: 1.4rem; }
-    p { margin-bottom: 1.5rem; }
-    a { color: #2563eb; text-decoration: underline; text-underline-offset: 4px; }
-    img { max-width: 100%; height: auto; border-radius: 12px; margin: 2rem 0; }
-    ul { list-style-type: disc; margin-bottom: 1.5rem; padding-inline-start: 2rem; }
-    ol { list-style-type: decimal; margin-bottom: 1.5rem; padding-inline-start: 2rem; }
-    li { margin-bottom: 0.5rem; }
-    blockquote { border-inline-start: 4px solid #2563eb; padding-inline-start: 1.25rem; font-style: italic; color: #4b5563; margin: 2rem 0; }
-    table { border-collapse: collapse; width: 100%; margin: 2rem 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
-    th, td { border: 1px solid #e5e7eb; padding: 12px 16px; text-align: ${article.direction === 'rtl' ? 'right' : 'left'}; }
-    th { color: #111827; font-weight: 700; }
-    thead tr { background-color: #f3f4f6; color: #111827; }
-    tbody tr:nth-of-type(even) { background-color: #f9fafb; }
-    ${chartStyles}
-  </style>
 </head>
-<body class="bt-article-export">
-  <main class="bt-article-content">
+<body dir="${article.direction || 'ltr'}">
+  <div>
     ${cleanContent}
-  </main>
-  ${cleanScripts ? `<div style="display: none;">${cleanScripts}</div>` : ''}
+    ${cleanScripts}
+  </div>
 </body>
 </html>`;
   };
 
   const buildExportHtmlFragment = (cleanContent: string, cleanScripts: string) => {
     if (!article) return "";
-
-    const chartStyles = `
-    .bt-article-export .relative.h-72.w-full,
-    .bt-article-export .relative[class*="h-72"][class*="w-full"] {
-      position: relative;
-      width: 100%;
-      height: 18rem;
-      min-height: 18rem;
-    }
-    .bt-article-export .relative.h-72.w-full > canvas,
-    .bt-article-export .relative[class*="h-72"][class*="w-full"] > canvas {
-      display: block;
-      width: 100% !important;
-      height: 100% !important;
-      max-width: 100%;
-    }`;
-
-    return `<div class="bt-article-export" dir="${article.direction || 'ltr'}">
-  <style>
-    .bt-article-export {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      line-height: 1.8;
-      color: #374151;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 40px 20px;
-      direction: ${article.direction || 'ltr'};
-    }
-    .bt-article-export h1,
-    .bt-article-export h2,
-    .bt-article-export h3,
-    .bt-article-export h4,
-    .bt-article-export h5,
-    .bt-article-export h6 {
-      color: #111827;
-      font-weight: 800;
-      margin-top: 2.5rem;
-      margin-bottom: 1.25rem;
-      line-height: 1.25;
-    }
-    .bt-article-export h1 { font-size: 2.5rem; }
-    .bt-article-export h2 { font-size: 1.8rem; }
-    .bt-article-export h3 { font-size: 1.4rem; }
-    .bt-article-export p { margin-bottom: 1.5rem; }
-    .bt-article-export a { color: #2563eb; text-decoration: underline; text-underline-offset: 4px; }
-    .bt-article-export img { max-width: 100%; height: auto; border-radius: 12px; margin: 2rem 0; }
-    .bt-article-export ul { list-style-type: disc; margin-bottom: 1.5rem; padding-inline-start: 2rem; }
-    .bt-article-export ol { list-style-type: decimal; margin-bottom: 1.5rem; padding-inline-start: 2rem; }
-    .bt-article-export li { margin-bottom: 0.5rem; }
-    .bt-article-export blockquote { border-inline-start: 4px solid #2563eb; padding-inline-start: 1.25rem; font-style: italic; color: #4b5563; margin: 2rem 0; }
-    .bt-article-export table { border-collapse: collapse; width: 100%; margin: 2rem 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
-    .bt-article-export th, .bt-article-export td { border: 1px solid #e5e7eb; padding: 12px 16px; text-align: ${article.direction === 'rtl' ? 'right' : 'left'}; }
-    .bt-article-export th { color: #111827; font-weight: 700; }
-    .bt-article-export thead tr { background-color: #f3f4f6; color: #111827; }
-    .bt-article-export tbody tr:nth-of-type(even) { background-color: #f9fafb; }
-    ${chartStyles}
-  </style>
-  <div class="bt-article-content">
+    return `<div dir="${article.direction || 'ltr'}">
     ${cleanContent}
-  </div>
-  ${cleanScripts ? `<div style="display: none;">${cleanScripts}</div>` : ''}
+    ${cleanScripts}
 </div>`;
   };
 
