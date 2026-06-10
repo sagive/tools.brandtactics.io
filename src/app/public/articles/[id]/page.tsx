@@ -203,50 +203,55 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
         .trim();
     }
 
+    // Remove common editor/import artifacts that leak into stored HTML.
+    normalized = normalized
+      .replace(/x\s*<!---->/g, "")
+      .replace(/<!---->/g, "")
+      .replace(/<response-element\b[^>]*>/g, "")
+      .replace(/<\/response-element>/g, "")
+      .replace(/<source-footnote\b[^>]*>/g, "")
+      .replace(/<\/source-footnote>/g, "");
+
     if (typeof document === "undefined") {
       return normalized;
     }
 
     const temp = document.createElement("div");
     temp.innerHTML = normalized;
+
+    // Remove empty HTML comments left by editors/frameworks.
+    const walker = document.createTreeWalker(temp, NodeFilter.SHOW_COMMENT);
+    const commentsToRemove: Comment[] = [];
+    let currentNode = walker.nextNode();
+    while (currentNode) {
+      const commentNode = currentNode as Comment;
+      if (!commentNode.data.trim()) {
+        commentsToRemove.push(commentNode);
+      }
+      currentNode = walker.nextNode();
+    }
+    commentsToRemove.forEach((comment) => comment.remove());
+
+    // Unwrap source wrapper elements while preserving their content.
+    temp.querySelectorAll("response-element, source-footnote").forEach((node) => {
+      const fragment = document.createDocumentFragment();
+      while (node.firstChild) {
+        fragment.appendChild(node.firstChild);
+      }
+      node.replaceWith(fragment);
+    });
+
     return temp.innerHTML.trim();
   };
 
-  const copyAsHtml = () => {
-    if (!article?.content) return;
-    const cleanContent = normalizeHtmlForClipboard(article.content);
-    const cleanScripts = article.scripts ? normalizeHtmlForClipboard(article.scripts) : "";
-    const scriptsString = cleanScripts ? `\n\n${cleanScripts}` : "";
-    navigator.clipboard.writeText(cleanContent + scriptsString);
-    toast.success("HTML content copied to clipboard!");
-  };
+  const buildExportHtmlDocument = (cleanContent: string, cleanScripts: string) => {
+    if (!article) return "";
 
-  const copyArticle = () => {
-    if (!article) return;
-    const titleText = `${article.title}\n\n`;
-    let text = '';
-    if (typeof document !== 'undefined') {
-      const temp = document.createElement("div");
-      temp.innerHTML = article.content;
-      text = temp.innerText || temp.textContent || "";
-    } else {
-      text = article.content.replace(/<[^>]*>/g, ' ');
-    }
-    navigator.clipboard.writeText(titleText + text.trim());
-    toast.success("Article text copied to clipboard!");
-  };
-
-  const downloadHtml = () => {
-    if (!article) return;
-
-    const cleanContent = article.content ? normalizeHtmlForClipboard(article.content) : "";
-    const cleanScripts = article.scripts ? normalizeHtmlForClipboard(article.scripts) : "";
-    
     const wordsCount = cleanContent
       ? cleanContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().split(' ').length
       : 0;
 
-    const htmlContent = `<!DOCTYPE html>
+    return `<!DOCTYPE html>
 <html lang="${article.direction === 'rtl' ? 'he' : 'en'}" dir="${article.direction || 'ltr'}">
 <head>
   <meta charset="UTF-8">
@@ -304,6 +309,39 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
   ${cleanScripts ? `<div style="display: none;">${cleanScripts}</div>` : ''}
 </body>
 </html>`;
+  };
+
+  const copyAsHtml = () => {
+    if (!article?.content) return;
+    const cleanContent = normalizeHtmlForClipboard(article.content);
+    const cleanScripts = article.scripts ? normalizeHtmlForClipboard(article.scripts) : "";
+    const fullHtml = buildExportHtmlDocument(cleanContent, cleanScripts);
+    navigator.clipboard.writeText(fullHtml);
+    toast.success("HTML content copied to clipboard!");
+  };
+
+  const copyArticle = () => {
+    if (!article) return;
+    const titleText = `${article.title}\n\n`;
+    let text = '';
+    if (typeof document !== 'undefined') {
+      const temp = document.createElement("div");
+      temp.innerHTML = article.content;
+      text = temp.innerText || temp.textContent || "";
+    } else {
+      text = article.content.replace(/<[^>]*>/g, ' ');
+    }
+    navigator.clipboard.writeText(titleText + text.trim());
+    toast.success("Article text copied to clipboard!");
+  };
+
+  const downloadHtml = () => {
+    if (!article) return;
+
+    const cleanContent = article.content ? normalizeHtmlForClipboard(article.content) : "";
+    const cleanScripts = article.scripts ? normalizeHtmlForClipboard(article.scripts) : "";
+
+    const htmlContent = buildExportHtmlDocument(cleanContent, cleanScripts);
 
     const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
