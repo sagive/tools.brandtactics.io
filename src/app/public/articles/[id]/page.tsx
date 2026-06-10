@@ -255,29 +255,30 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
       node.replaceWith(replacement);
     });
 
-    // Keep chart wrappers from expanding indefinitely when Tailwind sizing is absent.
-    temp.querySelectorAll("div").forEach((node) => {
-      const classList = Array.from(node.classList);
-      const hasChartWrapperClasses =
-        node.classList.contains("relative") &&
-        classList.some((cls) => cls.includes("h-72")) &&
-        classList.some((cls) => cls.includes("w-full"));
+    // Give every copied chart a stable height so it does not stretch with host-page defaults.
+    temp.querySelectorAll("canvas").forEach((canvasNode) => {
+      const canvas = canvasNode as HTMLCanvasElement;
+      const wrapper = canvas.parentElement as HTMLElement | null;
+      if (!wrapper) return;
 
-      if (!hasChartWrapperClasses) return;
+      const wrapperTag = wrapper.tagName.toLowerCase();
+      if (wrapperTag !== "div" && wrapperTag !== "section" && wrapperTag !== "figure") {
+        return;
+      }
 
-      const wrapper = node as HTMLDivElement;
       wrapper.style.position = "relative";
       wrapper.style.width = "100%";
       wrapper.style.height = "18rem";
       wrapper.style.minHeight = "18rem";
+      wrapper.style.overflow = "hidden";
 
-      wrapper.querySelectorAll("canvas").forEach((canvasNode) => {
-        const canvas = canvasNode as HTMLCanvasElement;
-        canvas.style.display = "block";
-        canvas.style.width = "100%";
-        canvas.style.height = "100%";
-        canvas.style.maxWidth = "100%";
-      });
+      // Some generated exports include stray <br> nodes around canvases; remove them here.
+      wrapper.querySelectorAll("br").forEach((brNode) => brNode.remove());
+
+      canvas.style.display = "block";
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
+      canvas.style.maxWidth = "100%";
     });
 
     return temp.innerHTML.trim();
