@@ -311,13 +311,89 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
 </html>`;
   };
 
+  const buildExportHtmlFragment = (cleanContent: string, cleanScripts: string) => {
+    if (!article) return "";
+
+    const wordsCount = cleanContent
+      ? cleanContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().split(' ').length
+      : 0;
+
+    return `<div class="bt-article-export" dir="${article.direction || 'ltr'}">
+  <style>
+    .bt-article-export {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.8;
+      color: #374151;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      direction: ${article.direction || 'ltr'};
+    }
+    .bt-article-export h1,
+    .bt-article-export h2,
+    .bt-article-export h3,
+    .bt-article-export h4,
+    .bt-article-export h5,
+    .bt-article-export h6 {
+      color: #111827;
+      font-weight: 800;
+      margin-top: 2.5rem;
+      margin-bottom: 1.25rem;
+      line-height: 1.25;
+    }
+    .bt-article-export h1 { font-size: 2.5rem; }
+    .bt-article-export h2 { font-size: 1.8rem; }
+    .bt-article-export h3 { font-size: 1.4rem; }
+    .bt-article-export p { margin-bottom: 1.5rem; }
+    .bt-article-export a { color: #2563eb; text-decoration: underline; text-underline-offset: 4px; }
+    .bt-article-export img { max-width: 100%; height: auto; border-radius: 12px; margin: 2rem 0; }
+    .bt-article-export ul { list-style-type: disc; margin-bottom: 1.5rem; padding-inline-start: 2rem; }
+    .bt-article-export ol { list-style-type: decimal; margin-bottom: 1.5rem; padding-inline-start: 2rem; }
+    .bt-article-export li { margin-bottom: 0.5rem; }
+    .bt-article-export blockquote { border-inline-start: 4px solid #2563eb; padding-inline-start: 1.25rem; font-style: italic; color: #4b5563; margin: 2rem 0; }
+    .bt-article-export table { border-collapse: collapse; width: 100%; margin: 2rem 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+    .bt-article-export th, .bt-article-export td { border: 1px solid #e5e7eb; padding: 12px 16px; text-align: ${article.direction === 'rtl' ? 'right' : 'left'}; }
+    .bt-article-export th { color: #111827; font-weight: 700; }
+    .bt-article-export thead tr { background-color: #f3f4f6; color: #111827; }
+    .bt-article-export tbody tr:nth-of-type(even) { background-color: #f9fafb; }
+    .bt-article-export .bt-article-header {
+      margin-bottom: 3rem;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 1.5rem;
+    }
+    .bt-article-export .bt-article-title {
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+    }
+    .bt-article-export .bt-article-meta {
+      font-size: 0.875rem;
+      color: #6b7280;
+      display: flex;
+      gap: 1rem;
+    }
+  </style>
+  <div class="bt-article-header">
+    <h1 class="bt-article-title">${article.title}</h1>
+    <div class="bt-article-meta">
+      <span>Published on: ${new Date(article.created_at).toLocaleDateString()}</span>
+      <span>•</span>
+      <span>${wordsCount} Words</span>
+    </div>
+  </div>
+  <div class="bt-article-content">
+    ${cleanContent}
+  </div>
+  ${cleanScripts ? `<div style="display: none;">${cleanScripts}</div>` : ''}
+</div>`;
+  };
+
   const copyAsHtml = () => {
     if (!article?.content) return;
     const cleanContent = normalizeHtmlForClipboard(article.content);
     const cleanScripts = article.scripts ? normalizeHtmlForClipboard(article.scripts) : "";
-    const fullHtml = buildExportHtmlDocument(cleanContent, cleanScripts);
-    navigator.clipboard.writeText(fullHtml);
-    toast.success("HTML content copied to clipboard!");
+    const htmlFragment = buildExportHtmlFragment(cleanContent, cleanScripts);
+    navigator.clipboard.writeText(htmlFragment);
+    toast.success("HTML wrapper copied to clipboard!");
   };
 
   const copyArticle = () => {
