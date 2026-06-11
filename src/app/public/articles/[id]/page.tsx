@@ -242,7 +242,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
     });
 
     // Replace semantic layout wrappers with plain divs so host-site styles do not collide.
-    temp.querySelectorAll("main, article").forEach((node) => {
+    temp.querySelectorAll("main, article, figure").forEach((node) => {
       const replacement = document.createElement("div");
       Array.from(node.attributes).forEach((attr) => {
         if (attr.name !== "class") {
