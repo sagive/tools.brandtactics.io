@@ -110,6 +110,24 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
 
   useEffect(() => {
     if (!loading && article?.content && contentRef.current) {
+      // Normalize wrapper tags in the live article DOM before any script execution.
+      const normalizeWrappers = (root: ParentNode) => {
+        root.querySelectorAll("main, article, figure").forEach((node) => {
+          const replacement = document.createElement("div");
+          Array.from(node.attributes).forEach((attr) => {
+            if (attr.name !== "class") {
+              replacement.setAttribute(attr.name, attr.value);
+            }
+          });
+          while (node.firstChild) {
+            replacement.appendChild(node.firstChild);
+          }
+          node.replaceWith(replacement);
+        });
+      };
+
+      normalizeWrappers(contentRef.current);
+
       const foundScripts = Array.from(contentRef.current.querySelectorAll("script"));
       if (foundScripts.length === 0) return;
 
@@ -211,6 +229,14 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
       .replace(/<\/response-element>/g, "")
       .replace(/<source-footnote\b[^>]*>/g, "")
       .replace(/<\/source-footnote>/g, "");
+
+    // Replace semantic wrappers in plain HTML strings before DOM parsing is available.
+    normalized = normalized
+      .replace(/<figure\b([^>]*)>/gi, (_match, attrs: string) => {
+        const withoutClass = attrs.replace(/\sclass\s*=\s*(?:"[^"]*"|'[^']*')/i, "");
+        return `<div${withoutClass}>`;
+      })
+      .replace(/<\/figure>/gi, "</div>");
 
     if (typeof document === "undefined") {
       return normalized;
