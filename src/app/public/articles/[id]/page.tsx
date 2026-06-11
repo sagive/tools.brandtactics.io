@@ -127,7 +127,8 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
       };
 
       normalizeWrappers(contentRef.current);
-      window.tailwind = window.tailwind || { config: {} };
+      const articleWindow = window as Window & { tailwind?: { config?: Record<string, unknown> } };
+      articleWindow.tailwind = articleWindow.tailwind || { config: {} };
 
       const foundScripts = Array.from(contentRef.current.querySelectorAll("script"));
       if (foundScripts.length === 0) return;
