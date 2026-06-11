@@ -127,6 +127,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
       };
 
       normalizeWrappers(contentRef.current);
+      window.tailwind = window.tailwind || { config: {} };
 
       const foundScripts = Array.from(contentRef.current.querySelectorAll("script"));
       if (foundScripts.length === 0) return;
@@ -310,6 +311,8 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
     return temp.innerHTML.trim();
   };
 
+  const tailwindShim = `<script>window.tailwind = window.tailwind || { config: {} };</script>`;
+
   const buildExportHtmlDocument = (cleanContent: string, cleanScripts: string) => {
     if (!article) return "";
 
@@ -326,6 +329,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
 <body dir="${article.direction || 'ltr'}">
   <div>
     ${cleanContent}
+    ${tailwindShim}
     ${cleanScripts}
   </div>
 </body>
@@ -336,6 +340,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
     if (!article) return "";
     return `<div dir="${article.direction || 'ltr'}">
     ${cleanContent}
+    ${tailwindShim}
     ${cleanScripts}
 </div>`;
   };
