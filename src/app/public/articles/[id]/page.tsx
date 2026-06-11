@@ -313,6 +313,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
   };
 
   const tailwindShim = `<script>window.tailwind = window.tailwind || { config: {} };</script>`;
+  const tailwindCdnScript = `<script src="https://cdn.tailwindcss.com"></script>`;
 
   const buildExportHtmlDocument = (cleanContent: string, cleanScripts: string) => {
     if (!article) return "";
@@ -340,8 +341,9 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
   const buildExportHtmlFragment = (cleanContent: string, cleanScripts: string) => {
     if (!article) return "";
     return `<div dir="${article.direction || 'ltr'}">
-    ${cleanContent}
     ${tailwindShim}
+    ${tailwindCdnScript}
+    ${cleanContent}
     ${cleanScripts}
 </div>`;
   };
