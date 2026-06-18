@@ -448,24 +448,33 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
     <div className="min-h-screen bg-white" dir={direction}>
 
       {/* Premium Header */}
-      <header className="border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+      <header className="border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50 print:static print:bg-transparent print:backdrop-blur-0 print:border-b-0">
         <div className="max-w-4xl mx-auto px-6 h-20 flex items-center justify-between">
-          {article.clients?.hide_logo_in_preview ? (
-            article.clients?.custom_logo_text ? (
-              <span className="font-bold text-gray-900 tracking-tight text-lg">
-                {article.clients.custom_logo_text}
-              </span>
-            ) : <div />
-          ) : (
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-                BT
+          <div className="flex items-center gap-2 print:hidden">
+            {article.clients?.hide_logo_in_preview ? (
+              article.clients?.custom_logo_text ? (
+                <span className="font-bold text-gray-900 tracking-tight text-lg">
+                  {article.clients.custom_logo_text}
+                </span>
+              ) : <div />
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                  BT
+                </div>
+                <span className="font-bold text-gray-900 tracking-tight">BrandTactics</span>
               </div>
-              <span className="font-bold text-gray-900 tracking-tight">BrandTactics</span>
+            )}
+          </div>
+
+          <div className="hidden items-center gap-2 print:flex">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+              BT
             </div>
-          )}
-          
-          <div className="flex items-center gap-3">
+            <span className="font-bold text-gray-900 tracking-tight text-lg">BrandTactics</span>
+          </div>
+
+          <div className="flex items-center gap-3 print:hidden">
             <Button
               variant="outline"
               size="sm"
@@ -730,7 +739,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
           )}
 
           {/* Client Feedback Card */}
-          <div className="mt-16 border-t border-gray-100 pt-10">
+          <div className="mt-16 border-t border-gray-100 pt-10 print:hidden">
             <div className="border border-blue-300 bg-blue-50/20 shadow-sm overflow-hidden rounded-2xl p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-2 bg-blue-100 rounded-lg text-blue-700">
@@ -832,7 +841,7 @@ export default function PublicArticleView({ params }: { params: Promise<{ id: st
         </article>
       </main>
 
-      <footer className="bg-gray-50 border-t border-gray-100 py-12 mt-20">
+      <footer className="bg-gray-50 border-t border-gray-100 py-12 mt-20 print:hidden">
         <div className="max-w-4xl mx-auto px-6 text-center">
           {article.clients?.hide_logo_in_preview ? (
             article.clients?.custom_bottom_text ? (
