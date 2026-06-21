@@ -57,6 +57,11 @@ function DialogContent({
           className
         )}
         {...props}
+        style={{
+          transform: "translate(-50%, -50%)",
+          translate: "none",
+          ...props.style,
+        }}
       >
         {children}
         {showCloseButton && (
