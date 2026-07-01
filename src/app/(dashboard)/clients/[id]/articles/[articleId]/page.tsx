@@ -364,107 +364,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
           <p className="text-sm text-gray-500">View or edit article details.</p>
         </div>
         <div className="flex items-center gap-3">
-          {!isEditing ? (
-            <>
-              {isPublic ? (
-                <div className="flex items-center gap-1 bg-indigo-50 border border-indigo-100 rounded-lg p-0.5">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="text-indigo-700 hover:text-indigo-800 hover:bg-indigo-100/50 font-semibold text-xs h-8"
-                    onClick={() => {
-                      const url = `${window.location.origin}/public/articles/${articleId}`;
-                      navigator.clipboard.writeText(url);
-                      toast.success("Share link copied to clipboard!");
-                    }}
-                  >
-                    <Share2 className="w-3.5 h-3.5 mr-1.5" />
-                    Copy Share Link
-                  </Button>
-                  <div className="h-4 w-px bg-indigo-200" />
-                  <a 
-                    href={`${window.location.origin}/public/articles/${articleId}`} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="flex"
-                  >
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      className="text-indigo-700 hover:text-indigo-800 hover:bg-indigo-100/50 h-8 w-8 rounded-md flex items-center justify-center"
-                      title="Open in new tab"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </Button>
-                  </a>
-                  <div className="h-4 w-px bg-indigo-200" />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50 font-medium text-xs h-8 px-2.5"
-                    onClick={async () => {
-                      try {
-                        const { error } = await supabase.from('articles').update({ is_public: false }).eq('id', articleId);
-                        if (error) throw error;
-                        setIsPublic(false);
-                        toast.success("Article sharing disabled (Private)");
-                      } catch (err: any) {
-                        toast.error("Failed to disable sharing");
-                      }
-                    }}
-                  >
-                    Make Private
-                  </Button>
-                </div>
-              ) : (
-                <Button 
-                  variant="outline" 
-                  className="text-indigo-600 border-indigo-200 hover:bg-indigo-50/30 hover:text-indigo-700 transition-all font-semibold"
-                  onClick={async () => {
-                    try {
-                      let finalMetaTitle = metaTitle;
-                      let finalMetaDescription = metaDescription;
-                      
-                      if (!metaTitle.trim() || !metaDescription.trim()) {
-                        toast.info("Auto-generating empty SEO metadata...");
-                        const data = await generateMeta(title, content);
-                        if (data) {
-                          if (!metaTitle.trim()) {
-                            finalMetaTitle = data.meta_title;
-                            setMetaTitle(data.meta_title);
-                          }
-                          if (!metaDescription.trim()) {
-                            finalMetaDescription = data.meta_description;
-                            setMetaDescription(data.meta_description);
-                          }
-                        }
-                      }
-
-                      const { error } = await supabase.from('articles').update({ 
-                        is_public: true,
-                        meta_title: finalMetaTitle,
-                        meta_description: finalMetaDescription
-                      }).eq('id', articleId);
-                      if (error) throw error;
-                      setIsPublic(true);
-                      const url = `${window.location.origin}/public/articles/${articleId}`;
-                      navigator.clipboard.writeText(url);
-                      toast.success("Article is now public! Share link copied.");
-                    } catch (err: any) {
-                      toast.error("Failed to enable sharing");
-                    }
-                  }}
-                >
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Share Article
-                </Button>
-              )}
-              <Button onClick={() => setIsEditing(true)} variant="outline" className="text-blue-600 border-blue-200">
-                <Pencil className="w-4 h-4 mr-2" />
-                Edit Article
-              </Button>
-            </>
-          ) : (
+          {isEditing ? (
             <>
               <Button onClick={() => setIsEditing(false)} variant="ghost">
                 <X className="w-4 h-4 mr-2" />
@@ -475,7 +375,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                 Save Changes
               </Button>
             </>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -653,9 +553,110 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
         <div className="space-y-6 lg:w-[320px] w-full shrink-0">
           <Card className="shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm uppercase tracking-wider text-gray-500 font-bold">Metadata</CardTitle>
+              <CardTitle className="text-sm uppercase tracking-wider text-gray-500 font-bold">Settings</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {!isEditing && (
+                <div className="space-y-2 pb-3 border-b border-gray-100">
+                  <Button onClick={() => setIsEditing(true)} variant="outline" className="w-full text-blue-600 border-blue-200">
+                    <Pencil className="w-4 h-4 mr-2" />
+                    Edit Article
+                  </Button>
+                  {isPublic ? (
+                    <div className="flex items-center gap-1 bg-indigo-50 border border-indigo-100 rounded-lg p-0.5 w-full">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-indigo-700 hover:text-indigo-800 hover:bg-indigo-100/50 font-semibold text-xs h-8 flex-1"
+                        onClick={() => {
+                          const url = `${window.location.origin}/public/articles/${articleId}`;
+                          navigator.clipboard.writeText(url);
+                          toast.success("Share link copied to clipboard!");
+                        }}
+                      >
+                        <Share2 className="w-3.5 h-3.5 mr-1.5" />
+                        Copy Link
+                      </Button>
+                      <div className="h-4 w-px bg-indigo-200" />
+                      <a 
+                        href={`${window.location.origin}/public/articles/${articleId}`} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="flex"
+                      >
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          className="text-indigo-700 hover:text-indigo-800 hover:bg-indigo-100/50 h-8 w-8 rounded-md flex items-center justify-center"
+                          title="Open in new tab"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </Button>
+                      </a>
+                      <div className="h-4 w-px bg-indigo-200" />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50 font-medium text-xs h-8 px-2.5"
+                        onClick={async () => {
+                          try {
+                            const { error } = await supabase.from('articles').update({ is_public: false }).eq('id', articleId);
+                            if (error) throw error;
+                            setIsPublic(false);
+                            toast.success("Article sharing disabled (Private)");
+                          } catch (err: any) {
+                            toast.error("Failed to disable sharing");
+                          }
+                        }}
+                      >
+                        Make Private
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      className="w-full text-indigo-600 border-indigo-200 hover:bg-indigo-50/30 hover:text-indigo-700 transition-all font-semibold"
+                      onClick={async () => {
+                        try {
+                          let finalMetaTitle = metaTitle;
+                          let finalMetaDescription = metaDescription;
+                          
+                          if (!metaTitle.trim() || !metaDescription.trim()) {
+                            toast.info("Auto-generating empty SEO metadata...");
+                            const data = await generateMeta(title, content);
+                            if (data) {
+                              if (!metaTitle.trim()) {
+                                finalMetaTitle = data.meta_title;
+                                setMetaTitle(data.meta_title);
+                              }
+                              if (!metaDescription.trim()) {
+                                finalMetaDescription = data.meta_description;
+                                setMetaDescription(data.meta_description);
+                              }
+                            }
+                          }
+
+                          const { error } = await supabase.from('articles').update({ 
+                            is_public: true,
+                            meta_title: finalMetaTitle,
+                            meta_description: finalMetaDescription
+                          }).eq('id', articleId);
+                          if (error) throw error;
+                          setIsPublic(true);
+                          const url = `${window.location.origin}/public/articles/${articleId}`;
+                          navigator.clipboard.writeText(url);
+                          toast.success("Article is now public! Share link copied.");
+                        } catch (err: any) {
+                          toast.error("Failed to enable sharing");
+                        }
+                      }}
+                    >
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Share Article
+                    </Button>
+                  )}
+                </div>
+              )}
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-gray-600">Status</Label>
                 {isEditing ? (
