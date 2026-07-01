@@ -363,20 +363,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 truncate max-w-2xl">{title}</h1>
           <p className="text-sm text-gray-500">View or edit article details.</p>
         </div>
-        <div className="flex items-center gap-3">
-          {isEditing ? (
-            <>
-              <Button onClick={() => setIsEditing(false)} variant="ghost">
-                <X className="w-4 h-4 mr-2" />
-                Cancel
-              </Button>
-              <Button onClick={handleSave} disabled={isSaving} className="bg-green-600 hover:bg-green-700">
-                {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Save Changes
-              </Button>
-            </>
-          ) : null}
-        </div>
+        <div />
       </div>
 
       <div className={`flex flex-col gap-6 items-start ${direction === 'rtl' ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
@@ -556,7 +543,18 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
               <CardTitle className="text-sm uppercase tracking-wider text-gray-500 font-bold">Settings</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {!isEditing && (
+              {isEditing ? (
+                <div className="space-y-2 pb-3 border-b border-gray-100">
+                  <Button onClick={handleSave} disabled={isSaving} className="w-full bg-green-600 hover:bg-green-700">
+                    {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                    Save Changes
+                  </Button>
+                  <Button onClick={() => setIsEditing(false)} variant="outline" className="w-full">
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
                 <div className="space-y-2 pb-3 border-b border-gray-100">
                   <Button onClick={() => setIsEditing(true)} variant="outline" className="w-full text-blue-600 border-blue-200">
                     <Pencil className="w-4 h-4 mr-2" />
