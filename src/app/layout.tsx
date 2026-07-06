@@ -11,7 +11,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "BrandTactics App",
+  title: "BrandTactics Tools",
   description: "Internal SaaS App for BrandTactics",
   icons: [
     { rel: "icon", url: "/star.png" },
