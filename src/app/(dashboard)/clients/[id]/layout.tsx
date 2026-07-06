@@ -52,6 +52,7 @@ export default function ClientLayout({
         setClientName(data.name);
         setClientWebsite(data.website);
         setClientStatus(data.status || "Active");
+        document.title = `${data.name} — BrandTactics Tools`;
       }
       setIsLoading(false);
     }
