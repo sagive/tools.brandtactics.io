@@ -65,15 +65,20 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
   const [assignees, setAssignees] = useState<string[]>([]);
   const [requester, setRequester] = useState(task?.requester || "");
   const [comments, setComments] = useState<any[]>(task?.comments || []);
-  const [clientId, setClientId] = useState(task?.client_id || defaultClientId || pathnameClientId || "");
+  const [selectedClientIds, setSelectedClientIds] = useState<string[]>(
+    task?.client_id ? [task.client_id] 
+    : defaultClientId ? [defaultClientId] 
+    : pathnameClientId ? [pathnameClientId] 
+    : []
+  );
   const [isEditingDesc, setIsEditingDesc] = useState(!isEditing);
   
-  // Sync clientId with defaultClientId or pathnameClientId when they change (for new tasks)
+  // Sync selectedClientIds with defaultClientId or pathnameClientId when they change (for new tasks)
   useEffect(() => {
     if (!isEditing) {
       const target = defaultClientId || pathnameClientId;
-      if (target) {
-        setClientId(target);
+      if (target && selectedClientIds.length === 0) {
+        setSelectedClientIds([target]);
       }
     }
   }, [defaultClientId, pathnameClientId, isEditing]);
@@ -105,17 +110,20 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
           
           const target = defaultClientId || pathnameClientId;
           if (target) {
-            setClientId(target);
+            setSelectedClientIds([target]);
+          } else if (parsed.selectedClientIds && Array.isArray(parsed.selectedClientIds)) {
+            setSelectedClientIds(parsed.selectedClientIds);
           } else if (parsed.clientId) {
-            setClientId(parsed.clientId);
+            // Backward compatibility with old saved format
+            setSelectedClientIds([parsed.clientId]);
           }
         } catch (e) {
           console.error("Failed to parse saved task choices", e);
         }
       } else {
         const target = defaultClientId || pathnameClientId;
-        if (target) {
-          setClientId(target);
+        if (target && selectedClientIds.length === 0) {
+          setSelectedClientIds([target]);
         }
       }
     }
@@ -124,10 +132,10 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
   // Save to localStorage whenever these change (only for new tasks)
   useEffect(() => {
     if (!isEditing) {
-      const choices = { title, status, priority, assignee: assignees.join(','), requester, clientId, dueDate };
+      const choices = { title, status, priority, assignee: assignees.join(','), requester, selectedClientIds, dueDate };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(choices));
     }
-  }, [isEditing, title, status, priority, assignees, requester, clientId, dueDate]);
+  }, [isEditing, title, status, priority, assignees, requester, selectedClientIds, dueDate]);
 
   const handleResetFields = () => {
     setTitle("");
@@ -137,7 +145,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
     setAssignee("");
     setAssignees([]);
     setRequester("");
-    setClientId(defaultClientId || "");
+    setSelectedClientIds(defaultClientId ? [defaultClientId] : []);
     setDueDate("");
     localStorage.removeItem(STORAGE_KEY);
     toast.success("Fields reset");
@@ -158,7 +166,13 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
 
   useEffect(() => {
     async function fetchData() {
-      const targetId = task?.client_id || defaultClientId || clientId;
+      const targetIds = task?.client_id 
+        ? [task.client_id] 
+        : defaultClientId 
+          ? [defaultClientId] 
+          : selectedClientIds.length > 0 
+            ? selectedClientIds 
+            : [];
       
       try {
         // Fetch everything in parallel
@@ -169,11 +183,12 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
 
         let finalClients = clientsRes.data || [];
         
-        // If our current client isn't in the full list, fetch it specifically
-        if (targetId && !finalClients.some(c => c.id === targetId)) {
-          const { data: specific } = await supabase.from('clients').select('id, name').eq('id', targetId).single();
+        // If any selected clients aren't in the list, fetch them specifically
+        const missingIds = targetIds.filter(id => !finalClients.some(c => c.id === id));
+        if (missingIds.length > 0) {
+          const { data: specific } = await supabase.from('clients').select('id, name').in('id', missingIds);
           if (specific) {
-            finalClients = [specific, ...finalClients];
+            finalClients = [...specific, ...finalClients];
           }
         }
 
@@ -185,7 +200,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
     }
 
     fetchData();
-  }, [isEditing, defaultClientId, task?.client_id]);
+  }, [isEditing, defaultClientId, task?.client_id, selectedClientIds]);
 
   const createdDate = task?.created_at 
     ? new Date(task.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
@@ -262,7 +277,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
         const targetUser = users.find(u => u.full_name === assignee || u.email === assignee);
         if (targetUser && targetUser.email) {
           const assignerName = profile?.full_name || profile?.email || "Someone";
-          const taskUrl = `${window.location.origin}/clients/${clientId}/tasks?task=${task.id}`;
+          const taskUrl = `${window.location.origin}/clients/${task.client_id}/tasks?task=${task.id}`;
           
           fetch('/api/notify-assignment', {
             method: 'POST',
@@ -356,7 +371,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
          user_email: targetEmail,
          title: "New Task Comment",
          message: `${currentUserName} commented on "${title}"`,
-         action_url: `/clients/${clientId}/tasks?task=${task.id}`,
+         action_url: `/clients/${task.client_id}/tasks?task=${task.id}`,
          type: 'comment'
        }]).then(({error}) => {
          if (error) console.error("Failed to insert notification:", error);
@@ -392,7 +407,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
       task_id: task.id,
       user_email: profile.email,
       task_title: title,
-      action_url: `/clients/${clientId}/tasks?task=${task.id}`,
+      action_url: `/clients/${task.client_id}/tasks?task=${task.id}`,
       trigger_time: triggerTime
     }]);
     
@@ -407,45 +422,55 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
   const handleCreateTask = async () => {
     const plainText = stripHtml(description);
     if (!plainText) { toast.error("Description is required"); return; }
-    if (!clientId) { toast.error("Client is required"); return; }
+    if (selectedClientIds.length === 0) { toast.error("At least one client is required"); return; }
     
     const generatedTitle = plainText.substring(0, 100);
 
     setIsCreating(true);
     try {
+      const clientIdsList = selectedClientIds.length > 0 ? selectedClientIds : [null];
       const assigneesList = assignees.length > 0 ? assignees : [""];
-      const tasksToInsert = assigneesList.map(item => ({
-        title: generatedTitle,
-        description,
-        status,
-        priority,
-        assignee: item,
-        requester,
-        end_date: dueDate || null,
-        client_id: clientId,
-        comments: comments || []
-      }));
+      
+      // Cartesian product: each client × each assignee
+      const tasksToInsert: any[] = [];
+      for (const cId of clientIdsList) {
+        for (const a of assigneesList) {
+          tasksToInsert.push({
+            title: generatedTitle,
+            description,
+            status,
+            priority,
+            assignee: a,
+            requester,
+            end_date: dueDate || null,
+            client_id: cId,
+            comments: comments || []
+          });
+        }
+      }
 
       const { data, error } = await supabase.from('tasks').insert(tasksToInsert).select();
       
       if (error) throw error;
       
+      const totalCreated = tasksToInsert.length;
       toast.success(
-        assignees.length > 1 
-          ? `Successfully created ${assignees.length} tasks` 
+        totalCreated > 1 
+          ? `Successfully created ${totalCreated} tasks` 
           : "Task created successfully"
       );
       
       onTaskCreated?.();
 
-      const clientName = clients.find(c => c.id === clientId)?.name || "Client";
       const assignerName = profile?.full_name || profile?.email || "Someone";
 
       if (data && Array.isArray(data)) {
         data.forEach(taskRow => {
+          const clientName = clients.find(c => c.id === taskRow.client_id)?.name || "Client";
+          
           logActivity({
             userName: assignerName,
-            clientId: clientId,
+            clientId: taskRow.client_id,
             actionType: 'task_created',
             content: `created task <b>"${generatedTitle}"</b> for <b>${clientName}</b>`
           });
@@ -454,7 +479,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
           if (taskRow.assignee) {
             const targetUser = users.find(u => u.full_name === taskRow.assignee || u.email === taskRow.assignee);
             if (targetUser && targetUser.email) {
-              const taskUrl = `${window.location.origin}/clients/${clientId}/tasks?task=${taskRow.id}`;
+              const taskUrl = `${window.location.origin}/clients/${taskRow.client_id}/tasks?task=${taskRow.id}`;
               
               fetch('/api/notify-assignment', {
                 method: 'POST',
@@ -469,6 +494,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
       // Keep dialog open but reset content
       setDescription("");
       setAssignees([]);
+      setSelectedClientIds([]);
       
     } catch (err: any) {
       toast.error(err.message || "Failed to create task");
@@ -676,19 +702,52 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
             
             {!isEditing && (
               <div className="space-y-2">
-                <Label className="text-gray-600 text-[13px] font-medium">Client <span className="text-red-500">*</span></Label>
-                <Select value={clientId} onValueChange={setClientId}>
-                  <SelectTrigger className="bg-white px-3 w-full border-gray-200">
-                    <SelectValue placeholder="Select a client">
-                      {clients.find(c => c.id === clientId)?.name || (clientId ? "Loading..." : "Select a client")}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clients.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label className="text-gray-600 text-[13px] font-medium">Clients <span className="text-red-500">*</span></Label>
+                <Popover>
+                  <PopoverTrigger className="flex h-10 w-full items-center justify-between rounded-lg border border-input bg-white px-3 py-2 text-sm text-gray-900 shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring">
+                    <span className="truncate">
+                      {selectedClientIds.length === 0 
+                        ? "Select clients" 
+                        : selectedClientIds.length === 1 
+                        ? clients.find(c => c.id === selectedClientIds[0])?.name || "Loading..." 
+                        : `${selectedClientIds.length} clients selected`}
+                    </span>
+                    <ChevronDownIcon className="w-4 h-4 text-muted-foreground" />
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-56 p-2 bg-white rounded-lg border shadow-md max-h-60 overflow-y-auto z-[9999]">
+                    <div className="space-y-2">
+                      {clients.map(c => {
+                        const isChecked = selectedClientIds.includes(c.id);
+                        return (
+                          <div 
+                            key={c.id} 
+                            onClick={() => {
+                              if (isChecked) {
+                                setSelectedClientIds(selectedClientIds.filter(id => id !== c.id));
+                              } else {
+                                setSelectedClientIds([...selectedClientIds, c.id]);
+                              }
+                            }}
+                            className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-gray-50 cursor-pointer transition-colors"
+                          >
+                            <Checkbox 
+                              checked={isChecked}
+                              onClick={(e) => e.stopPropagation()} 
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedClientIds([...selectedClientIds, c.id]);
+                                } else {
+                                  setSelectedClientIds(selectedClientIds.filter(id => id !== c.id));
+                                }
+                              }}
+                            />
+                            <span className="text-xs font-semibold text-gray-700 truncate">{c.name}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             )}
 
@@ -875,7 +934,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
             ) : (
               <Button 
                 onClick={handleCreateTask} 
-                disabled={isCreating || !stripHtml(description) || !clientId}
+                disabled={isCreating || !stripHtml(description) || selectedClientIds.length === 0}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm mt-4 font-semibold"
               >
                 {isCreating ? "Creating..." : "Create Task"}
