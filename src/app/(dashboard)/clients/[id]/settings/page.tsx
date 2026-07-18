@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Save, CheckCircle2, CircleDot, Plus, Trash2 } from "lucide-react";
+import { Loader2, Save, CheckCircle2, CircleDot, Plus, Trash2, AlertTriangle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth-provider";
@@ -24,7 +25,12 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
   const { id } = React.use(params);
   const { profile } = useAuth();
   const isAdmin = profile?.role === 'admin';
+  const router = useRouter();
   
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [formData, setFormData] = useState({
     name: "",
     website: "",
@@ -130,6 +136,29 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
     updated[index] = { ...updated[index], [field]: value };
     setClientManagers(updated);
     setIsDirty(true);
+  };
+
+  const handleDeleteClient = async () => {
+    if (!isAdmin || formData.status !== "Archived") return;
+    if (deleteConfirmName !== formData.name) {
+      toast.error("Client name does not match. Type the exact client name to confirm.");
+      return;
+    }
+
+    if (!confirm(`Are you absolutely sure you want to permanently delete "${formData.name}" and all associated data? This cannot be undone.`)) return;
+
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase.from("clients").delete().eq("id", id);
+      if (error) throw error;
+
+      toast.success(`Client "${formData.name}" has been permanently deleted.`);
+      router.push("/clients");
+    } catch (err: any) {
+      toast.error("Failed to delete client: " + err.message);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleSave = async () => {
@@ -450,6 +479,78 @@ export default function ClientSettings({ params }: { params: Promise<{ id: strin
                )}
             </div>
           </div>
+
+          {/* Danger Zone — Delete Archived Client */}
+          {formData.status === "Archived" && (
+            <div className="border-t border-red-200 pt-8 mt-8">
+              <div className="rounded-xl border-2 border-red-200 bg-red-50/50 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-red-800 uppercase tracking-wider">Danger Zone</h3>
+                    <p className="text-xs text-red-600">Irreversible action — this permanently deletes the client</p>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg border border-red-100 p-4 mb-4 space-y-2">
+                  <p className="text-sm font-semibold text-gray-900">
+                    Deleting <span className="text-red-600">{formData.name}</span> will also remove:
+                  </p>
+                  <ul className="text-xs text-gray-600 space-y-1 list-disc list-inside">
+                    <li>All tasks assigned to this client</li>
+                    <li>All articles created for this client</li>
+                    <li>All SEO email updates sent to this client</li>
+                    <li>All backlinks associated with this client</li>
+                  </ul>
+                </div>
+
+                {!confirmDelete ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => setConfirmDelete(true)}
+                    className="border-red-300 text-red-600 hover:bg-red-100 hover:text-red-700 font-bold text-xs"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete this client
+                  </Button>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold text-red-700">
+                      Type <span className="font-bold underline">{formData.name}</span> to confirm deletion:
+                    </p>
+                    <Input
+                      value={deleteConfirmName}
+                      onChange={(e) => setDeleteConfirmName(e.target.value)}
+                      placeholder={formData.name}
+                      className="h-10 border-red-300 focus-visible:ring-red-400 bg-white"
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        variant="destructive"
+                        onClick={handleDeleteClient}
+                        disabled={deleteConfirmName !== formData.name || isDeleting}
+                        className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs"
+                      >
+                        {isDeleting ? "Deleting..." : "Permanently Delete"}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setConfirmDelete(false);
+                          setDeleteConfirmName("");
+                        }}
+                        className="text-gray-600 hover:text-gray-800 text-xs"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-between pt-8 border-t border-gray-100 mt-8">
               <div className="text-xs text-gray-400 italic">
