@@ -55,7 +55,7 @@ export default function QuickTaskPage() {
   }, []);
 
   const fetchClients = async () => {
-    const { data, error } = await supabase.from("clients").select("id, name").order("name");
+    const { data, error } = await supabase.from("clients").select("id, name").eq("status", "Active").order("name");
     if (data) setClients(data);
   };
 

@@ -177,7 +177,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
       try {
         // Fetch everything in parallel
         const [clientsRes, usersRes] = await Promise.all([
-          supabase.from('clients').select('id, name').order('name'),
+          supabase.from('clients').select('id, name').eq('status', 'Active').order('name'),
           supabase.from('users').select('id, full_name, email').order('full_name')
         ]);
 
