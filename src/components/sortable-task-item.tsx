@@ -184,7 +184,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
               onValueChange={handleStatusChange}
             >
               <SelectTrigger className={cn(
-                "h-5 text-[10px] sm:text-xs font-medium px-2 py-0 border-0 focus:ring-0 shadow-none rounded-md w-full",
+                "h-[30px] text-[10px] sm:text-xs font-medium px-2 py-0 border-0 focus:ring-0 shadow-none rounded-none w-full",
                 status === 'Stuck' ? 'bg-red-50 text-red-700 hover:bg-red-100' :
                 status === 'Working on it' ? 'bg-amber-100 text-black hover:bg-amber-200' :
                 status === 'Review' ? 'bg-purple-50 text-purple-700 hover:bg-purple-100' :
@@ -207,7 +207,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
           {hideClientBadge ? (
             <Dialog>
               <DialogTrigger className="focus:outline-none">
-                <Badge variant="outline" className="text-[10px] text-amber-600 bg-amber-50 border-amber-200 uppercase tracking-wide shrink-0 font-bold px-1.5 py-0 cursor-pointer hover:bg-amber-100 transition-colors flex items-center gap-1">
+                <Badge variant="outline" className="text-[10px] text-amber-600 bg-amber-50 border-amber-200 uppercase tracking-wide shrink-0 font-bold px-2 h-[30px] cursor-pointer hover:bg-amber-100 transition-colors flex items-center gap-1 rounded-none">
                   <Pencil className="w-3 h-3" />
                   Edit
                 </Badge>
