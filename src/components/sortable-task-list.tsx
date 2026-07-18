@@ -21,7 +21,7 @@ import { Card } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
-export function SortableTaskList({ title, initialTasks, onRefresh, autoOpenTaskId }: { title: string, initialTasks: any[], onRefresh?: () => void, autoOpenTaskId?: string | null }) {
+export function SortableTaskList({ title, initialTasks, onRefresh, autoOpenTaskId, hideClientBadge }: { title: string, initialTasks: any[], onRefresh?: () => void, autoOpenTaskId?: string | null, hideClientBadge?: boolean }) {
   const [tasks, setTasks] = useState(initialTasks);
 
   useEffect(() => {
@@ -90,6 +90,7 @@ export function SortableTaskList({ title, initialTasks, onRefresh, autoOpenTaskI
                 onDelete={() => setTasks(t => t.filter(x => x.id !== task.id))}
                 onUpdate={onRefresh}
                 autoOpenTaskId={autoOpenTaskId}
+                hideClientBadge={hideClientBadge}
               />
             ))}
           </SortableContext>

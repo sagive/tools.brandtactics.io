@@ -164,12 +164,12 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
           <>
             {statusFilter === 'open' ? (
               <>
-                <SortableTaskList title="Pending" initialTasks={pending} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
-                <SortableTaskList title="Working on it / Review" initialTasks={active} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
-                <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
+                <SortableTaskList title="Pending" initialTasks={pending} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} hideClientBadge />
+                <SortableTaskList title="Working on it / Review" initialTasks={active} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} hideClientBadge />
+                <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} hideClientBadge />
               </>
             ) : (
-              <SortableTaskList title="Completed" initialTasks={completed} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
+              <SortableTaskList title="Completed" initialTasks={completed} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} hideClientBadge />
             )}
             {filteredTasks.length === 0 && (
                <div className="text-center py-10 text-gray-500 bg-white border rounded-lg border-dashed">

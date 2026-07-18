@@ -35,7 +35,7 @@ function stripHtml(html: string) {
   return text.replace(/\s+/g, ' ').trim();
 }
 
-export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: { task: any, onDelete?: () => void, onUpdate?: () => void, autoOpenTaskId?: string | null }) {
+export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hideClientBadge }: { task: any, onDelete?: () => void, onUpdate?: () => void, autoOpenTaskId?: string | null, hideClientBadge?: boolean }) {
   const [status, setStatus] = useState(task.status);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
 
@@ -71,10 +71,15 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-1 sm:p-1.5 bg-white border-b hover:bg-slate-50 group">
+    <div ref={setNodeRef} style={style} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 px-1.5 py-1 sm:py-1.5 bg-white border-b hover:bg-slate-50 group">
       
-      <div className="flex items-center flex-1 gap-3 min-w-0">
-        {/* Task Description (flex-1) */}
+      <div className="flex items-center flex-1 gap-1.5 sm:gap-2 min-w-0">
+        {/* Grip Handle — moved to before the title */}
+        <button {...attributes} {...listeners} className="cursor-grab text-gray-300 hover:text-gray-500 shrink-0 touch-none">
+          <GripVertical className="w-5 h-5" />
+        </button>
+
+        {/* Task Description */}
         <Dialog defaultOpen={autoOpenTaskId === task.id}>
           <DialogTrigger className={cn(
             "flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 cursor-pointer min-w-0 bg-transparent border-0 p-0 mx-0 outline-none group/title",
@@ -92,10 +97,21 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Metadata Area (Visible on tablets and up) */}
           <div className="hidden md:flex items-center text-[11px] sm:text-xs text-gray-500 gap-3">
-            {/* Client Box */}
-            <Badge variant="outline" className="text-[10px] text-blue-600 bg-blue-50 border-blue-200 uppercase tracking-wide truncate max-w-[130px] shrink-0 font-bold px-1.5 py-0">
-              {task.client}
-            </Badge>
+            {/* Client Box or Edit Tag when inside a client page */}
+            {hideClientBadge ? (
+              <Dialog>
+                <DialogTrigger className="focus:outline-none">
+                  <Badge variant="outline" className="text-[10px] text-amber-600 bg-amber-50 border-amber-200 uppercase tracking-wide shrink-0 font-bold px-1.5 py-0 cursor-pointer hover:bg-amber-100 transition-colors">
+                    Edit
+                  </Badge>
+                </DialogTrigger>
+                <EditTaskDialog task={task} onTaskCreated={onUpdate} />
+              </Dialog>
+            ) : (
+              <Badge variant="outline" className="text-[10px] text-blue-600 bg-blue-50 border-blue-200 uppercase tracking-wide truncate max-w-[130px] shrink-0 font-bold px-1.5 py-0">
+                {task.client}
+              </Badge>
+            )}
 
             {/* Unified Actor Flow (Requester -> Assignee) */}
             <div className="flex items-center gap-1">
@@ -196,27 +212,24 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId }: {
             </Select>
           </div>
 
-          {/* Edit Button */}
-          <Dialog>
-            <TooltipProvider delay={300}>
-              <Tooltip>
-                <TooltipTrigger render={
-                  <DialogTrigger className="text-gray-400 hover:text-blue-600 cursor-pointer flex items-center justify-center bg-transparent border-0 p-0 outline-none w-7 h-7 rounded-full hover:bg-gray-100 shrink-0">
-                      <Pencil className="w-4 h-4" />
-                  </DialogTrigger>
-                } />
-                <TooltipContent side="top">
-                  <p>Edit</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <EditTaskDialog task={task} onTaskCreated={onUpdate} />
-          </Dialog>
-
-          {/* Grip Handle at the end */}
-          <button {...attributes} {...listeners} className="cursor-grab text-gray-300 hover:text-gray-500 shrink-0 touch-none">
-            <GripVertical className="w-5 h-5" />
-          </button>
+          {/* Edit Button — hidden when edit tag is shown in metadata */}
+          {!hideClientBadge && (
+            <Dialog>
+              <TooltipProvider delay={300}>
+                <Tooltip>
+                  <TooltipTrigger render={
+                    <DialogTrigger className="text-gray-400 hover:text-blue-600 cursor-pointer flex items-center justify-center bg-transparent border-0 p-0 outline-none w-7 h-7 rounded-full hover:bg-gray-100 shrink-0">
+                        <Pencil className="w-4 h-4" />
+                    </DialogTrigger>
+                  } />
+                  <TooltipContent side="top">
+                    <p>Edit</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <EditTaskDialog task={task} onTaskCreated={onUpdate} />
+            </Dialog>
+          )}
         </div>
       </div>
 
