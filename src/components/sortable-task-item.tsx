@@ -97,17 +97,8 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Metadata Area (Visible on tablets and up) */}
           <div className="hidden md:flex items-center text-[11px] sm:text-xs text-gray-500 gap-3">
-            {/* Client Box or Edit Tag when inside a client page */}
-            {hideClientBadge ? (
-              <Dialog>
-                <DialogTrigger className="focus:outline-none">
-                  <Badge variant="outline" className="text-[10px] text-amber-600 bg-amber-50 border-amber-200 uppercase tracking-wide shrink-0 font-bold px-1.5 py-0 cursor-pointer hover:bg-amber-100 transition-colors">
-                    Edit
-                  </Badge>
-                </DialogTrigger>
-                <EditTaskDialog task={task} onTaskCreated={onUpdate} />
-              </Dialog>
-            ) : (
+            {/* Client Box — hidden inside client page, shown in global tasks */}
+            {!hideClientBadge && (
               <Badge variant="outline" className="text-[10px] text-blue-600 bg-blue-50 border-blue-200 uppercase tracking-wide truncate max-w-[130px] shrink-0 font-bold px-1.5 py-0">
                 {task.client}
               </Badge>
@@ -212,8 +203,18 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
             </Select>
           </div>
 
-          {/* Edit Button — hidden when edit tag is shown in metadata */}
-          {!hideClientBadge && (
+          {/* Edit Button — far right */}
+          {hideClientBadge ? (
+            <Dialog>
+              <DialogTrigger className="focus:outline-none">
+                <Badge variant="outline" className="text-[10px] text-amber-600 bg-amber-50 border-amber-200 uppercase tracking-wide shrink-0 font-bold px-1.5 py-0 cursor-pointer hover:bg-amber-100 transition-colors flex items-center gap-1">
+                  <Pencil className="w-3 h-3" />
+                  Edit
+                </Badge>
+              </DialogTrigger>
+              <EditTaskDialog task={task} onTaskCreated={onUpdate} />
+            </Dialog>
+          ) : (
             <Dialog>
               <TooltipProvider delay={300}>
                 <Tooltip>
