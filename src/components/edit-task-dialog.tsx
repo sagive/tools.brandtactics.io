@@ -630,7 +630,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
               </div>
               
               {isEditingDesc ? (
-                <div id="task-description-container" data-testid="task-description" className="border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[120px] [&_.ql-editor]:overflow-x-auto flex-1 min-w-0">
+                <div id="task-description-container" data-testid="task-description" data-name="task-description" className="border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[120px] [&_.ql-editor]:overflow-x-auto flex-1 min-w-0">
                    <ReactQuill 
                      theme="snow"
                      value={description}
@@ -946,6 +946,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
             {isEditing ? (
               <div className="flex flex-col flex-1 mt-2">
                 <Button 
+                  data-name="task-save"
                   onClick={handleUpdateTask} 
                   disabled={isUpdating || !title.trim() || isDeleting}
                   className="w-full bg-[#4640A0] hover:bg-[#342e81] text-white shadow-sm font-semibold mb-2"
@@ -959,6 +960,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                 
                 <div className="mt-[50px] flex items-center justify-center pb-6">
                   <Button 
+                    data-name="task-delete"
                     variant="ghost" 
                     size="sm" 
                     className="h-7 text-[10px] text-red-500 hover:text-red-700 hover:bg-red-50 px-2 uppercase tracking-widest font-normal"
