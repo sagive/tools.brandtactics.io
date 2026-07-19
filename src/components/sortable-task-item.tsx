@@ -71,7 +71,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 px-1.5 py-1 sm:py-1.5 bg-white border-b hover:bg-slate-50 group">
+    <div ref={setNodeRef} style={style} data-id={task.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 px-1.5 py-1 sm:py-1.5 bg-white border-b hover:bg-slate-50 group">
       
       <div className="flex items-center flex-1 gap-1.5 sm:gap-2 min-w-0">
         {/* Grip Handle — moved to before the title */}
@@ -206,7 +206,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
           {/* Edit Button — far right */}
           {hideClientBadge ? (
             <Dialog>
-              <DialogTrigger className="focus:outline-none">
+              <DialogTrigger data-name="edit-task" data-task-id={task.id} className="focus:outline-none">
                 <Badge variant="outline" className="text-[10px] text-gray-600 bg-gray-100 border-gray-200 uppercase tracking-wide shrink-0 font-bold px-2 h-[30px] cursor-pointer hover:bg-gray-200 transition-colors flex items-center gap-1 rounded-none">
                   <Pencil className="w-3 h-3" />
                   Edit
@@ -219,7 +219,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
               <TooltipProvider delay={300}>
                 <Tooltip>
                   <TooltipTrigger render={
-                    <DialogTrigger className="text-gray-400 hover:text-blue-600 cursor-pointer flex items-center justify-center bg-transparent border-0 p-0 outline-none w-7 h-7 rounded-full hover:bg-gray-100 shrink-0">
+                    <DialogTrigger data-name="edit-task" data-task-id={task.id} className="text-gray-400 hover:text-blue-600 cursor-pointer flex items-center justify-center bg-transparent border-0 p-0 outline-none w-7 h-7 rounded-full hover:bg-gray-100 shrink-0">
                         <Pencil className="w-4 h-4" />
                     </DialogTrigger>
                   } />
