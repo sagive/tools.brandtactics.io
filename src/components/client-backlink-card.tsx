@@ -244,7 +244,7 @@ export function ClientBacklinkCard({
           <div className="flex items-center gap-4">
             <div className="flex flex-col items-center gap-1">
               <Checkbox 
-                data-tasked={isTasked ? "true" : "false"}
+                data-name="tasked"
                 checked={isTasked} 
                 onCheckedChange={toggleTasked}
                 className="h-5 w-5 border-blue-200 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
@@ -253,7 +253,7 @@ export function ClientBacklinkCard({
             </div>
             <div className="flex flex-col items-center gap-1">
               <Checkbox 
-                data-used={isUsed ? "true" : "false"}
+                data-name="used"
                 checked={isUsed} 
                 onCheckedChange={toggleUsed}
                 className="h-5 w-5"
@@ -275,7 +275,7 @@ export function ClientBacklinkCard({
                 <User className="h-3 w-3" />
               </button>
               <Input 
-                data-user={username || ""}
+                data-name="user"
                 placeholder="Client User" 
                 value={username} 
                 onChange={(e) => { setUsername(e.target.value); setIsDirty(true); }}
@@ -291,7 +291,7 @@ export function ClientBacklinkCard({
                 <Lock className="h-3 w-3" />
               </button>
               <Input 
-                data-pass={password || ""}
+                data-name="pass"
                 type="text"
                 placeholder="Client Pass" 
                 value={password} 
