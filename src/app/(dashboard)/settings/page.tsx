@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, Mail, Lock, User, Users, Trash2, Plus, FileText, RotateCw, Clock, Camera, Upload, Zap, ArrowUp, ArrowDown, Globe, Bot, Webhook, Link2, Copy, ShieldCheck, Key } from "lucide-react";
+import { Save, Mail, Lock, User, Users, Trash2, Plus, FileText, RotateCw, Clock, Camera, Upload, Zap, ArrowUp, ArrowDown, Globe, Bot, Webhook, Link2, Copy, ShieldCheck, Key, ListChecks } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth-provider";
@@ -49,6 +49,44 @@ function SiteRow({ site, onDelete, onUpdate, onMove, isFirst, isLast }: { site: 
         <Button variant="ghost" className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0" onClick={() => onDelete(site.id)}>
           <Trash2 className="w-4 h-4" />
         </Button>
+      </div>
+    </div>
+  );
+}
+
+function TaskTemplateRow({ template, onDelete, onUpdate }: { template: any, onDelete: (id: string) => void, onUpdate: (id: string, updates: any) => Promise<void> }) {
+  const [name, setName] = useState(template.name);
+  const [content, setContent] = useState(template.content || "");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    await onUpdate(template.id, { name, content });
+    setIsSaving(false);
+  };
+
+  return (
+    <div className="p-6 border rounded-xl bg-white shadow-sm space-y-4">
+      <div className="flex items-center gap-4">
+        <div className="flex-1 space-y-1">
+          <Label className="text-xs font-semibold text-gray-500 uppercase">Template Name</Label>
+          <Input value={name} onChange={(e) => setName(e.target.value)} className="font-bold text-gray-900 border-gray-200" placeholder="e.g., Company Profile Setup" />
+        </div>
+        <div className="flex items-end gap-2 pt-5">
+          <Button variant="outline" onClick={handleSave} disabled={isSaving} className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200 shrink-0">
+            {isSaving ? "Saving..." : <><Save className="w-4 h-4 mr-2" /> Save</>}
+          </Button>
+          <Button variant="ghost" className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0" onClick={() => onDelete(template.id)}>
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs font-semibold text-gray-500 uppercase">Task Description Template</Label>
+        <div className="border rounded-md overflow-hidden bg-white border-gray-200">
+          <ReactQuill theme="snow" value={content} onChange={setContent} className="[&_.ql-editor]:min-h-[150px] [&_.ql-editor]:text-sm [&_.ql-toolbar]:border-x-0 [&_.ql-toolbar]:border-t-0 [&_.ql-container]:border-none" />
+        </div>
+        <p className="text-[10px] text-gray-400 mt-1">This template can be injected into any task description from the task editor dropdown.</p>
       </div>
     </div>
   );
@@ -249,6 +287,7 @@ function SettingsContent() {
 
     fetchSettings();
     fetchPrewrittenTemplates();
+    fetchTaskTemplates();
     setIsLoading(false);
   }, []);
 
@@ -458,6 +497,55 @@ function SettingsContent() {
     }
   };
 
+  // ─── Task Templates ───────────────────────────────────────────
+  const [taskTemplates, setTaskTemplates] = useState<any[]>([]);
+
+  const fetchTaskTemplates = async () => {
+    try {
+      const { data, error } = await supabase.from('task_templates').select('*').order('created_at', { ascending: true });
+      if (data) setTaskTemplates(data);
+    } catch (err) {
+      // Table might not exist yet
+    }
+  };
+
+  const handleCreateTaskTemplate = async () => {
+    const newTemp = { name: "New Task Template", content: "" };
+    try {
+      const { data, error } = await supabase.from('task_templates').insert(newTemp).select().single();
+      if (error) throw error;
+      if (data) {
+        setTaskTemplates([...taskTemplates, data]);
+        toast.success("New task template added");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add task template. Make sure you ran the SQL migration.");
+    }
+  };
+
+  const handleUpdateTaskTemplate = async (id: string, updates: any) => {
+    try {
+      const { error } = await supabase.from('task_templates').update(updates).eq('id', id);
+      if (error) throw error;
+      setTaskTemplates(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+      toast.success("Task template saved.");
+    } catch (err: any) {
+      toast.error("Failed to save task template");
+    }
+  };
+
+  const handleDeleteTaskTemplate = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this task template?")) return;
+    try {
+      const { error } = await supabase.from('task_templates').delete().eq('id', id);
+      if (error) throw error;
+      setTaskTemplates(prev => prev.filter(t => t.id !== id));
+      toast.success("Task template deleted");
+    } catch (err: any) {
+      toast.error("Failed to delete task template");
+    }
+  };
+
   const previewHtml = template.replace('[content]', `
     <p>This is a preview of how your message will look inside the template wrapper.</p>
     <ul>
@@ -489,6 +577,7 @@ function SettingsContent() {
           <TabsTrigger value="endpoints" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Article Settings</TabsTrigger>
           <TabsTrigger value="profiles" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Profiles</TabsTrigger>
           <TabsTrigger value="ai" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">AI Integrations</TabsTrigger>
+          <TabsTrigger value="tasks" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">TASKS</TabsTrigger>
           <TabsTrigger value="webhooks" className="px-6 py-2 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Webhooks</TabsTrigger>
         </TabsList>
 
@@ -983,6 +1072,44 @@ function SettingsContent() {
                     onMove={handleMoveSite}
                     isFirst={idx === 0}
                     isLast={idx === profileSites.length - 1}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="tasks" className="space-y-6 mt-0 outline-none ring-0">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                  <ListChecks className="w-5 h-5 mr-2 text-green-600" />
+                  Task Templates
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  Create reusable task description templates that can be quickly injected into any task from the task editor dropdown.
+                </p>
+              </div>
+              <Button onClick={handleCreateTaskTemplate} className="bg-green-600 hover:bg-green-700 text-white shadow-sm gap-2">
+                <Plus className="w-4 h-4" /> Add Task Template
+              </Button>
+            </div>
+
+            {taskTemplates.length === 0 ? (
+              <div className="p-12 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+                <ListChecks className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                <h4 className="font-semibold text-gray-700">No task templates yet</h4>
+                <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">Click the button above to create your first task template.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {taskTemplates.map(t => (
+                  <TaskTemplateRow 
+                    key={t.id} 
+                    template={t} 
+                    onDelete={handleDeleteTaskTemplate} 
+                    onUpdate={handleUpdateTaskTemplate} 
                   />
                 ))}
               </div>

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { BellIcon, Link2, List, Bold, Italic, Underline, Strikethrough, SmilePlus, X, Send, Trash2, Pencil, ChevronDownIcon } from "lucide-react";
+import { BellIcon, Link2, List, Bold, Italic, Underline, Strikethrough, SmilePlus, X, Send, Trash2, Pencil, ChevronDownIcon, FileText } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -89,6 +89,15 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [taskTemplates, setTaskTemplates] = useState<any[]>([]);
+
+  // Fetch task templates for dropdown injection
+  useEffect(() => {
+    try {
+      supabase.from('task_templates').select('*').order('created_at', { ascending: true })
+        .then(({ data }) => { if (data) setTaskTemplates(data); });
+    } catch {}
+  }, []);
 
   // Load from localStorage on mount for new tasks
   useEffect(() => {
@@ -577,7 +586,34 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
 
             <div className="space-y-2 max-w-full">
               <div className="flex items-center justify-between">
-                <Label className="text-gray-900 font-bold text-lg">Description <span className="text-red-500">*</span></Label>
+                <div className="flex items-center gap-3">
+                  <Label className="text-gray-900 font-bold text-lg">Description <span className="text-red-500">*</span></Label>
+                  {taskTemplates.length > 0 && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-md border border-green-200 bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-300">
+                          <FileText className="w-3.5 h-3.5" />
+                          Templates
+                          <ChevronDownIcon className="w-3 h-3" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-72">
+                        <div className="px-2 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Inject Template</div>
+                        {taskTemplates.map(t => (
+                          <DropdownMenuItem 
+                            key={t.id}
+                            onClick={() => {
+                              setDescription(t.content || "");
+                              toast.success(`Template "${t.name}" injected`);
+                            }}
+                            className="text-sm cursor-pointer"
+                          >
+                            <FileText className="w-3.5 h-3.5 mr-2 text-green-500" />
+                            {t.name}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
                 {isEditing && !isEditingDesc && (
                   <Button 
                     variant="ghost" 

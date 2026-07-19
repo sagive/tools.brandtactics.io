@@ -9,8 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { Loader2, ListChecks } from "lucide-react";
+import { Loader2, ListChecks, FileText, ChevronDownIcon } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface BulkTaskDialogProps {
   clientId: string;
@@ -38,12 +39,20 @@ export function BulkTaskDialog({ clientId, selectedBacklinks, users, onSuccess, 
   const [requester, setRequester] = useState("");
   const [assignee, setAssignee] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [taskTemplates, setTaskTemplates] = useState<any[]>([]);
 
   useEffect(() => {
     if (profile && !requester) {
       setRequester(profile.full_name || profile.email || "");
     }
   }, [profile, requester]);
+
+  useEffect(() => {
+    try {
+      supabase.from('task_templates').select('*').order('created_at', { ascending: true })
+        .then(({ data }) => { if (data) setTaskTemplates(data); });
+    } catch {}
+  }, []);
 
   const handleBulkCreate = async () => {
     if (!baseTitle) return toast.error("Please enter a base title");
@@ -123,7 +132,34 @@ export function BulkTaskDialog({ clientId, selectedBacklinks, users, onSuccess, 
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-gray-500 uppercase">General Description</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-bold text-gray-500 uppercase">General Description</Label>
+              {taskTemplates.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="inline-flex items-center gap-1 h-7 px-3 text-[10px] font-medium rounded-md border border-green-200 bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-300">
+                      <FileText className="w-3 h-3" />
+                      Templates
+                      <ChevronDownIcon className="w-2.5 h-2.5" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-64">
+                    <div className="px-2 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Inject Template</div>
+                    {taskTemplates.map(t => (
+                      <DropdownMenuItem 
+                        key={t.id}
+                        onClick={() => {
+                          setGeneralDescription(t.content || "");
+                          toast.success(`Template "${t.name}" injected`);
+                        }}
+                        className="text-sm cursor-pointer"
+                      >
+                        <FileText className="w-3.5 h-3.5 mr-2 text-green-500" />
+                        {t.name}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
             <Textarea 
               placeholder="Instructions for the team..." 
               value={generalDescription} 
