@@ -586,8 +586,8 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
 
             <div className="space-y-2 max-w-full">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Label className="text-gray-900 font-bold text-lg">Description <span className="text-red-500">*</span></Label>
+                <Label className="text-gray-900 font-bold text-lg">Description <span className="text-red-500">*</span></Label>
+                <div className="flex items-center gap-2">
                   {taskTemplates.length > 0 && (
                     <DropdownMenu>
                       <DropdownMenuTrigger className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-md border border-green-200 bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-300">
@@ -595,35 +595,38 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                           Templates
                           <ChevronDownIcon className="w-3 h-3" />
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="w-72">
+                      <DropdownMenuContent align="end" className="w-72">
                         <div className="px-2 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Inject Template</div>
                         {taskTemplates.map(t => (
-                          <DropdownMenuItem 
+                          <div
                             key={t.id}
-                            onClick={() => {
-                              setDescription(t.content || "");
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const content = t.content || "";
+                              setIsEditingDesc(true);
+                              setDescription(content);
                               toast.success(`Template "${t.name}" injected`);
                             }}
-                            className="text-sm cursor-pointer"
+                            className="relative flex cursor-pointer items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none hover:bg-accent hover:text-accent-foreground"
                           >
-                            <FileText className="w-3.5 h-3.5 mr-2 text-green-500" />
+                            <FileText className="w-3.5 h-3.5 shrink-0 text-green-500" />
                             {t.name}
-                          </DropdownMenuItem>
+                          </div>
                         ))}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
+                  {isEditing && !isEditingDesc && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => setIsEditingDesc(true)}
+                      className="h-8 w-8 text-blue-600 hover:bg-blue-50"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
-                {isEditing && !isEditingDesc && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={() => setIsEditingDesc(true)}
-                    className="h-8 w-8 text-blue-600 hover:bg-blue-50"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                )}
               </div>
               
               {isEditingDesc ? (

@@ -144,17 +144,18 @@ export function BulkTaskDialog({ clientId, selectedBacklinks, users, onSuccess, 
                   <DropdownMenuContent align="end" className="w-64">
                     <div className="px-2 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Inject Template</div>
                     {taskTemplates.map(t => (
-                      <DropdownMenuItem 
+                      <div
                         key={t.id}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setGeneralDescription(t.content || "");
                           toast.success(`Template "${t.name}" injected`);
                         }}
-                        className="text-sm cursor-pointer"
+                        className="relative flex cursor-pointer items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none hover:bg-accent hover:text-accent-foreground"
                       >
-                        <FileText className="w-3.5 h-3.5 mr-2 text-green-500" />
+                        <FileText className="w-3.5 h-3.5 shrink-0 text-green-500" />
                         {t.name}
-                      </DropdownMenuItem>
+                      </div>
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
