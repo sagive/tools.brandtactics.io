@@ -5,7 +5,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Download, Trash2, Edit, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Search, Plus, Download, Trash2, Edit, ChevronLeft, ChevronRight, ExternalLink, Settings2, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
@@ -51,6 +54,49 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // ─── Article Settings (toggle) ──────────────────────────────
+  const [showArticleSettings, setShowArticleSettings] = useState(false);
+  const [articleSettings, setArticleSettings] = useState({ categories: "", hideLogo: false, customHeader: "", customFooter: "" });
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  useEffect(() => {
+    if (showArticleSettings) {
+      try {
+        supabase.from('clients').select('article_categories, hide_logo_in_preview, custom_logo_text, custom_bottom_text')
+          .eq('id', clientId).single()
+          .then(({ data }) => {
+            if (data) {
+              setArticleSettings({
+                categories: data.article_categories || "",
+                hideLogo: data.hide_logo_in_preview || false,
+                customHeader: data.custom_logo_text || "",
+                customFooter: data.custom_bottom_text || ""
+              });
+            }
+          });
+      } catch {}
+    }
+  }, [showArticleSettings, clientId]);
+
+  const handleSaveArticleSettings = async () => {
+    setIsSavingSettings(true);
+    try {
+      const { error } = await supabase.from('clients').update({
+        article_categories: articleSettings.categories || null,
+        hide_logo_in_preview: articleSettings.hideLogo,
+        custom_logo_text: articleSettings.customHeader || null,
+        custom_bottom_text: articleSettings.customFooter || null
+      }).eq('id', clientId);
+      if (error) throw error;
+      toast.success("Article settings saved");
+      setRefreshKey(prev => prev + 1);
+    } catch (err: any) {
+      toast.error("Failed to save settings");
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
   const [articleCounts, setArticleCounts] = useState<ArticleCounts>({
     total: 0,
     draft: 0,
@@ -291,7 +337,16 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
         </div>
         
         <div className="flex gap-3 w-full sm:w-auto">
-          <Button variant="outline" className="w-full sm:w-auto bg-white">
+          <Button 
+            variant={showArticleSettings ? "default" : "outline"} 
+            size="default"
+            onClick={() => setShowArticleSettings(!showArticleSettings)}
+            className={showArticleSettings ? "bg-gray-800 hover:bg-gray-900 text-white" : "bg-white"}
+            title="Article Settings"
+          >
+            <Settings2 className="w-4 h-4 mr-2" /> Settings
+          </Button>
+          <Button variant="outline" className="bg-white">
             <Download className="w-4 h-4 mr-2" /> Export
           </Button>
           <Link href={`/clients/${clientId}/articles/new`} className="w-full sm:w-auto">
@@ -301,6 +356,63 @@ export default function ClientArticles({ params }: { params: Promise<{ id: strin
           </Link>
         </div>
       </div>
+
+      {/* Article Settings — toggleable */}
+      {showArticleSettings && (
+        <div className="border border-gray-200 rounded-xl bg-white shadow-sm p-6 space-y-5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Articles Settings</h3>
+            <Button onClick={handleSaveArticleSettings} disabled={isSavingSettings} className="bg-blue-600 hover:bg-blue-700 text-white">
+              {isSavingSettings ? "Saving..." : <><Save className="w-4 h-4 mr-2" /> Save Settings</>}
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-1 md:col-span-2">
+              <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Categories (one per line)</Label>
+              <Textarea 
+                value={articleSettings.categories} 
+                onChange={(e) => setArticleSettings(prev => ({ ...prev, categories: e.target.value }))}
+                placeholder="e.g.&#10;Marketing&#10;Sales&#10;Tech Support"
+                className="min-h-[120px] resize-y font-mono text-sm"
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2 pt-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="articles-hide-logo" 
+                  checked={articleSettings.hideLogo} 
+                  onCheckedChange={(checked) => setArticleSettings(prev => ({ ...prev, hideLogo: !!checked }))} 
+                />
+                <Label htmlFor="articles-hide-logo" className="text-xs font-bold text-gray-700 cursor-pointer uppercase tracking-wider">
+                  Hide BrandTactics Logo in Article Public Preview
+                </Label>
+              </div>
+            </div>
+            {articleSettings.hideLogo && (
+              <>
+                <div className="space-y-1">
+                  <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Custom Header text (leave empty for nothing)</Label>
+                  <Input 
+                    value={articleSettings.customHeader} 
+                    onChange={(e) => setArticleSettings(prev => ({ ...prev, customHeader: e.target.value }))}
+                    placeholder="e.g. Zap"
+                    className="h-10" 
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Custom Footer text (leave empty for nothing)</Label>
+                  <Input 
+                    value={articleSettings.customFooter} 
+                    onChange={(e) => setArticleSettings(prev => ({ ...prev, customFooter: e.target.value }))}
+                    placeholder="e.g. Shared by Zap Portal"
+                    className="h-10" 
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Articles Table */}
       <Card className="shadow-sm overflow-hidden">
