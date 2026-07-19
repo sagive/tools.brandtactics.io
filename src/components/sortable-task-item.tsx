@@ -183,7 +183,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
               value={status} 
               onValueChange={handleStatusChange}
             >
-              <SelectTrigger className={cn(
+              <SelectTrigger data-name="task_status" data-task-id={task.id} className={cn(
                 "h-[30px] min-h-[30px] text-[10px] sm:text-xs font-medium px-2 leading-none border-0 focus:ring-0 shadow-none rounded-none w-full",
                 status === 'Stuck' ? 'bg-red-50 text-red-700 hover:bg-red-100' :
                 status === 'Working on it' ? 'bg-amber-100 text-black hover:bg-amber-200' :

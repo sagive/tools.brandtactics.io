@@ -530,7 +530,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
              )}
 
              {/* Date Picker Auto-save wrapper */}
-             <div className="flex items-center gap-2 text-gray-500" data-testid="task-due-date">
+             <div className="flex items-center gap-2 text-gray-500" data-testid="task-due-date" data-name="task-due-date">
                <span className="font-medium whitespace-nowrap">Due:</span>
                <DateTimePicker
                  isDateOnly
@@ -743,7 +743,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
               <div className="space-y-2" data-testid="task-client">
                 <Label className="text-gray-600 text-[13px] font-medium">Clients <span className="text-red-500">*</span></Label>
                 <Popover>
-                  <PopoverTrigger className="flex h-10 w-full items-center justify-between rounded-lg border border-input bg-white px-3 py-2 text-sm text-gray-900 shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring">
+                  <PopoverTrigger data-name="task-client" className="flex h-10 w-full items-center justify-between rounded-lg border border-input bg-white px-3 py-2 text-sm text-gray-900 shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring">
                     <span className="truncate">
                       {selectedClientIds.length === 0 
                         ? "Select clients" 
@@ -800,7 +800,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                     updateField("status", val); 
                   }}
                 >
-                  <SelectTrigger className="bg-white w-full"><SelectValue /></SelectTrigger>
+                  <SelectTrigger data-name="task-status" className="bg-white w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Pending">Pending</SelectItem>
                     <SelectItem value="Working on it">
@@ -836,7 +836,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                     updateField("priority", val); 
                   }}
                 >
-                  <SelectTrigger className="bg-white w-full"><SelectValue /></SelectTrigger>
+                  <SelectTrigger data-name="task-priority" className="bg-white w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Low"><span className="text-gray-600 font-medium">Low</span></SelectItem>
                     <SelectItem value="Medium"><span className="text-yellow-600 font-medium">Normal</span></SelectItem>
@@ -856,7 +856,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                      updateField("requester", val); 
                    }}
                 >
-                  <SelectTrigger className="bg-white w-full h-9">
+                  <SelectTrigger data-name="task-requester" className="bg-white w-full h-9">
                     <SelectValue placeholder="Pick User" />
                   </SelectTrigger>
                   <SelectContent>
@@ -879,7 +879,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                       updateField("assignee", val); 
                     }}
                   >
-                    <SelectTrigger className="bg-white px-2 w-full">
+                    <SelectTrigger data-name="task-assignee" className="bg-white px-2 w-full">
                       <SelectValue placeholder="Pick User" />
                     </SelectTrigger>
                     <SelectContent>
@@ -973,6 +973,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
             ) : (
               <Button 
                 data-testid="task-create"
+                data-name="task-create"
                 onClick={handleCreateTask} 
                 disabled={isCreating || !stripHtml(description) || selectedClientIds.length === 0}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm mt-4 font-semibold"
