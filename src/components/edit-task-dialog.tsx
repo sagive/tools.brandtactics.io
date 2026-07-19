@@ -530,7 +530,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
              )}
 
              {/* Date Picker Auto-save wrapper */}
-             <div className="flex items-center gap-2 text-gray-500">
+             <div className="flex items-center gap-2 text-gray-500" data-testid="task-due-date">
                <span className="font-medium whitespace-nowrap">Due:</span>
                <DateTimePicker
                  isDateOnly
@@ -630,7 +630,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
               </div>
               
               {isEditingDesc ? (
-                <div id="task-description-container" className="border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[120px] [&_.ql-editor]:overflow-x-auto flex-1 min-w-0">
+                <div id="task-description-container" data-testid="task-description" className="border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[120px] [&_.ql-editor]:overflow-x-auto flex-1 min-w-0">
                    <ReactQuill 
                      theme="snow"
                      value={description}
@@ -740,7 +740,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
           <div className="w-full md:w-80 shrink-0 bg-gray-50/30 p-6 space-y-6 flex flex-col">
             
             {!isEditing && (
-              <div className="space-y-2">
+              <div className="space-y-2" data-testid="task-client">
                 <Label className="text-gray-600 text-[13px] font-medium">Clients <span className="text-red-500">*</span></Label>
                 <Popover>
                   <PopoverTrigger className="flex h-10 w-full items-center justify-between rounded-lg border border-input bg-white px-3 py-2 text-sm text-gray-900 shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring">
@@ -791,7 +791,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
             )}
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div className="space-y-2" data-testid="task-status">
                 <Label className="text-gray-600 text-[13px] font-medium">Status</Label>
                 <Select 
                   value={status} 
@@ -827,7 +827,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                 </Select>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2" data-testid="task-priority">
                 <Label className="text-gray-600 text-[13px] font-medium">Priority</Label>
                 <Select 
                   value={priority}
@@ -847,7 +847,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div className="space-y-2" data-testid="task-requester">
                 <Label className="text-gray-600 text-[13px] font-medium">Requester</Label>
                 <Select 
                    value={requester} 
@@ -869,7 +869,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                 </Select>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2" data-testid="task-assignee">
                 <Label className="text-gray-600 text-[13px] font-medium">Assigned to</Label>
                 {isEditing ? (
                   <Select 
@@ -972,6 +972,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
               </div>
             ) : (
               <Button 
+                data-testid="task-create"
                 onClick={handleCreateTask} 
                 disabled={isCreating || !stripHtml(description) || selectedClientIds.length === 0}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm mt-4 font-semibold"
