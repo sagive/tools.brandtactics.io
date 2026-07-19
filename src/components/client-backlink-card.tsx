@@ -214,7 +214,7 @@ export function ClientBacklinkCard({
         </div>
       )}
 
-      <CardContent className="p-4 space-y-4 pt-10">
+      <CardContent data-url={backlink.url} className="p-4 space-y-4 pt-10">
         {/* Header: Name and Toggle */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
