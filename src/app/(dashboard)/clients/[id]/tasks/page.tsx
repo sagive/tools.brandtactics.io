@@ -130,6 +130,16 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
             )}
           </Button>
 
+          {/* New Task — visible only on small screens when sidebar is hidden */}
+          <Dialog>
+            <DialogTrigger render={
+              <Button className="h-10 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 shrink-0 xl:hidden">
+                <Plus className="w-4 h-4 mr-2" /> New Task
+              </Button>
+            } />
+            <EditTaskDialog defaultClientId={id} onTaskCreated={fetchTasks} />
+          </Dialog>
+
           <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200">
             <Button 
               variant="ghost" 
