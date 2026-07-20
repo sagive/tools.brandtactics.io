@@ -96,10 +96,7 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
     else if (showTasked) {
       if (!isTasked) return false;
     }
-    // 4. Default (nothing checked): Show only Available (neither used nor tasked)
-    else {
-      if (isUsed || isTasked) return false;
-    }
+    // 4. Default (nothing checked): Show ALL backlinks
 
     const matchesSearch = 
       b.website_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
