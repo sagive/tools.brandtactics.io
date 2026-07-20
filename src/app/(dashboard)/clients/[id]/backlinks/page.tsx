@@ -37,7 +37,7 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
     setLoading(true);
     try {
       const [backRes, catsRes, mappingRes, usersRes] = await Promise.all([
-        supabase.from("backlinks").select("*, backlink_categories(name)"),
+        supabase.from("backlinks").select("*, backlink_categories(name)").limit(10000),
         supabase.from("backlink_categories").select("*").order("rank"),
         supabase.from("client_backlinks").select("*").eq("client_id", clientId),
         supabase.from("users").select("id, full_name, email").order("full_name")
@@ -96,7 +96,10 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
     else if (showTasked) {
       if (!isTasked) return false;
     }
-    // 4. Default (nothing checked): Show ALL backlinks
+    // 4. Default (nothing checked): Show only Available (neither used nor tasked)
+    else {
+      if (isUsed || isTasked) return false;
+    }
 
     const matchesSearch = 
       b.website_name.toLowerCase().includes(searchTerm.toLowerCase()) ||

@@ -53,7 +53,7 @@ export default function BacklinksDashboard() {
   async function fetchData() {
     setLoading(true);
     const [backRes, catsRes] = await Promise.all([
-      supabase.from("backlinks").select("*, backlink_categories(name)").order("rank", { ascending: false }),
+      supabase.from("backlinks").select("*, backlink_categories(name)").order("rank", { ascending: false }).limit(10000),
       supabase.from("backlink_categories").select("*").order("rank")
     ]);
     
