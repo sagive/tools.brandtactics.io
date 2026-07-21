@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Send, Trash2, Mail } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -152,8 +152,8 @@ export default function ClientEmailsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 min-w-[300px] max-w-[400px]">
-                        <Popover>
-                          <PopoverTrigger render={
+                        <Dialog>
+                          <DialogTrigger render={
                             <button 
                               className="text-sm text-gray-700 hover:text-blue-600 font-medium text-left truncate w-full decoration-dashed hover:underline underline-offset-4 focus:outline-none" 
                               title="Click to view full message"
@@ -161,19 +161,19 @@ export default function ClientEmailsPage() {
                               {truncate(email.title, 55) || "No Subject"}
                             </button>
                           } />
-                          <PopoverContent className="w-[600px] p-0 shadow-2xl border-gray-100 bg-white rounded-xl overflow-hidden" align="start">
-                            <div className="bg-gray-50/80 px-5 py-3 border-b border-gray-100">
-                              <h4 className="font-bold text-sm text-gray-900 leading-tight">
+                          <DialogContent className="max-w-4xl sm:max-w-4xl w-[90vw] max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0 bg-white rounded-xl">
+                            <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 shrink-0">
+                              <h4 className="font-bold text-base text-gray-900 leading-tight pr-8">
                                 {email.title || "No Subject"}
                               </h4>
                             </div>
-                            <div className="p-6">
-                              <div className="text-[13px] text-gray-700 leading-relaxed max-h-[500px] overflow-y-auto w-full prose prose-sm prose-p:my-2 prose-a:text-blue-600 [&>p]:whitespace-pre-wrap custom-scrollbar">
+                            <div className="p-6 overflow-y-auto flex-1">
+                              <div className="text-[14px] text-gray-700 leading-relaxed w-full prose prose-sm prose-p:my-2 prose-a:text-blue-600 [&>p]:whitespace-pre-wrap">
                                 <div dangerouslySetInnerHTML={{ __html: email.body || "No content." }} />
                               </div>
                             </div>
-                          </PopoverContent>
-                        </Popover>
+                          </DialogContent>
+                        </Dialog>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {email.status === 'Scheduled' ? (
