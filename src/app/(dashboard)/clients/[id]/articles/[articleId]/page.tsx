@@ -360,7 +360,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
           </Button>
         </Link>
         <div className={`flex-1 ${direction === 'rtl' ? 'text-right' : ''}`} dir={direction}>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900 truncate max-w-2xl">{title}</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">{title}</h1>
           <p className="text-sm text-gray-500">View or edit article details.</p>
         </div>
         <div />
