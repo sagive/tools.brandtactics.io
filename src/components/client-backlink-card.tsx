@@ -50,6 +50,21 @@ export function ClientBacklinkCard({
     setIsDirty(false);
   }, [clientData?.is_used, clientData?.is_tasked, clientData?.client_username, clientData?.client_password, clientData?.live_link]);
 
+  // Warn before leaving page if there are unsaved changes
+  useEffect(() => {
+    if (!isDirty) return;
+
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      // Modern browsers ignore custom messages for security reasons,
+      // but setting returnValue triggers the native confirmation dialog
+      e.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
   const copyToClipboard = (text: string, type: string) => {
     if (!text) return;
     navigator.clipboard.writeText(text);
@@ -308,10 +323,11 @@ export function ClientBacklinkCard({
           <Button 
             onClick={handleSave} 
             disabled={isSaving}
+            data-style="save"
             className="w-full h-8 text-xs bg-[#4640A0] hover:bg-[#342e81] gap-2"
           >
             {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
-            Save Alignment
+            Save Changes
           </Button>
         )}
       </CardContent>
