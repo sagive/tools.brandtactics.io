@@ -198,7 +198,10 @@ export default function QuickTaskPage() {
                       const isChecked = selectedClientIds.includes(c.id);
                       return (
                         <div 
-                          key={c.id} 
+                          key={c.id}
+                          data-name={c.name}
+                          data-selected={isChecked}
+                          data-role="client-option"
                           onClick={() => {
                             if (isChecked) {
                               setSelectedClientIds(selectedClientIds.filter(id => id !== c.id));
@@ -210,6 +213,7 @@ export default function QuickTaskPage() {
                         >
                           <Checkbox 
                             checked={isChecked}
+                            data-name={c.name}
                             onClick={(e) => e.stopPropagation()} 
                             onCheckedChange={(checked) => {
                               if (checked) {
@@ -219,7 +223,7 @@ export default function QuickTaskPage() {
                               }
                             }}
                           />
-                          <span className="text-xs font-semibold text-gray-700 truncate">{c.name}</span>
+                          <span data-name={c.name} className="text-xs font-semibold text-gray-700 truncate">{c.name}</span>
                         </div>
                       );
                     })}

@@ -759,7 +759,10 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                         const isChecked = selectedClientIds.includes(c.id);
                         return (
                           <div 
-                            key={c.id} 
+                            key={c.id}
+                            data-name={c.name}
+                            data-selected={isChecked}
+                            data-role="client-option"
                             onClick={() => {
                               if (isChecked) {
                                 setSelectedClientIds(selectedClientIds.filter(id => id !== c.id));
@@ -771,6 +774,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                           >
                             <Checkbox 
                               checked={isChecked}
+                              data-name={c.name}
                               onClick={(e) => e.stopPropagation()} 
                               onCheckedChange={(checked) => {
                                 if (checked) {
@@ -780,7 +784,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                                 }
                               }}
                             />
-                            <span className="text-xs font-semibold text-gray-700 truncate">{c.name}</span>
+                            <span data-name={c.name} className="text-xs font-semibold text-gray-700 truncate">{c.name}</span>
                           </div>
                         );
                       })}
@@ -861,8 +865,8 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                   </SelectTrigger>
                   <SelectContent>
                     {users.map(u => (
-                      <SelectItem key={u.id} value={u.full_name || u.email}>
-                        <span className="truncate">{u.full_name || u.email}</span>
+                      <SelectItem key={u.id} value={u.full_name || u.email} data-name={u.full_name || u.email}>
+                        <span data-name={u.full_name || u.email} className="truncate">{u.full_name || u.email}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -884,8 +888,8 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                     </SelectTrigger>
                     <SelectContent>
                       {users.map(u => (
-                        <SelectItem key={u.id} value={u.full_name || u.email}>
-                          <span className="truncate">{u.full_name || u.email}</span>
+                        <SelectItem key={u.id} value={u.full_name || u.email} data-name={u.full_name || u.email}>
+                          <span data-name={u.full_name || u.email} className="truncate">{u.full_name || u.email}</span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -909,7 +913,10 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                           const isChecked = assignees.includes(nameOrEmail);
                           return (
                             <div 
-                              key={u.id} 
+                              key={u.id}
+                              data-name={nameOrEmail}
+                              data-selected={isChecked}
+                              data-role="user-option"
                               onClick={(e) => {
                                 if (isChecked) {
                                   setAssignees(assignees.filter(a => a !== nameOrEmail));
@@ -921,6 +928,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                             >
                               <Checkbox 
                                 checked={isChecked}
+                                data-name={nameOrEmail}
                                 onClick={(e) => e.stopPropagation()} 
                                 onCheckedChange={(checked) => {
                                   if (checked) {
@@ -930,7 +938,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                                   }
                                 }}
                               />
-                              <span className="text-xs font-semibold text-gray-700 truncate">{nameOrEmail}</span>
+                              <span data-name={nameOrEmail} className="text-xs font-semibold text-gray-700 truncate">{nameOrEmail}</span>
                             </div>
                           );
                         })}

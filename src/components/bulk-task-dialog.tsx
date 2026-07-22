@@ -203,7 +203,7 @@ export function BulkTaskDialog({ clientId, selectedBacklinks, users, onSuccess, 
                 </SelectTrigger>
                 <SelectContent>
                   {users.map(u => (
-                    <SelectItem key={u.id} value={u.full_name || u.email}>{u.full_name || u.email}</SelectItem>
+                    <SelectItem key={u.id} value={u.full_name || u.email} data-name={u.full_name || u.email}>{u.full_name || u.email}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -216,7 +216,7 @@ export function BulkTaskDialog({ clientId, selectedBacklinks, users, onSuccess, 
                 </SelectTrigger>
                 <SelectContent>
                   {users.map(u => (
-                    <SelectItem key={u.id} value={u.full_name || u.email}>{u.full_name || u.email}</SelectItem>
+                    <SelectItem key={u.id} value={u.full_name || u.email} data-name={u.full_name || u.email}>{u.full_name || u.email}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
