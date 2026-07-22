@@ -78,33 +78,39 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
     }
   }, [searchParams]);
 
+  const hasActiveSearch = searchTerm.trim().length > 0;
+
   const filteredBacklinks = backlinks.filter(b => {
     const mapping = clientMappings.find(m => m.backlink_id === b.id);
     const isUsed = mapping?.is_used || false;
     const isTasked = mapping?.is_tasked || false;
 
-    // Filter by visibility toggles
-    // 1. Both checked: Show only Used or Tasked items
-    if (showUsed && showTasked) {
-      if (!isUsed && !isTasked) return false;
-    } 
-    // 2. Only showUsed checked: Show ONLY used items
-    else if (showUsed) {
-      if (!isUsed) return false;
-    }
-    // 3. Only showTasked checked: Show ONLY tasked items
-    else if (showTasked) {
-      if (!isTasked) return false;
-    }
-    // 4. Default (nothing checked): Show only Available (neither used nor tasked)
-    else {
-      if (isUsed || isTasked) return false;
+    // When free-text search is active, include ALL backlinks regardless of status
+    if (!hasActiveSearch) {
+      // Filter by visibility toggles
+      // 1. Both checked: Show only Used or Tasked items
+      if (showUsed && showTasked) {
+        if (!isUsed && !isTasked) return false;
+      } 
+      // 2. Only showUsed checked: Show ONLY used items
+      else if (showUsed) {
+        if (!isUsed) return false;
+      }
+      // 3. Only showTasked checked: Show ONLY tasked items
+      else if (showTasked) {
+        if (!isTasked) return false;
+      }
+      // 4. Default (nothing checked): Show only Available (neither used nor tasked)
+      else {
+        if (isUsed || isTasked) return false;
+      }
     }
 
-    const matchesSearch = 
+    const matchesSearch = !hasActiveSearch || (
       b.website_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       b.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.backlink_categories?.name.toLowerCase().includes(searchTerm.toLowerCase());
+      b.backlink_categories?.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
     
     const matchesCategory = !activeCategoryId || b.category_id === activeCategoryId;
     
