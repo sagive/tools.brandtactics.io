@@ -6,8 +6,7 @@ import { DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/compone
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import { Button } from "@/components/ui/button";
 import { BellIcon, Link2, List, Bold, Italic, Underline, Strikethrough, SmilePlus, X, Send, Trash2, Pencil, ChevronDownIcon, FileText } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
@@ -742,55 +741,23 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
             {!isEditing && (
               <div className="space-y-2" data-testid="task-client">
                 <Label className="text-gray-600 text-[13px] font-medium">Clients <span className="text-red-500">*</span></Label>
-                <Popover>
-                  <PopoverTrigger data-name="task-client" className="flex h-10 w-full items-center justify-between rounded-lg border border-input bg-white px-3 py-2 text-sm text-gray-900 shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring">
-                    <span className="truncate">
-                      {selectedClientIds.length === 0 
-                        ? "Select clients" 
-                        : selectedClientIds.length === 1 
-                        ? clients.find(c => c.id === selectedClientIds[0])?.name || "Loading..." 
-                        : `${selectedClientIds.length} clients selected`}
-                    </span>
-                    <ChevronDownIcon className="w-4 h-4 text-muted-foreground" />
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-56 p-2 bg-white rounded-lg border shadow-md max-h-60 overflow-y-auto z-[9999]">
-                    <div className="space-y-2">
-                      {clients.map(c => {
-                        const isChecked = selectedClientIds.includes(c.id);
-                        return (
-                          <div 
-                            key={c.id}
-                            data-name={c.name}
-                            data-selected={isChecked}
-                            data-role="client-option"
-                            onClick={() => {
-                              if (isChecked) {
-                                setSelectedClientIds(selectedClientIds.filter(id => id !== c.id));
-                              } else {
-                                setSelectedClientIds([...selectedClientIds, c.id]);
-                              }
-                            }}
-                            className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-gray-50 cursor-pointer transition-colors"
-                          >
-                            <Checkbox 
-                              checked={isChecked}
-                              data-name={c.name}
-                              onClick={(e) => e.stopPropagation()} 
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setSelectedClientIds([...selectedClientIds, c.id]);
-                                } else {
-                                  setSelectedClientIds(selectedClientIds.filter(id => id !== c.id));
-                                }
-                              }}
-                            />
-                            <span data-name={c.name} className="text-xs font-semibold text-gray-700 truncate">{c.name}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </PopoverContent>
-                </Popover>
+                <select
+                  multiple
+                  value={selectedClientIds}
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.selectedOptions, o => o.value);
+                    setSelectedClientIds(selected);
+                  }}
+                  className="w-full min-h-[120px] rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
+                  data-name="task-client"
+                >
+                  {clients.map(c => (
+                    <option key={c.id} value={c.id} data-name={c.name}>{c.name}</option>
+                  ))}
+                </select>
+                {selectedClientIds.length > 0 && (
+                  <p className="text-[11px] text-gray-400">{selectedClientIds.length} client(s) selected</p>
+                )}
               </div>
             )}
 
@@ -875,76 +842,30 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
 
               <div className="space-y-2" data-testid="task-assignee">
                 <Label className="text-gray-600 text-[13px] font-medium">Assigned to</Label>
-                {isEditing ? (
-                  <Select 
-                    value={assignee}
-                    onValueChange={(val) => { 
-                      setAssignee(val); 
-                      updateField("assignee", val); 
-                    }}
-                  >
-                    <SelectTrigger data-name="task-assignee" className="bg-white px-2 w-full">
-                      <SelectValue placeholder="Pick User" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {users.map(u => (
-                        <SelectItem key={u.id} value={u.full_name || u.email} data-name={u.full_name || u.email}>
-                          <span data-name={u.full_name || u.email} className="truncate">{u.full_name || u.email}</span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Popover>
-                    <PopoverTrigger className="flex h-10 w-full items-center justify-between rounded-lg border border-input bg-transparent px-3 py-2 text-sm text-gray-900 shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring">
-                      <span className="truncate">
-                        {assignees.length === 0 
-                          ? "Pick Users" 
-                          : assignees.length === 1 
-                          ? assignees[0] 
-                          : `${assignees.length} people selected`}
-                      </span>
-                      <ChevronDownIcon className="w-4 h-4 text-muted-foreground" />
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="w-56 p-2 bg-white rounded-lg border shadow-md max-h-60 overflow-y-auto z-[9999]">
-                      <div className="space-y-2">
-                        {users.map(u => {
-                          const nameOrEmail = u.full_name || u.email;
-                          const isChecked = assignees.includes(nameOrEmail);
-                          return (
-                            <div 
-                              key={u.id}
-                              data-name={nameOrEmail}
-                              data-selected={isChecked}
-                              data-role="user-option"
-                              onClick={(e) => {
-                                if (isChecked) {
-                                  setAssignees(assignees.filter(a => a !== nameOrEmail));
-                                } else {
-                                  setAssignees([...assignees, nameOrEmail]);
-                                }
-                              }}
-                              className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-gray-50 cursor-pointer transition-colors"
-                            >
-                              <Checkbox 
-                                checked={isChecked}
-                                data-name={nameOrEmail}
-                                onClick={(e) => e.stopPropagation()} 
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setAssignees([...assignees, nameOrEmail]);
-                                  } else {
-                                    setAssignees(assignees.filter(a => a !== nameOrEmail));
-                                  }
-                                }}
-                              />
-                              <span data-name={nameOrEmail} className="text-xs font-semibold text-gray-700 truncate">{nameOrEmail}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                <select
+                  multiple
+                  value={isEditing ? (assignee ? [assignee] : []) : assignees}
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.selectedOptions, o => o.value);
+                    if (isEditing) {
+                      const newVal = selected.length > 0 ? selected[selected.length - 1] : "";
+                      setAssignee(newVal);
+                      updateField("assignee", newVal);
+                    } else {
+                      setAssignees(selected);
+                    }
+                  }}
+                  className="w-full min-h-[100px] rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
+                  data-name="task-assignee"
+                >
+                  {users.map(u => (
+                    <option key={u.id} value={u.full_name || u.email} data-name={u.full_name || u.email}>
+                      {u.full_name || u.email}
+                    </option>
+                  ))}
+                </select>
+                {!isEditing && assignees.length > 0 && (
+                  <p className="text-[11px] text-gray-400">{assignees.length} person(s) selected</p>
                 )}
               </div>
             </div>

@@ -5,11 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import { Card, CardContent } from "@/components/ui/card";
-import { Mic, MicOff, Image as ImageIcon, Save, Loader2, ArrowLeft, ArrowRight, ChevronDownIcon } from "lucide-react";
+import { Mic, MicOff, Image as ImageIcon, Save, Loader2, ArrowLeft, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import dynamic from "next/dynamic";
@@ -181,55 +179,20 @@ export default function QuickTaskPage() {
         <div className="space-y-2">
             <Label className="text-xs font-bold uppercase text-gray-500">Clients <span className="text-red-500">*</span></Label>
             {clients.length > 0 ? (
-              <Popover>
-                <PopoverTrigger className="flex h-14 sm:h-12 w-full items-center justify-between rounded-lg border border-input bg-white px-4 py-2 text-base sm:text-sm text-gray-900 shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring">
-                  <span className="truncate">
-                    {selectedClientIds.length === 0 
-                      ? "Select clients" 
-                      : selectedClientIds.length === 1 
-                      ? clients.find(c => c.id === selectedClientIds[0])?.name || "Loading..." 
-                      : `${selectedClientIds.length} clients selected`}
-                  </span>
-                  <ChevronDownIcon className="w-4 h-4 text-muted-foreground shrink-0" />
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-56 p-2 bg-white rounded-lg border shadow-md max-h-60 overflow-y-auto z-[9999]">
-                  <div className="space-y-2">
-                    {clients.map(c => {
-                      const isChecked = selectedClientIds.includes(c.id);
-                      return (
-                        <div 
-                          key={c.id}
-                          data-name={c.name}
-                          data-selected={isChecked}
-                          data-role="client-option"
-                          onClick={() => {
-                            if (isChecked) {
-                              setSelectedClientIds(selectedClientIds.filter(id => id !== c.id));
-                            } else {
-                              setSelectedClientIds([...selectedClientIds, c.id]);
-                            }
-                          }}
-                          className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-gray-50 cursor-pointer transition-colors"
-                        >
-                          <Checkbox 
-                            checked={isChecked}
-                            data-name={c.name}
-                            onClick={(e) => e.stopPropagation()} 
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setSelectedClientIds([...selectedClientIds, c.id]);
-                              } else {
-                                setSelectedClientIds(selectedClientIds.filter(id => id !== c.id));
-                              }
-                            }}
-                          />
-                          <span data-name={c.name} className="text-xs font-semibold text-gray-700 truncate">{c.name}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <select
+                multiple
+                value={selectedClientIds}
+                onChange={(e) => {
+                  const selected = Array.from(e.target.selectedOptions, o => o.value);
+                  setSelectedClientIds(selected);
+                }}
+                className="w-full min-h-[120px] rounded-lg border border-input bg-white px-4 py-2 text-base sm:text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
+                data-name="task-client"
+              >
+                {clients.map(c => (
+                  <option key={c.id} value={c.id} data-name={c.name}>{c.name}</option>
+                ))}
+              </select>
             ) : (
               <div className="h-14 sm:h-12 w-full border border-gray-200 rounded-md flex items-center px-4 bg-gray-50 text-gray-500 text-sm">
                 Loading clients...
