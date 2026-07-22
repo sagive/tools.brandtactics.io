@@ -181,12 +181,18 @@ export default function QuickTaskPage() {
             {clients.length > 0 ? (
               <select
                 multiple
+                size={Math.min(clients.length, 5)}
                 value={selectedClientIds}
-                onChange={(e) => {
-                  const selected = Array.from(e.target.selectedOptions, o => o.value);
-                  setSelectedClientIds(selected);
+                onMouseDown={(e) => {
+                  const target = e.target as HTMLElement;
+                  if (target.tagName !== 'OPTION') return;
+                  e.preventDefault();
+                  (target as HTMLOptionElement).selected = !(target as HTMLOptionElement).selected;
                 }}
-                className="w-full min-h-[120px] rounded-lg border border-input bg-white px-4 py-2 text-base sm:text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
+                onChange={(e) => {
+                  setSelectedClientIds(Array.from(e.currentTarget.selectedOptions, o => o.value));
+                }}
+                className="w-full rounded-lg border border-input bg-white px-4 py-2 text-base sm:text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
                 data-name="task-client"
               >
                 {clients.map(c => (

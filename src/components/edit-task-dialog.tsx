@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { Button } from "@/components/ui/button";
 import { BellIcon, Link2, List, Bold, Italic, Underline, Strikethrough, SmilePlus, X, Send, Trash2, Pencil, ChevronDownIcon, FileText } from "lucide-react";
@@ -17,7 +16,6 @@ import { logActivity } from "@/lib/activity-logger";
 import { linkifyHtml } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
-import { DateTimePicker } from "@/components/ui/date-time-picker";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 
@@ -528,17 +526,18 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                </button>
              )}
 
-             {/* Date Picker Auto-save wrapper */}
+             {/* Date Picker */}
              <div className="flex items-center gap-2 text-gray-500" data-testid="task-due-date" data-name="task-due-date">
                <span className="font-medium whitespace-nowrap">Due:</span>
-               <DateTimePicker
-                 isDateOnly
+               <input
+                 type="date"
                  value={dueDate}
-                 onChange={(val: string) => { 
-                   setDueDate(val); 
-                   updateField('end_date', val); 
+                 onChange={(e) => { 
+                   setDueDate(e.target.value); 
+                   updateField('end_date', e.target.value); 
                  }}
-                 className="h-8 py-1 px-3 bg-transparent border-transparent hover:border-gray-300 hover:bg-gray-50 shadow-none font-medium text-gray-900 w-auto min-w-[120px]"
+                 className="h-8 py-1 px-3 bg-transparent border border-transparent hover:border-gray-300 hover:bg-gray-50 shadow-none font-medium text-gray-900 w-auto min-w-[130px] rounded-md text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                 data-name="task-due-date"
                />
              </div>
              
@@ -743,12 +742,18 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                 <Label className="text-gray-600 text-[13px] font-medium">Clients <span className="text-red-500">*</span></Label>
                 <select
                   multiple
+                  size={Math.min(clients.length, 5)}
                   value={selectedClientIds}
-                  onChange={(e) => {
-                    const selected = Array.from(e.target.selectedOptions, o => o.value);
-                    setSelectedClientIds(selected);
+                  onMouseDown={(e) => {
+                    const target = e.target as HTMLElement;
+                    if (target.tagName !== 'OPTION') return;
+                    e.preventDefault();
+                    (target as HTMLOptionElement).selected = !(target as HTMLOptionElement).selected;
                   }}
-                  className="w-full min-h-[120px] rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
+                  onChange={(e) => {
+                    setSelectedClientIds(Array.from(e.currentTarget.selectedOptions, o => o.value));
+                  }}
+                  className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
                   data-name="task-client"
                 >
                   {clients.map(c => (
@@ -756,7 +761,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                   ))}
                 </select>
                 {selectedClientIds.length > 0 && (
-                  <p className="text-[11px] text-gray-400">{selectedClientIds.length} client(s) selected</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">{selectedClientIds.length} client(s) selected</p>
                 )}
               </div>
             )}
@@ -764,89 +769,67 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2" data-testid="task-status">
                 <Label className="text-gray-600 text-[13px] font-medium">Status</Label>
-                <Select 
-                  value={status} 
-                  onValueChange={(val) => { 
-                    setStatus(val); 
-                    updateField("status", val); 
-                  }}
+                <select
+                  value={status}
+                  onChange={(e) => { const val = e.target.value; setStatus(val); updateField("status", val); }}
+                  className="w-full h-10 rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
+                  data-name="task-status"
                 >
-                  <SelectTrigger data-name="task-status" className="bg-white w-full"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Working on it">
-                      <span className="flex items-center gap-2 truncate">
-                        <div className="w-2.5 h-2.5 rounded-sm bg-blue-500 shrink-0" /> Working on it
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="Review">
-                      <span className="flex items-center gap-2 truncate">
-                        <div className="w-2.5 h-2.5 rounded-sm bg-purple-500 shrink-0" /> Review
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="Stuck">
-                      <span className="flex items-center gap-2 truncate">
-                        <div className="w-2.5 h-2.5 rounded-sm bg-red-500 shrink-0" /> Stuck
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="Completed">
-                      <span className="flex items-center gap-2 truncate">
-                        <div className="w-2.5 h-2.5 rounded-sm bg-green-500 shrink-0" /> Completed
-                      </span>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                  <option value="Pending">Pending</option>
+                  <option value="Working on it">Working on it</option>
+                  <option value="Review">Review</option>
+                  <option value="Stuck">Stuck</option>
+                  <option value="Completed">Completed</option>
+                </select>
               </div>
 
               <div className="space-y-2" data-testid="task-priority">
                 <Label className="text-gray-600 text-[13px] font-medium">Priority</Label>
-                <Select 
+                <select
                   value={priority}
-                  onValueChange={(val) => { 
-                    setPriority(val); 
-                    updateField("priority", val); 
-                  }}
+                  onChange={(e) => { const val = e.target.value; setPriority(val); updateField("priority", val); }}
+                  className="w-full h-10 rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
+                  data-name="task-priority"
                 >
-                  <SelectTrigger data-name="task-priority" className="bg-white w-full"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Low"><span className="text-gray-600 font-medium">Low</span></SelectItem>
-                    <SelectItem value="Medium"><span className="text-yellow-600 font-medium">Normal</span></SelectItem>
-                    <SelectItem value="High"><span className="text-red-600 font-medium">High</span></SelectItem>
-                  </SelectContent>
-                </Select>
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </select>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2" data-testid="task-requester">
                 <Label className="text-gray-600 text-[13px] font-medium">Requester</Label>
-                <Select 
-                   value={requester} 
-                   onValueChange={(val) => { 
-                     setRequester(val); 
-                     updateField("requester", val); 
-                   }}
+                <select
+                  value={requester}
+                  onChange={(e) => { const val = e.target.value; setRequester(val); updateField("requester", val); }}
+                  className="w-full h-10 rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
+                  data-name="task-requester"
                 >
-                  <SelectTrigger data-name="task-requester" className="bg-white w-full h-9">
-                    <SelectValue placeholder="Pick User" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {users.map(u => (
-                      <SelectItem key={u.id} value={u.full_name || u.email} data-name={u.full_name || u.email}>
-                        <span data-name={u.full_name || u.email} className="truncate">{u.full_name || u.email}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <option value="">Pick User</option>
+                  {users.map(u => (
+                    <option key={u.id} value={u.full_name || u.email} data-name={u.full_name || u.email}>
+                      {u.full_name || u.email}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-2" data-testid="task-assignee">
                 <Label className="text-gray-600 text-[13px] font-medium">Assigned to</Label>
                 <select
                   multiple
+                  size={Math.min(users.length, 5)}
                   value={isEditing ? (assignee ? [assignee] : []) : assignees}
+                  onMouseDown={(e) => {
+                    const target = e.target as HTMLElement;
+                    if (target.tagName !== 'OPTION') return;
+                    e.preventDefault();
+                    (target as HTMLOptionElement).selected = !(target as HTMLOptionElement).selected;
+                  }}
                   onChange={(e) => {
-                    const selected = Array.from(e.target.selectedOptions, o => o.value);
+                    const selected = Array.from(e.currentTarget.selectedOptions, o => o.value);
                     if (isEditing) {
                       const newVal = selected.length > 0 ? selected[selected.length - 1] : "";
                       setAssignee(newVal);
@@ -855,7 +838,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                       setAssignees(selected);
                     }
                   }}
-                  className="w-full min-h-[100px] rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
+                  className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
                   data-name="task-assignee"
                 >
                   {users.map(u => (
@@ -865,7 +848,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                   ))}
                 </select>
                 {!isEditing && assignees.length > 0 && (
-                  <p className="text-[11px] text-gray-400">{assignees.length} person(s) selected</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">{assignees.length} person(s) selected</p>
                 )}
               </div>
             </div>
