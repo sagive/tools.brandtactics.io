@@ -116,6 +116,7 @@ export default function GlobalTasksPage() {
 
   const pending = filteredTasks.filter(t => t.status === "Pending");
   const active = filteredTasks.filter(t => t.status === "Working on it" || t.status === "Review");
+  const updateReady = filteredTasks.filter(t => t.status === "Update Ready");
   const stuck = filteredTasks.filter(t => t.status === "Stuck");
   const completed = filteredTasks.filter(t => t.status === "Completed");
 
@@ -236,6 +237,7 @@ export default function GlobalTasksPage() {
               <>
                 <SortableTaskList title="Pending" initialTasks={pending} onRefresh={fetchTasks} />
                 <SortableTaskList title="Working on it / Review" initialTasks={active} onRefresh={fetchTasks} />
+                <SortableTaskList title="Update Ready" initialTasks={updateReady} onRefresh={fetchTasks} />
                 <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} onRefresh={fetchTasks} />
               </>
             ) : (

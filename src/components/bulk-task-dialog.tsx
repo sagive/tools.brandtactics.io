@@ -176,7 +176,10 @@ export function BulkTaskDialog({ clientId, selectedBacklinks, users, onSuccess, 
                 <SelectTrigger className="bg-gray-50/30"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="In Progress">In Progress</SelectItem>
+                  <SelectItem value="Working on it">Working on it</SelectItem>
+                  <SelectItem value="Review">Review</SelectItem>
+                  <SelectItem value="Update Ready">Update Ready</SelectItem>
+                  <SelectItem value="Stuck">Stuck</SelectItem>
                   <SelectItem value="Completed">Completed</SelectItem>
                 </SelectContent>
               </Select>

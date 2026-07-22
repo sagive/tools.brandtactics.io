@@ -91,6 +91,7 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
 
   const pending = filteredTasks.filter(t => t.status === "Pending");
   const active = filteredTasks.filter(t => t.status === "Working on it" || t.status === "Review");
+  const updateReady = filteredTasks.filter(t => t.status === "Update Ready");
   const stuck = filteredTasks.filter(t => t.status === "Stuck");
   const completed = filteredTasks.filter(t => t.status === "Completed");
 
@@ -176,6 +177,7 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
               <>
                 <SortableTaskList title="Pending" initialTasks={pending} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} hideClientBadge />
                 <SortableTaskList title="Working on it / Review" initialTasks={active} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} hideClientBadge />
+                <SortableTaskList title="Update Ready" initialTasks={updateReady} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} hideClientBadge />
                 <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} hideClientBadge />
               </>
             ) : (

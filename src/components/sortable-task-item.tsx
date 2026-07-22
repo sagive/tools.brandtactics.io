@@ -188,6 +188,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
                 status === 'Stuck' ? 'bg-red-50 text-red-700 hover:bg-red-100' :
                 status === 'Working on it' ? 'bg-amber-100 text-black hover:bg-amber-200' :
                 status === 'Review' ? 'bg-purple-50 text-purple-700 hover:bg-purple-100' :
+                status === 'Update Ready' ? 'bg-cyan-50 text-cyan-700 hover:bg-cyan-100' :
                 status === 'Completed' ? 'bg-green-50 text-green-700 hover:bg-green-100' :
                 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               )}>
@@ -197,6 +198,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
                 <SelectItem value="Pending">Pending</SelectItem>
                 <SelectItem value="Working on it">Working on it</SelectItem>
                 <SelectItem value="Review">Review</SelectItem>
+                <SelectItem value="Update Ready">Update Ready</SelectItem>
                 <SelectItem value="Stuck">Stuck</SelectItem>
                 <SelectItem value="Completed">Completed</SelectItem>
               </SelectContent>

@@ -779,6 +779,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                   <option value="Working on it">Working on it</option>
                   <option value="Review">Review</option>
                   <option value="Stuck">Stuck</option>
+                  <option value="Update Ready">Update Ready</option>
                   <option value="Completed">Completed</option>
                 </select>
               </div>
