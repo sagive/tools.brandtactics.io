@@ -684,7 +684,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                            </div>
                         </div>
                       ) : (
-                        <div className="text-[13px] text-gray-700 break-words [&>p]:mb-2 last:[&>p]:mb-0 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&_img]:max-w-[150px] [&_img]:rounded-md [&_a]:text-blue-600 [&_a]:underline" dangerouslySetInnerHTML={{ __html: linkifyHtml(comment.text) }} />
+                        <div className="w-full text-[13px] text-gray-700 break-words [&>p]:mb-2 last:[&>p]:mb-0 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&_img]:max-w-[150px] [&_img]:rounded-md [&_a]:text-blue-600 [&_a]:underline" dangerouslySetInnerHTML={{ __html: linkifyHtml(comment.text) }} />
                       )}
                       
                       {/* Interaction Actions */}
