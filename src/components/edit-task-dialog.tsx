@@ -662,7 +662,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                     <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-semibold text-xs shrink-0 pt-0.5">
                       {comment.user === 'ME' ? 'ME' : 'MJ'}
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                          <span className="font-semibold text-sm text-gray-900">{comment.user === 'ME' ? 'You' : (profile && profile.full_name === comment.user ? 'You' : comment.user)}</span>
                          <span className="text-xs text-gray-400">
