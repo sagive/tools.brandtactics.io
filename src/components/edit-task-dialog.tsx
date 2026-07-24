@@ -639,7 +639,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                 </div>
               ) : (
                 <div 
-                  className="p-4 border rounded-md bg-gray-50/30 prose prose-sm max-w-none min-h-[120px] overflow-x-auto
+                  className="p-4 border rounded-md bg-gray-50/30 prose prose-sm max-w-none min-h-[120px] break-words
                     [&_a]:text-blue-600 [&_a]:underline [&_a]:underline-offset-4 [&_a]:font-medium hover:[&_a]:text-blue-800
                     [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4
                     [&_img]:max-w-full [&_img]:rounded-lg [&_img]:shadow-sm"
@@ -684,7 +684,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                            </div>
                         </div>
                       ) : (
-                        <div className="text-[13px] text-gray-700 [&>p]:mb-2 last:[&>p]:mb-0 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&_img]:max-w-[150px] [&_img]:rounded-md [&_a]:text-blue-600 [&_a]:underline" dangerouslySetInnerHTML={{ __html: linkifyHtml(comment.text) }} />
+                        <div className="text-[13px] text-gray-700 break-words [&>p]:mb-2 last:[&>p]:mb-0 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&_img]:max-w-[150px] [&_img]:rounded-md [&_a]:text-blue-600 [&_a]:underline" dangerouslySetInnerHTML={{ __html: linkifyHtml(comment.text) }} />
                       )}
                       
                       {/* Interaction Actions */}
