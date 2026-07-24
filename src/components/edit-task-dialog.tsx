@@ -307,7 +307,11 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
   };
 
   const handleDeleteTask = async () => {
-    if (!isEditing || !task.id) return;
+    if (!task?.id) {
+      console.error("Delete failed: no task id", { isEditing, task });
+      toast.error("Cannot delete: task not found");
+      return;
+    }
     if (!confirm("Are you sure you want to permanently delete this task?")) return;
     
     setIsDeleting(true);
@@ -316,12 +320,24 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
       if (error) throw error;
       
       toast.success("Task deleted successfully");
-      onTaskCreated?.(); // Refresh parent list
       
-      // Close dialog
+      // Refresh parent list first
+      if (onTaskCreated) {
+        await Promise.resolve(onTaskCreated());
+      }
+      
+      // Close dialog - try multiple selectors for robustness
       const closeButton = document.querySelector('[data-slot="dialog-close"]') as HTMLButtonElement;
-      if (closeButton) closeButton.click();
+      if (closeButton) {
+        closeButton.click();
+      } else {
+        // Fallback: click the X button or press Escape
+        const xButton = document.querySelector('.lucide-x')?.closest('button') as HTMLButtonElement;
+        if (xButton) xButton.click();
+        else document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      }
     } catch (err: any) {
+      console.error("Delete task error:", err);
       toast.error(err.message || "Failed to delete task");
     } finally {
       setIsDeleting(false);
