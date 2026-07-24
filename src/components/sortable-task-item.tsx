@@ -71,7 +71,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
   };
 
   return (
-    <div ref={setNodeRef} style={style} data-id={task.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 px-1.5 py-1 sm:py-1.5 bg-white border-b hover:bg-slate-50 group">
+    <div ref={setNodeRef} style={style} data-testid="task-row" data-task-id={task.id} data-id={task.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 px-1.5 py-1 sm:py-1.5 bg-white border-b hover:bg-slate-50 group">
       
       <div className="flex items-center flex-1 gap-1.5 sm:gap-2 min-w-0">
         {/* Grip Handle — moved to before the title */}
@@ -85,7 +85,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
             "flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 cursor-pointer min-w-0 bg-transparent border-0 p-0 mx-0 outline-none group/title",
             "text-left rtl:text-right"
           )}>
-            <span className="font-medium text-sm text-gray-900 truncate pr-2 block group-hover/title:text-blue-600 transition-colors">
+            <span data-testid="task-title" className="font-medium text-sm text-gray-900 truncate pr-2 block group-hover/title:text-blue-600 transition-colors">
               {stripHtml(task.description || task.title).substring(0, 75)}
               {stripHtml(task.description || task.title).length > 75 ? '...' : ''}
             </span>
@@ -99,7 +99,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
           <div className="hidden md:flex items-center text-[11px] sm:text-xs text-gray-500 gap-3">
             {/* Client Box — hidden inside client page, shown in global tasks */}
             {!hideClientBadge && (
-              <Badge variant="outline" className="text-[10px] text-blue-600 bg-blue-50 border-blue-200 uppercase tracking-wide truncate max-w-[130px] shrink-0 font-bold px-1.5 py-0">
+              <Badge variant="outline" data-testid="task-client" className="text-[10px] text-blue-600 bg-blue-50 border-blue-200 uppercase tracking-wide truncate max-w-[130px] shrink-0 font-bold px-1.5 py-0">
                 {task.client}
               </Badge>
             )}
@@ -183,7 +183,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
               value={status} 
               onValueChange={handleStatusChange}
             >
-              <SelectTrigger data-name="task_status" data-task-id={task.id} className={cn(
+              <SelectTrigger data-testid="task-status" data-name="task_status" data-task-id={task.id} className={cn(
                 "h-[30px] min-h-[30px] text-[10px] sm:text-xs font-medium px-2 leading-none border-0 focus:ring-0 shadow-none rounded-none w-full",
                 status === 'Stuck' ? 'bg-red-50 text-red-700 hover:bg-red-100' :
                 status === 'Working on it' ? 'bg-amber-100 text-black hover:bg-amber-200' :
@@ -208,7 +208,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
           {/* Edit Button — far right */}
           {hideClientBadge ? (
             <Dialog>
-              <DialogTrigger data-name="edit-task" data-task-id={task.id} className="focus:outline-none">
+              <DialogTrigger data-testid="task-action-btn" data-name="edit-task" data-task-id={task.id} className="focus:outline-none">
                 <Badge variant="outline" className="text-[10px] text-gray-600 bg-gray-100 border-gray-200 uppercase tracking-wide shrink-0 font-bold px-2 h-[30px] cursor-pointer hover:bg-gray-200 transition-colors flex items-center gap-1 rounded-none">
                   <Pencil className="w-3 h-3" />
                   Edit
@@ -221,7 +221,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
               <TooltipProvider delay={300}>
                 <Tooltip>
                   <TooltipTrigger render={
-                    <DialogTrigger data-name="edit-task" data-task-id={task.id} className="text-gray-400 hover:text-blue-600 cursor-pointer flex items-center justify-center bg-transparent border-0 p-0 outline-none w-7 h-7 rounded-full hover:bg-gray-100 shrink-0">
+                    <DialogTrigger data-testid="task-action-btn" data-name="edit-task" data-task-id={task.id} className="text-gray-400 hover:text-blue-600 cursor-pointer flex items-center justify-center bg-transparent border-0 p-0 outline-none w-7 h-7 rounded-full hover:bg-gray-100 shrink-0">
                         <Pencil className="w-4 h-4" />
                     </DialogTrigger>
                   } />
