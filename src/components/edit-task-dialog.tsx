@@ -307,6 +307,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
   };
 
   const handleDeleteTask = async () => {
+    console.log("[delete] handleDeleteTask called", { isEditing, taskId: task?.id });
     if (!task?.id) {
       console.error("Delete failed: no task id", { isEditing, task });
       toast.error("Cannot delete: task not found");
@@ -314,9 +315,11 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
     }
     if (!confirm("Are you sure you want to permanently delete this task?")) return;
     
+    console.log("[delete] confirmed, calling supabase...");
     setIsDeleting(true);
     try {
-      const { error } = await supabase.from('tasks').delete().eq('id', task.id);
+      const { data, error } = await supabase.from('tasks').delete().eq('id', task.id).select();
+      console.log("[delete] supabase response:", { data, error });
       if (error) throw error;
       
       toast.success("Task deleted successfully");
@@ -889,17 +892,16 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                 </div>
                 
                 <div className="mt-[50px] flex items-center justify-center pb-6">
-                  <Button 
+                  <button
+                    type="button"
                     data-name="task-delete"
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-7 text-[10px] text-red-500 hover:text-red-700 hover:bg-red-50 px-2 uppercase tracking-widest font-normal"
+                    className="h-7 text-[10px] text-red-500 hover:text-red-700 hover:bg-red-50 px-2 uppercase tracking-widest font-normal inline-flex items-center justify-center rounded-lg border border-transparent shrink-0 transition-all select-none disabled:pointer-events-none disabled:opacity-50"
                     onClick={handleDeleteTask}
                     disabled={isDeleting}
                   >
                     <Trash2 className="w-3.5 h-3.5 mr-1" />
                     {isDeleting ? "Deleting..." : "Delete Task"}
-                  </Button>
+                  </button>
                 </div>
               </div>
             ) : (
