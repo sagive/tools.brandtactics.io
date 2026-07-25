@@ -541,7 +541,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
 
   return (
     <DialogContent showCloseButton={false} className="max-w-[100%] sm:max-w-[95vw] md:max-w-[850px] lg:max-w-5xl xl:max-w-6xl w-full p-0 overflow-hidden bg-white">
-      <div className="flex flex-col h-[95vh] max-h-[95vh] min-w-0 overflow-hidden">
+      <div className="flex flex-col min-w-0">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <DialogTitle className="text-xl font-bold">{isEditing ? "Edit Task" : "New Task"}</DialogTitle>
@@ -617,10 +617,10 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
         </div>
 
         {/* Body Content */}
-        <div className="flex flex-col md:flex-row flex-1 overflow-y-auto min-w-0">
+        <div className="flex flex-col md:flex-row min-w-0 h-fit">
           
           {/* LEFT COLUMN - Settings fields */}
-          <div className="w-full md:w-72 shrink-0 p-6 space-y-6 border-r border-gray-100">
+          <div className="w-full md:w-72 shrink-0 p-6 space-y-6 border-r border-gray-100 h-fit">
             
             {/* Clients multi-select - for new tasks */}
             {!isEditing && (
@@ -730,7 +730,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
           </div>
 
           {/* RIGHT COLUMN - Task text body + Comments */}
-          <div className="flex-1 p-6 min-w-0">
+          <div className="flex-1 p-6 min-w-0 h-fit">
 
             {/* Title field hidden per user request - summary generated from description */}
             <div className="hidden">
@@ -790,7 +790,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
               </div>
               
               {isEditingDesc ? (
-                <div id="task-description-container" data-testid="task-description" data-name="task-description" data-type="description" className="border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[200px] [&_.ql-editor]:overflow-x-auto">
+                <div id="task-description-container" data-testid="task-description" data-name="task-description" data-type="description" className="border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[315px] [&_.ql-editor]:overflow-x-auto">
                    <ReactQuill 
                      theme="snow"
                      value={description}
@@ -801,7 +801,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                 </div>
               ) : (
                 <div 
-                  className="p-4 border rounded-md bg-gray-50/30 prose prose-sm max-w-none min-h-[200px] break-words
+                  className="p-4 border rounded-md bg-gray-50/30 prose prose-sm max-w-none min-h-[315px] break-words
                     [&_a]:text-blue-600 [&_a]:underline [&_a]:underline-offset-4 [&_a]:font-medium hover:[&_a]:text-blue-800
                     [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4
                     [&_img]:max-w-full [&_img]:rounded-lg [&_img]:shadow-sm"
