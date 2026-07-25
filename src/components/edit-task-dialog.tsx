@@ -86,6 +86,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [taskTemplates, setTaskTemplates] = useState<any[]>([]);
 
   // Fetch task templates for dropdown injection
@@ -306,16 +307,9 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
     }
   };
 
-  const handleDeleteTask = async () => {
-    console.log("[delete] handleDeleteTask called", { isEditing, taskId: task?.id });
-    if (!task?.id) {
-      console.error("Delete failed: no task id", { isEditing, task });
-      toast.error("Cannot delete: task not found");
-      return;
-    }
-    if (!confirm("Are you sure you want to permanently delete this task?")) return;
-    
-    console.log("[delete] confirmed, calling supabase...");
+  const executeDelete = async () => {
+    setShowDeleteConfirm(false);
+    console.log("[delete] executing delete for task:", task?.id);
     setIsDeleting(true);
     try {
       const { data, error } = await supabase.from('tasks').delete().eq('id', task.id).select();
@@ -340,11 +334,21 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
         else document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
       }
     } catch (err: any) {
-      console.error("Delete task error:", err);
+      console.error("[delete] error:", err);
       toast.error(err.message || "Failed to delete task");
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const handleDeleteTask = () => {
+    console.log("[delete] handleDeleteTask called", { isEditing, taskId: task?.id });
+    if (!task?.id) {
+      console.error("Delete failed: no task id", { isEditing, task });
+      toast.error("Cannot delete: task not found");
+      return;
+    }
+    setShowDeleteConfirm(true);
   };
 
   const handlePublishComment = async () => {
@@ -891,17 +895,39 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                   <p className="text-[10px] text-gray-400 font-medium">Created: {createdDate}</p>
                 </div>
                 
-                <div className="mt-[50px] flex items-center justify-center pb-6">
-                  <button
-                    type="button"
-                    data-name="task-delete"
-                    className="h-7 text-[10px] text-red-500 hover:text-red-700 hover:bg-red-50 px-2 uppercase tracking-widest font-normal inline-flex items-center justify-center rounded-lg border border-transparent shrink-0 transition-all select-none disabled:pointer-events-none disabled:opacity-50"
-                    onClick={handleDeleteTask}
-                    disabled={isDeleting}
-                  >
-                    <Trash2 className="w-3.5 h-3.5 mr-1" />
-                    {isDeleting ? "Deleting..." : "Delete Task"}
-                  </button>
+                <div className="mt-[50px] flex flex-col items-center gap-2 pb-6">
+                  {showDeleteConfirm ? (
+                    <div className="flex flex-col items-center gap-2 p-3 border border-red-200 rounded-lg bg-red-50 w-full">
+                      <p className="text-xs font-semibold text-red-700">⚠️ Are you sure you want to permanently delete this task?</p>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          className="h-7 px-3 text-[10px] font-semibold uppercase tracking-wider rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                          onClick={executeDelete}
+                        >
+                          Yes, Delete
+                        </button>
+                        <button
+                          type="button"
+                          className="h-7 px-3 text-[10px] font-medium uppercase tracking-wider rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors"
+                          onClick={() => setShowDeleteConfirm(false)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      data-name="task-delete"
+                      className="h-7 text-[10px] text-red-500 hover:text-red-700 hover:bg-red-50 px-2 uppercase tracking-widest font-normal inline-flex items-center justify-center rounded-lg border border-transparent shrink-0 transition-all select-none disabled:pointer-events-none disabled:opacity-50"
+                      onClick={handleDeleteTask}
+                      disabled={isDeleting}
+                    >
+                      <Trash2 className="w-3.5 h-3.5 mr-1" />
+                      {isDeleting ? "Deleting..." : "Delete Task"}
+                    </button>
+                  )}
                 </div>
               </div>
             ) : (
