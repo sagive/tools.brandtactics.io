@@ -587,12 +587,12 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
              )}
 
              {/* Requested By - moved to header */}
-             <div className="flex items-center gap-2" data-testid="task-requester" data-name="task-requester" data-type="requester">
-               <Label className="text-gray-600 text-[13px] font-medium whitespace-nowrap">Requested by</Label>
+             <div className="flex items-center gap-1.5" data-testid="task-requester" data-name="task-requester" data-type="requester">
+               <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Requested by</span>
                <select
                  value={requester}
                  onChange={(e) => { const val = e.target.value; setRequester(val); updateField("requester", val); }}
-                 className="h-8 py-1 px-2 bg-transparent border border-gray-200 hover:border-gray-300 rounded-md shadow-none font-medium text-gray-900 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                 className="h-7 py-0.5 px-1.5 bg-transparent border-0 hover:bg-gray-100 rounded text-xs font-medium text-gray-700 outline-none focus-visible:ring-1 focus-visible:ring-ring"
                  data-name="task-requester"
                  data-type="requester"
                >
@@ -647,9 +647,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
         </div>
 
         {/* Body Content */}
-        <div className="flex flex-col md:flex-row flex-1 overflow-y-auto min-w-0">
-          {/* Left Column Component */}
-          <div className="flex-1 md:max-w-[65%] p-6 space-y-6 md:border-r border-gray-100 min-w-0">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 min-w-0">
             
             {/* Title field hidden per user request - summary generated from description */}
             <div className="hidden">
@@ -895,63 +893,54 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
             </div>
             )}
 
-          </div>
-
-          {/* Right Column Component - Actions only */}
-          <div className="w-full md:w-80 shrink-0 bg-gray-50/30 p-6 space-y-6 flex flex-col">
-            
+          {/* Action buttons at bottom */}
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
             {isEditing ? (
-              <div className="flex flex-col flex-1 mt-2">
+              <>
+                <div className="text-[10px] text-gray-400 font-medium mr-auto">Created: {createdDate}</div>
+                
+                {showDeleteConfirm ? (
+                  <div className="flex items-center gap-2 p-2 border border-red-200 rounded-lg bg-red-50">
+                    <p className="text-xs font-semibold text-red-700">⚠️ Delete this task?</p>
+                    <button
+                      type="button"
+                      className="h-7 px-3 text-[10px] font-semibold uppercase tracking-wider rounded bg-red-600 text-white hover:bg-red-700"
+                      onClick={executeDelete}
+                    >
+                      Yes, Delete
+                    </button>
+                    <button
+                      type="button"
+                      className="h-7 px-3 text-[10px] font-medium uppercase tracking-wider rounded border border-gray-300 text-gray-600 hover:bg-gray-100"
+                      onClick={() => setShowDeleteConfirm(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    data-name="task-delete"
+                    data-type="delete"
+                    className="h-7 text-[10px] text-red-500 hover:text-red-700 hover:bg-red-50 px-2 uppercase tracking-widest font-normal inline-flex items-center justify-center rounded border border-transparent shrink-0 transition-all"
+                    onClick={handleDeleteTask}
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="w-3.5 h-3.5 mr-1" />
+                    {isDeleting ? "Deleting..." : "Delete Task"}
+                  </button>
+                )}
+                
                 <Button 
                   data-name="task-save"
                   data-type="save"
                   onClick={handleUpdateTask} 
                   disabled={isUpdating || !title.trim() || isDeleting}
-                  className="w-full bg-[#4640A0] hover:bg-[#342e81] text-white shadow-sm font-semibold mb-2"
+                  className="bg-[#4640A0] hover:bg-[#342e81] text-white shadow-sm font-semibold"
                 >
                   {isUpdating ? "Saving..." : "Save Changes"}
                 </Button>
-                
-                <div className="px-1 text-center">
-                  <p className="text-[10px] text-gray-400 font-medium">Created: {createdDate}</p>
-                </div>
-                
-                <div className="mt-[50px] flex flex-col items-center gap-2 pb-6">
-                  {showDeleteConfirm ? (
-                    <div className="flex flex-col items-center gap-2 p-3 border border-red-200 rounded-lg bg-red-50 w-full">
-                      <p className="text-xs font-semibold text-red-700">⚠️ Are you sure you want to permanently delete this task?</p>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          className="h-7 px-3 text-[10px] font-semibold uppercase tracking-wider rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
-                          onClick={executeDelete}
-                        >
-                          Yes, Delete
-                        </button>
-                        <button
-                          type="button"
-                          className="h-7 px-3 text-[10px] font-medium uppercase tracking-wider rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors"
-                          onClick={() => setShowDeleteConfirm(false)}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      data-name="task-delete"
-                      data-type="delete"
-                      className="h-7 text-[10px] text-red-500 hover:text-red-700 hover:bg-red-50 px-2 uppercase tracking-widest font-normal inline-flex items-center justify-center rounded-lg border border-transparent shrink-0 transition-all select-none disabled:pointer-events-none disabled:opacity-50"
-                      onClick={handleDeleteTask}
-                      disabled={isDeleting}
-                    >
-                      <Trash2 className="w-3.5 h-3.5 mr-1" />
-                      {isDeleting ? "Deleting..." : "Delete Task"}
-                    </button>
-                  )}
-                </div>
-              </div>
+              </>
             ) : (
               <Button 
                 data-testid="task-create"
@@ -959,12 +948,11 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                 data-type="create"
                 onClick={handleCreateTask} 
                 disabled={isCreating || !stripHtml(description) || selectedClientIds.length === 0}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm mt-4 font-semibold"
+                className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm font-semibold"
               >
                 {isCreating ? "Creating..." : "Create Task"}
               </Button>
             )}
-
           </div>
         </div>
 
