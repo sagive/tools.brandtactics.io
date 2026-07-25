@@ -220,8 +220,8 @@ export default function GlobalTasksPage() {
           </Link>
 
           <Dialog>
-            <DialogTrigger render={<Button className="h-10 bg-blue-600 text-white hover:bg-blue-700 font-semibold px-4" />}>
-              <Plus className="w-4 h-4 mr-2" /> Full Task
+            <DialogTrigger render={<Button className="h-10 bg-blue-600 text-white hover:bg-blue-700 font-semibold px-4 new-task" data-action="new-task" />}>
+              <Plus className="w-4 h-4 mr-2" /> New Task
             </DialogTrigger>
             <EditTaskDialog onTaskCreated={fetchTasks} />
           </Dialog>
