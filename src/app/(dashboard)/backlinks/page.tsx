@@ -268,8 +268,18 @@ function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDele
                        <Plus className="w-3.5 h-3.5" /> Edit Source
                     </DropdownMenuItem>
                   }/>
-                  <DropdownMenuItem className="text-xs text-red-600 gap-2" onSelect={(e) => { e.preventDefault(); setShowDeleteConfirm(true); }}>
-                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                  <DropdownMenuItem className="text-xs text-red-600 gap-2">
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 cursor-pointer bg-transparent border-0 p-0 text-inherit text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log("[backlink-delete] button clicked");
+                        setShowDeleteConfirm(true);
+                      }}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Delete
+                    </button>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
