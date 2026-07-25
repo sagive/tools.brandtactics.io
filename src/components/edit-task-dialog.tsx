@@ -136,6 +136,13 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
     }
   }, [isEditing, defaultClientId, pathnameClientId]);
 
+  // Auto-set requester to current user for new tasks (if not already set by localStorage)
+  useEffect(() => {
+    if (!isEditing && profile && !requester) {
+      setRequester(profile.full_name || profile.email || "");
+    }
+  }, [isEditing, profile, requester]);
+
   // Save to localStorage whenever these change (only for new tasks)
   useEffect(() => {
     if (!isEditing) {
