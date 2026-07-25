@@ -736,6 +736,8 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
             <div className="hidden">
               <Label className="text-gray-600 text-[13px] font-medium">Task title <span className="text-red-500">*</span></Label>
               <Input 
+                data-name="task-title"
+                data-testid="task-title"
                 value={title} 
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Title (auto-generated)" 
