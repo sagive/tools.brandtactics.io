@@ -63,9 +63,11 @@ export default function BacklinksDashboard() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure? This will also remove client-specific data for this backlink.")) return;
-    const { error } = await supabase.from('backlinks').delete().eq('id', id);
+    console.log("[backlink-delete] deleting:", id);
+    const { data, error } = await supabase.from('backlinks').delete().eq('id', id).select();
+    console.log("[backlink-delete] response:", { data, error });
     if (error) {
+      console.error("[backlink-delete] error:", error);
       toast.error("Failed to delete backlink");
     } else {
       toast.success("Backlink deleted");
@@ -172,11 +174,37 @@ export default function BacklinksDashboard() {
 }
 
 function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDelete: (id: string) => void, onRefresh: () => void }) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const copyToClipboard = (text: string, type: string) => {
     if (!text) return;
     navigator.clipboard.writeText(text);
     toast.success(`${type} copied to clipboard`);
   };
+
+  if (showDeleteConfirm) {
+    return (
+      <Card className="relative overflow-hidden border-red-200 bg-red-50 h-14">
+        <div className="flex items-center h-full px-3 gap-2">
+          <Trash2 className="w-4 h-4 text-red-500 shrink-0" />
+          <span className="text-xs font-semibold text-red-700 flex-1 truncate">Delete &quot;{backlink.website_name}&quot;?</span>
+          <button
+            type="button"
+            className="h-6 px-2 text-[10px] font-bold uppercase rounded bg-red-600 text-white hover:bg-red-700 transition-colors shrink-0"
+            onClick={() => onDelete(backlink.id)}
+          >
+            Delete
+          </button>
+          <button
+            type="button"
+            className="h-6 px-2 text-[10px] font-medium uppercase rounded border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors shrink-0"
+            onClick={() => setShowDeleteConfirm(false)}
+          >
+            Cancel
+          </button>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="group relative overflow-hidden hover:shadow-md transition-all border-gray-200 bg-white hover:border-blue-200 h-14">
@@ -240,7 +268,7 @@ function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDele
                        <Plus className="w-3.5 h-3.5" /> Edit Source
                     </DropdownMenuItem>
                   }/>
-                  <DropdownMenuItem className="text-xs text-red-600 gap-2" onClick={(e) => { e.stopPropagation(); onDelete(backlink.id); }}>
+                  <DropdownMenuItem className="text-xs text-red-600 gap-2" onSelect={(e) => { e.preventDefault(); setShowDeleteConfirm(true); }}>
                     <Trash2 className="w-3.5 h-3.5" /> Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
