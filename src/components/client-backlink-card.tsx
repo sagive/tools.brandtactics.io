@@ -115,7 +115,7 @@ export function ClientBacklinkCard({
   };
 
   return (
-    <Card className={cn(
+    <Card data-name={backlink.website_name} data-id={backlink.id} className={cn(
       "group transition-all border-gray-200 bg-white overflow-hidden relative",
       isSelected ? "ring-2 ring-blue-500 border-blue-500 shadow-md" : (isUsed ? "border-blue-200 shadow-sm" : "opacity-75 grayscale-[0.5] hover:grayscale-0 hover:opacity-100")
     )}>
@@ -169,6 +169,7 @@ export function ClientBacklinkCard({
                 <div className="flex items-center gap-1.5 group/livelink">
                   {liveLink ? (
                     <a 
+                      data-type="url"
                       href={liveLink} 
                       target="_blank" 
                       rel="noopener noreferrer"
@@ -182,7 +183,7 @@ export function ClientBacklinkCard({
                   <button 
                     onClick={(e) => { e.stopPropagation(); setIsEditingLink(true); }}
                     className="p-0.5 hover:bg-blue-600 hover:text-white rounded transition-all text-blue-600"
-                    title={liveLink ? "Edit Live Link" : "Add Live Link"}
+                    title={liveLink ? "Edit client live link" : "Add client live link"}
                   >
                     <Link2 className="w-3.5 h-3.5" />
                   </button>
@@ -235,7 +236,7 @@ export function ClientBacklinkCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
                <h3 className="font-bold text-gray-900 text-sm truncate">{backlink.website_name}</h3>
-               <a href={backlink.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-600 transition-colors">
+               <a data-type="url" href={backlink.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-600 transition-colors">
                  <ExternalLink className="w-3 h-3" />
                </a>
                <button 

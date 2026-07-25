@@ -18,7 +18,6 @@ import {
   Search, 
   ArrowLeft,
   LayoutGrid,
-  SlidersHorizontal,
   User,
   Lock,
   Globe
@@ -207,10 +206,10 @@ function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDele
   }
 
   return (
-    <Card className="group relative overflow-hidden hover:shadow-md transition-all border-gray-200 bg-white hover:border-blue-200 h-14">
+    <Card data-name={backlink.website_name} data-id={backlink.id} className="group relative overflow-hidden hover:shadow-md transition-all border-gray-200 bg-white hover:border-blue-200 h-14">
       <div className="flex items-center h-full px-3 gap-3">
         {/* Main Link Overlay */}
-        <a href={backlink.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0" aria-label={`Open ${backlink.website_name}`}>
+        <a data-type="url" href={backlink.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0" aria-label={`Open ${backlink.website_name}`}>
           <span className="sr-only">Open {backlink.website_name}</span>
         </a>
 
@@ -258,8 +257,8 @@ function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDele
             <Dialog>
               <DropdownMenu>
                 <DropdownMenuTrigger render={
-                  <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-blue-600 bg-gray-50/50 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all">
-                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                  <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-blue-600 bg-gray-50/50 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all" title="Edit backlink settings">
+                    <Settings2 className="w-3.5 h-3.5" />
                   </Button>
                 }/>
                 <DropdownMenuContent align="end">

@@ -87,11 +87,13 @@ export function EditBacklinkDialog({ backlink, onBacklinkSaved }: { backlink?: a
       <div className="space-y-4 py-4">
         <div className="space-y-2">
           <Label>Website Name</Label>
-          <Input value={websiteName} onChange={(e) => setWebsiteName(e.target.value)} placeholder="e.g. Clutch.co" />
+          <Input data-type="website_name" data-value={websiteName} value={websiteName} onChange={(e) => setWebsiteName(e.target.value)} placeholder="e.g. Clutch.co" />
         </div>
         <div className="space-y-2">
           <Label>Website URL</Label>
           <Input 
+            data-type="url"
+            data-value={url}
             value={url} 
             onChange={(e) => {
               const newUrl = e.target.value;
@@ -112,7 +114,7 @@ export function EditBacklinkDialog({ backlink, onBacklinkSaved }: { backlink?: a
             <Label>Category</Label>
             {categories.length > 0 ? (
               <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger data-type="category" data-value={categoryId} className="w-full">
                   <SelectValue>
                     {categories.find(c => c.id === categoryId)?.name || "Select category"}
                   </SelectValue>
@@ -130,7 +132,7 @@ export function EditBacklinkDialog({ backlink, onBacklinkSaved }: { backlink?: a
           <div className="space-y-2">
             <Label>Rank</Label>
             <Select value={rank.toString()} onValueChange={(val) => setRank(parseInt(val))}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger data-type="rank" data-value={rank.toString()} className="w-full">
                 <SelectValue placeholder="Rank" />
               </SelectTrigger>
               <SelectContent>
@@ -150,14 +152,14 @@ export function EditBacklinkDialog({ backlink, onBacklinkSaved }: { backlink?: a
               Global User
               <span className="text-[10px] text-gray-400 font-normal">Optional</span>
             </Label>
-            <Input value={globalUsername} onChange={(e) => setGlobalUsername(e.target.value)} placeholder="Username" />
+            <Input data-type="global_username" data-value={globalUsername} value={globalUsername} onChange={(e) => setGlobalUsername(e.target.value)} placeholder="Username" />
           </div>
           <div className="space-y-2">
             <Label className="flex justify-between">
               Global Pass
               <span className="text-[10px] text-gray-400 font-normal">Optional</span>
             </Label>
-            <Input value={globalPassword} onChange={(e) => setGlobalPassword(e.target.value)} placeholder="Password" />
+            <Input data-type="global_password" data-value={globalPassword} value={globalPassword} onChange={(e) => setGlobalPassword(e.target.value)} placeholder="Password" />
           </div>
         </div>
       </div>
