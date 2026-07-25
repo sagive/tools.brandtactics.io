@@ -547,36 +547,6 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
           <DialogTitle className="text-xl font-bold">{isEditing ? "Edit Task" : "New Task"}</DialogTitle>
           <div className="flex items-center gap-4 text-sm text-gray-500">
              
-             {/* Templates Dropdown - moved to header */}
-             {taskTemplates.length > 0 && (
-               <DropdownMenu>
-                 <DropdownMenuTrigger className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-md border border-green-200 bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-300">
-                     <FileText className="w-3.5 h-3.5" />
-                     Templates
-                     <ChevronDownIcon className="w-3 h-3" />
-                 </DropdownMenuTrigger>
-                 <DropdownMenuContent align="end" className="w-72">
-                   <div className="px-2 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Inject Template</div>
-                   {taskTemplates.map(t => (
-                     <div
-                       key={t.id}
-                       onClick={(e) => {
-                         e.stopPropagation();
-                         const content = t.content || "";
-                         setIsEditingDesc(true);
-                         setDescription(content);
-                         toast.success(`Template "${t.name}" injected`);
-                       }}
-                       className="relative flex cursor-pointer items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none hover:bg-accent hover:text-accent-foreground"
-                     >
-                       <FileText className="w-3.5 h-3.5 shrink-0 text-green-500" />
-                       {t.name}
-                     </div>
-                   ))}
-                 </DropdownMenuContent>
-               </DropdownMenu>
-             )}
-
              {!isEditing && (
                <button 
                  onClick={handleResetFields} 
@@ -760,7 +730,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
           </div>
 
           {/* RIGHT COLUMN - Task text body + Comments */}
-          <div className="flex-1 p-6 space-y-6 min-w-0">
+          <div className="flex-1 p-6 flex flex-col min-w-0">
 
             {/* Title field hidden per user request - summary generated from description */}
             <div className="hidden">
@@ -773,10 +743,39 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
               />
             </div>
 
-            <div className="space-y-2 max-w-full">
-              <div className="flex items-center justify-between">
+            <div className="flex flex-col flex-1 min-h-0 max-w-full">
+              <div className="flex items-center justify-between mb-2">
                 <Label className="text-gray-900 font-bold text-lg">Task text <span className="text-red-500">*</span></Label>
                 <div className="flex items-center gap-2">
+                  {/* Templates Dropdown */}
+                  {taskTemplates.length > 0 && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-md border border-green-200 bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-300">
+                          <FileText className="w-3.5 h-3.5" />
+                          Templates
+                          <ChevronDownIcon className="w-3 h-3" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-72">
+                        <div className="px-2 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Inject Template</div>
+                        {taskTemplates.map(t => (
+                          <div
+                            key={t.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const content = t.content || "";
+                              setIsEditingDesc(true);
+                              setDescription(content);
+                              toast.success(`Template "${t.name}" injected`);
+                            }}
+                            className="relative flex cursor-pointer items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none hover:bg-accent hover:text-accent-foreground"
+                          >
+                            <FileText className="w-3.5 h-3.5 shrink-0 text-green-500" />
+                            {t.name}
+                          </div>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                   {isEditing && !isEditingDesc && (
                     <Button 
                       variant="ghost" 
@@ -791,7 +790,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
               </div>
               
               {isEditingDesc ? (
-                <div id="task-description-container" data-testid="task-description" data-name="task-description" data-type="description" className="border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[120px] [&_.ql-editor]:overflow-x-auto flex-1 min-w-0">
+                <div id="task-description-container" data-testid="task-description" data-name="task-description" data-type="description" className="border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 flex-1 min-h-0 flex flex-col [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-container]:flex-1 [&_.ql-editor]:min-h-0">
                    <ReactQuill 
                      theme="snow"
                      value={description}
@@ -802,7 +801,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                 </div>
               ) : (
                 <div 
-                  className="p-4 border rounded-md bg-gray-50/30 prose prose-sm max-w-none min-h-[120px] break-words
+                  className="p-4 border rounded-md bg-gray-50/30 prose prose-sm max-w-none flex-1 min-h-0 break-words
                     [&_a]:text-blue-600 [&_a]:underline [&_a]:underline-offset-4 [&_a]:font-medium hover:[&_a]:text-blue-800
                     [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4
                     [&_img]:max-w-full [&_img]:rounded-lg [&_img]:shadow-sm"
@@ -947,7 +946,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                 data-type="save"
                 onClick={handleUpdateTask} 
                 disabled={isUpdating || !title.trim() || isDeleting}
-                className="bg-[#4640A0] hover:bg-[#342e81] text-white shadow-sm font-semibold"
+                className="bg-[#4640A0] hover:bg-[#342e81] text-white shadow-sm font-semibold min-w-[320px] h-11 text-base"
               >
                 {isUpdating ? "Saving..." : "Save Changes"}
               </Button>
