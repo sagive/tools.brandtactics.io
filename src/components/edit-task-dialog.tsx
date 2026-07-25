@@ -545,8 +545,38 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <DialogTitle className="text-xl font-bold">{isEditing ? "Edit Task" : "New Task"}</DialogTitle>
-          <div className="flex items-center gap-6 text-sm text-gray-500">
+          <div className="flex items-center gap-4 text-sm text-gray-500">
              
+             {/* Templates Dropdown - moved to header */}
+             {taskTemplates.length > 0 && (
+               <DropdownMenu>
+                 <DropdownMenuTrigger className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-md border border-green-200 bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-300">
+                     <FileText className="w-3.5 h-3.5" />
+                     Templates
+                     <ChevronDownIcon className="w-3 h-3" />
+                 </DropdownMenuTrigger>
+                 <DropdownMenuContent align="end" className="w-72">
+                   <div className="px-2 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Inject Template</div>
+                   {taskTemplates.map(t => (
+                     <div
+                       key={t.id}
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         const content = t.content || "";
+                         setIsEditingDesc(true);
+                         setDescription(content);
+                         toast.success(`Template "${t.name}" injected`);
+                       }}
+                       className="relative flex cursor-pointer items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none hover:bg-accent hover:text-accent-foreground"
+                     >
+                       <FileText className="w-3.5 h-3.5 shrink-0 text-green-500" />
+                       {t.name}
+                     </div>
+                   ))}
+                 </DropdownMenuContent>
+               </DropdownMenu>
+             )}
+
              {!isEditing && (
                <button 
                  onClick={handleResetFields} 
@@ -556,8 +586,27 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                </button>
              )}
 
+             {/* Requested By - moved to header */}
+             <div className="flex items-center gap-2" data-testid="task-requester" data-name="task-requester" data-type="requester">
+               <Label className="text-gray-600 text-[13px] font-medium whitespace-nowrap">Requested by</Label>
+               <select
+                 value={requester}
+                 onChange={(e) => { const val = e.target.value; setRequester(val); updateField("requester", val); }}
+                 className="h-8 py-1 px-2 bg-transparent border border-gray-200 hover:border-gray-300 rounded-md shadow-none font-medium text-gray-900 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                 data-name="task-requester"
+                 data-type="requester"
+               >
+                 <option value="">Pick User</option>
+                 {users.map(u => (
+                   <option key={u.id} value={u.full_name || u.email} data-name={u.full_name || u.email}>
+                     {u.full_name || u.email}
+                   </option>
+                 ))}
+               </select>
+             </div>
+
              {/* Date Picker */}
-             <div className="flex items-center gap-2 text-gray-500" data-testid="task-due-date" data-name="task-due-date">
+             <div className="flex items-center gap-2 text-gray-500" data-testid="task-due-date" data-name="task-due-date" data-type="due_date">
                <span className="font-medium whitespace-nowrap">Due:</span>
                <input
                  type="date"
@@ -568,6 +617,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                  }}
                  className="h-8 py-1 px-3 bg-transparent border border-transparent hover:border-gray-300 hover:bg-gray-50 shadow-none font-medium text-gray-900 w-auto min-w-[130px] rounded-md text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
                  data-name="task-due-date"
+                 data-type="due_date"
                />
              </div>
              
@@ -612,38 +662,41 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
               />
             </div>
 
+            {/* Clients multi-select - for new tasks */}
+            {!isEditing && (
+              <div className="space-y-2" data-testid="task-client" data-name="task-client" data-type="clients">
+                <Label className="text-gray-900 font-bold text-base">Assign to clients <span className="text-red-500">*</span></Label>
+                <select
+                  multiple
+                  size={Math.min(clients.length, 5)}
+                  value={selectedClientIds}
+                  onMouseDown={(e) => {
+                    const target = e.target as HTMLElement;
+                    if (target.tagName !== 'OPTION') return;
+                    e.preventDefault();
+                    (target as HTMLOptionElement).selected = !(target as HTMLOptionElement).selected;
+                  }}
+                  onChange={(e) => {
+                    setSelectedClientIds(Array.from(e.currentTarget.selectedOptions, o => o.value));
+                  }}
+                  className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
+                  data-name="task-client"
+                  data-type="clients"
+                >
+                  {clients.map(c => (
+                    <option key={c.id} value={c.id} data-name={c.name}>{c.name}</option>
+                  ))}
+                </select>
+                {selectedClientIds.length > 0 && (
+                  <p className="text-[11px] text-gray-400 mt-0.5">{selectedClientIds.length} client(s) selected</p>
+                )}
+              </div>
+            )}
+
             <div className="space-y-2 max-w-full">
               <div className="flex items-center justify-between">
-                <Label className="text-gray-900 font-bold text-lg">Description <span className="text-red-500">*</span></Label>
+                <Label className="text-gray-900 font-bold text-lg">Task text <span className="text-red-500">*</span></Label>
                 <div className="flex items-center gap-2">
-                  {taskTemplates.length > 0 && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-md border border-green-200 bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-300">
-                          <FileText className="w-3.5 h-3.5" />
-                          Templates
-                          <ChevronDownIcon className="w-3 h-3" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-72">
-                        <div className="px-2 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Inject Template</div>
-                        {taskTemplates.map(t => (
-                          <div
-                            key={t.id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const content = t.content || "";
-                              setIsEditingDesc(true);
-                              setDescription(content);
-                              toast.success(`Template "${t.name}" injected`);
-                            }}
-                            className="relative flex cursor-pointer items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none hover:bg-accent hover:text-accent-foreground"
-                          >
-                            <FileText className="w-3.5 h-3.5 shrink-0 text-green-500" />
-                            {t.name}
-                          </div>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
                   {isEditing && !isEditingDesc && (
                     <Button 
                       variant="ghost" 
@@ -658,7 +711,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
               </div>
               
               {isEditingDesc ? (
-                <div id="task-description-container" data-testid="task-description" data-name="task-description" className="border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[120px] [&_.ql-editor]:overflow-x-auto flex-1 min-w-0">
+                <div id="task-description-container" data-testid="task-description" data-name="task-description" data-type="description" className="border rounded-md bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[120px] [&_.ql-editor]:overflow-x-auto flex-1 min-w-0">
                    <ReactQuill 
                      theme="snow"
                      value={description}
@@ -680,7 +733,83 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
               )}
             </div>
 
-            <div className="space-y-4 pt-2">
+            {/* Status + Priority */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2" data-testid="task-status" data-name="task-status" data-type="status">
+                <Label className="text-gray-900 font-bold text-base">Task status</Label>
+                <select
+                  value={status}
+                  onChange={(e) => { const val = e.target.value; setStatus(val); updateField("status", val); }}
+                  className="w-full h-10 rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
+                  data-name="task-status"
+                  data-type="status"
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="Working on it">Working on it</option>
+                  <option value="Review">Review</option>
+                  <option value="Stuck">Stuck</option>
+                  <option value="Update Ready">Update Ready</option>
+                  <option value="Completed">Completed</option>
+                </select>
+              </div>
+
+              <div className="space-y-2" data-testid="task-priority" data-name="task-priority" data-type="priority">
+                <Label className="text-gray-900 font-bold text-base">Task Priority</Label>
+                <select
+                  value={priority}
+                  onChange={(e) => { const val = e.target.value; setPriority(val); updateField("priority", val); }}
+                  className="w-full h-10 rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
+                  data-name="task-priority"
+                  data-type="priority"
+                >
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Assigned to */}
+            <div className="space-y-2" data-testid="task-assignee" data-name="task-assignee" data-type="assignee">
+              <Label className="text-gray-900 font-bold text-base">Assigned to</Label>
+              <select
+                multiple
+                size={Math.min(users.length, 5)}
+                value={isEditing ? (assignee ? [assignee] : []) : assignees}
+                onMouseDown={(e) => {
+                  const target = e.target as HTMLElement;
+                  if (target.tagName !== 'OPTION') return;
+                  e.preventDefault();
+                  (target as HTMLOptionElement).selected = !(target as HTMLOptionElement).selected;
+                }}
+                onChange={(e) => {
+                  const selected = Array.from(e.currentTarget.selectedOptions, o => o.value);
+                  if (isEditing) {
+                    const newVal = selected.length > 0 ? selected[selected.length - 1] : "";
+                    setAssignee(newVal);
+                    updateField("assignee", newVal);
+                  } else {
+                    setAssignees(selected);
+                  }
+                }}
+                className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
+                data-name="task-assignee"
+                data-type="assignee"
+              >
+                {users.map(u => (
+                  <option key={u.id} value={u.full_name || u.email} data-name={u.full_name || u.email}>
+                    {u.full_name || u.email}
+                  </option>
+                ))}
+              </select>
+              {!isEditing && assignees.length > 0 && (
+                <p className="text-[11px] text-gray-400 mt-0.5">{assignees.length} person(s) selected</p>
+              )}
+            </div>
+
+            {/* Comments - only when editing an existing task */}
+            {isEditing && (
+            <div className="space-y-4 pt-2 border-t border-gray-100">
               <Label className="text-gray-900 font-bold text-base">Comments</Label>
               <div className="space-y-6">
                 
@@ -740,7 +869,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
               <div className="flex gap-3 pt-6 border-t border-gray-100 mt-6 relative pb-10">
                 <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0 mt-1">ME</div>
                 <div className="relative flex-1 flex flex-col items-start">
-                  <div data-testid="task-comment-input" className="w-full border border-gray-200 rounded-md bg-white focus-within:ring-1 focus-within:ring-[#4640A0] focus-within:border-[#4640A0] [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[80px]">
+                  <div data-testid="task-comment-input" data-name="task-comment-input" data-type="comment" className="w-full border border-gray-200 rounded-md bg-white focus-within:ring-1 focus-within:ring-[#4640A0] focus-within:border-[#4640A0] [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[80px]">
                      <ReactQuill 
                        theme="snow"
                        value={newComment}
@@ -751,6 +880,8 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                   </div>
                   <Button 
                     data-testid="task-comment-submit"
+                    data-name="task-comment-submit"
+                    data-type="comment-submit"
                     size="sm" 
                     variant="secondary"
                     className="mt-3 px-5"
@@ -762,135 +893,18 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                 </div>
               </div>
             </div>
+            )}
 
           </div>
 
-          {/* Right Column Component */}
+          {/* Right Column Component - Actions only */}
           <div className="w-full md:w-80 shrink-0 bg-gray-50/30 p-6 space-y-6 flex flex-col">
-            
-            {!isEditing && (
-              <div className="space-y-2" data-testid="task-client">
-                <Label className="text-gray-600 text-[13px] font-medium">Clients <span className="text-red-500">*</span></Label>
-                <select
-                  multiple
-                  size={Math.min(clients.length, 5)}
-                  value={selectedClientIds}
-                  onMouseDown={(e) => {
-                    const target = e.target as HTMLElement;
-                    if (target.tagName !== 'OPTION') return;
-                    e.preventDefault();
-                    (target as HTMLOptionElement).selected = !(target as HTMLOptionElement).selected;
-                  }}
-                  onChange={(e) => {
-                    setSelectedClientIds(Array.from(e.currentTarget.selectedOptions, o => o.value));
-                  }}
-                  className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
-                  data-name="task-client"
-                >
-                  {clients.map(c => (
-                    <option key={c.id} value={c.id} data-name={c.name}>{c.name}</option>
-                  ))}
-                </select>
-                {selectedClientIds.length > 0 && (
-                  <p className="text-[11px] text-gray-400 mt-0.5">{selectedClientIds.length} client(s) selected</p>
-                )}
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2" data-testid="task-status">
-                <Label className="text-gray-600 text-[13px] font-medium">Status</Label>
-                <select
-                  value={status}
-                  onChange={(e) => { const val = e.target.value; setStatus(val); updateField("status", val); }}
-                  className="w-full h-10 rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
-                  data-name="task-status"
-                >
-                  <option value="Pending">Pending</option>
-                  <option value="Working on it">Working on it</option>
-                  <option value="Review">Review</option>
-                  <option value="Stuck">Stuck</option>
-                  <option value="Update Ready">Update Ready</option>
-                  <option value="Completed">Completed</option>
-                </select>
-              </div>
-
-              <div className="space-y-2" data-testid="task-priority">
-                <Label className="text-gray-600 text-[13px] font-medium">Priority</Label>
-                <select
-                  value={priority}
-                  onChange={(e) => { const val = e.target.value; setPriority(val); updateField("priority", val); }}
-                  className="w-full h-10 rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
-                  data-name="task-priority"
-                >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2" data-testid="task-requester">
-                <Label className="text-gray-600 text-[13px] font-medium">Requester</Label>
-                <select
-                  value={requester}
-                  onChange={(e) => { const val = e.target.value; setRequester(val); updateField("requester", val); }}
-                  className="w-full h-10 rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
-                  data-name="task-requester"
-                >
-                  <option value="">Pick User</option>
-                  {users.map(u => (
-                    <option key={u.id} value={u.full_name || u.email} data-name={u.full_name || u.email}>
-                      {u.full_name || u.email}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2" data-testid="task-assignee">
-                <Label className="text-gray-600 text-[13px] font-medium">Assigned to</Label>
-                <select
-                  multiple
-                  size={Math.min(users.length, 5)}
-                  value={isEditing ? (assignee ? [assignee] : []) : assignees}
-                  onMouseDown={(e) => {
-                    const target = e.target as HTMLElement;
-                    if (target.tagName !== 'OPTION') return;
-                    e.preventDefault();
-                    (target as HTMLOptionElement).selected = !(target as HTMLOptionElement).selected;
-                  }}
-                  onChange={(e) => {
-                    const selected = Array.from(e.currentTarget.selectedOptions, o => o.value);
-                    if (isEditing) {
-                      const newVal = selected.length > 0 ? selected[selected.length - 1] : "";
-                      setAssignee(newVal);
-                      updateField("assignee", newVal);
-                    } else {
-                      setAssignees(selected);
-                    }
-                  }}
-                  className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring"
-                  data-name="task-assignee"
-                >
-                  {users.map(u => (
-                    <option key={u.id} value={u.full_name || u.email} data-name={u.full_name || u.email}>
-                      {u.full_name || u.email}
-                    </option>
-                  ))}
-                </select>
-                {!isEditing && assignees.length > 0 && (
-                  <p className="text-[11px] text-gray-400 mt-0.5">{assignees.length} person(s) selected</p>
-                )}
-              </div>
-            </div>
-
-            <hr className="border-gray-200 mt-6" />
             
             {isEditing ? (
               <div className="flex flex-col flex-1 mt-2">
                 <Button 
                   data-name="task-save"
+                  data-type="save"
                   onClick={handleUpdateTask} 
                   disabled={isUpdating || !title.trim() || isDeleting}
                   className="w-full bg-[#4640A0] hover:bg-[#342e81] text-white shadow-sm font-semibold mb-2"
@@ -927,6 +941,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                     <button
                       type="button"
                       data-name="task-delete"
+                      data-type="delete"
                       className="h-7 text-[10px] text-red-500 hover:text-red-700 hover:bg-red-50 px-2 uppercase tracking-widest font-normal inline-flex items-center justify-center rounded-lg border border-transparent shrink-0 transition-all select-none disabled:pointer-events-none disabled:opacity-50"
                       onClick={handleDeleteTask}
                       disabled={isDeleting}
@@ -941,6 +956,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
               <Button 
                 data-testid="task-create"
                 data-name="task-create"
+                data-type="create"
                 onClick={handleCreateTask} 
                 disabled={isCreating || !stripHtml(description) || selectedClientIds.length === 0}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm mt-4 font-semibold"
