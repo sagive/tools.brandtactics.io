@@ -6,8 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Trash2, Zap, Languages } from "lucide-react";
-import Link from "next/link";
+import { Search, Plus, Trash2, Languages } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -212,13 +211,6 @@ export default function GlobalTasksPage() {
             </Button>
           </div>
           
-          <Link href="/tasks/quick">
-            <Button variant="default" className="h-10 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4">
-              <Zap className="w-4 h-4 mr-2" />
-              Quick Add
-            </Button>
-          </Link>
-
           <Dialog>
             <DialogTrigger render={<Button className="h-10 bg-blue-600 text-white hover:bg-blue-700 font-semibold px-4 new-task" data-action="new-task" />}>
               <Plus className="w-4 h-4 mr-2" /> New Task
