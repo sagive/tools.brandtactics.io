@@ -34,6 +34,8 @@ function SortableSocialItem({
   onEdit: () => void; 
   onRemove: () => void; 
 }) {
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+
   const {
     attributes,
     listeners,
@@ -52,45 +54,68 @@ function SortableSocialItem({
 
   const getFaviconUrl = (url: string) => {
     try {
-      const hostname = new URL(url).hostname;
+      const hostname = new URL(url.startsWith("http") ? url : `https://${url}`).hostname;
       return `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`;
     } catch {
       return null;
     }
   };
 
+  const getWebsiteBaseUrl = (url: string) => {
+    if (!url) return "";
+    try {
+      const rawUrl = url.trim();
+      const formattedUrl = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
+      const parsed = new URL(formattedUrl);
+      return parsed.hostname.replace(/^www\./, "");
+    } catch {
+      return url;
+    }
+  };
+
   const favicon = getFaviconUrl(social.url);
+  const websiteBase = getWebsiteBaseUrl(social.url);
 
   return (
     <div 
       ref={setNodeRef} 
       style={style} 
+      data-website={websiteBase}
+      data-user={social.username || ""}
+      data-pass={social.password || ""}
+      data-id={social.id}
       className={cn(
         "group flex items-center justify-between p-3 rounded-md border border-transparent hover:border-gray-200 transition-colors",
         index % 2 === 1 ? "bg-gray-50/50" : "bg-white",
         isDragging && "opacity-80 border-gray-300"
       )}
     >
-      <div className="flex items-center gap-3 min-w-0">
-        <div {...attributes} {...listeners} className="cursor-grab text-gray-400 hover:text-gray-600">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div {...attributes} {...listeners} className="cursor-grab text-gray-400 hover:text-gray-600 shrink-0">
           <GripVertical className="w-4 h-4" />
         </div>
-        <div className="w-8 h-8 rounded bg-gray-100 flexitems-center justify-center text-gray-500 overflow-hidden flex shrink-0 items-center">
+        <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-gray-500 overflow-hidden flex shrink-0">
             {favicon ? (
                <img src={favicon} alt="" className="w-full h-full object-contain p-1" />
             ) : (
                <Globe className="w-4 h-4" />
             )}
         </div>
-        <div className="truncate pr-4 flex-1">
+        <div className="truncate pr-4 flex-1 flex items-center gap-2 min-w-0">
           <a
-            href={social.url}
+            href={social.url.startsWith("http") ? social.url : `https://${social.url}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm font-semibold text-gray-900 hover:text-blue-600 truncate transition-colors block w-full outline-none"
+            className="text-sm font-semibold text-gray-900 hover:text-blue-600 truncate transition-colors block outline-none"
           >
             {social.title || social.url}
           </a>
+          <input 
+            type="hidden" 
+            data-website={websiteBase} 
+            value={social.url} 
+            readOnly 
+          />
         </div>
       </div>
       
@@ -98,39 +123,93 @@ function SortableSocialItem({
         {(social.username || social.password) && (
           <div className="flex items-center gap-1.5 mr-2">
             {social.username && (
-              <div 
-                className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white border border-gray-200 text-[11px] text-gray-600 font-medium cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => {
-                  navigator.clipboard.writeText(social.username || "");
-                  toast.success("Username copied");
-                }}
-                title="Click to copy"
-              >
-                <User className="w-3 h-3 text-gray-400" />
-                <span className="truncate max-w-[100px]">{social.username}</span>
+              <div className="relative flex items-center">
+                <User className="absolute left-2 w-3 h-3 text-gray-400 pointer-events-none z-10" />
+                <Input
+                  type="text"
+                  readOnly
+                  disabled
+                  value={social.username}
+                  data-user={social.username}
+                  className="h-7 text-[11px] pl-6 pr-2 w-[120px] bg-white border-gray-200 font-medium text-gray-700 cursor-pointer select-all truncate focus-visible:ring-0 disabled:opacity-100 disabled:cursor-pointer"
+                  onClick={(e) => {
+                    (e.target as HTMLInputElement).select();
+                    navigator.clipboard.writeText(social.username || "");
+                    toast.success("Username copied");
+                  }}
+                  title="Click to copy username"
+                />
               </div>
             )}
             {social.password && (
-              <div 
-                className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white border border-gray-200 text-[11px] text-gray-600 font-medium cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => {
-                  navigator.clipboard.writeText(social.password || "");
-                  toast.success("Password copied");
-                }}
-                title="Click to copy password"
-              >
-                <Lock className="w-3 h-3 text-gray-400" />
-                <span className="truncate max-w-[100px]">{social.password}</span>
+              <div className="relative flex items-center">
+                <Lock className="absolute left-2 w-3 h-3 text-gray-400 pointer-events-none z-10" />
+                <Input
+                  type="text"
+                  readOnly
+                  disabled
+                  value={social.password}
+                  data-pass={social.password}
+                  className="h-7 text-[11px] pl-6 pr-2 w-[110px] bg-white border-gray-200 font-medium text-gray-700 cursor-pointer select-all truncate focus-visible:ring-0 disabled:opacity-100 disabled:cursor-pointer"
+                  onClick={(e) => {
+                    (e.target as HTMLInputElement).select();
+                    navigator.clipboard.writeText(social.password || "");
+                    toast.success("Password copied");
+                  }}
+                  title="Click to copy password"
+                />
               </div>
             )}
           </div>
         )}
-        <Button variant="ghost" size="icon" onClick={onEdit} className="h-7 w-7 text-gray-400 hover:text-gray-900 hover:bg-gray-200">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={onEdit} 
+          data-type="edit-account"
+          data-action="edit"
+          className="h-7 w-7 text-gray-400 hover:text-gray-900 hover:bg-gray-200"
+          title="Edit account"
+        >
           <Pencil className="w-3.5 h-3.5" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={onRemove} className="h-7 w-7 text-gray-400 hover:text-red-600 hover:bg-red-50">
-          <Trash2 className="w-3.5 h-3.5" />
-        </Button>
+        {isConfirmingDelete ? (
+          <div className="flex items-center gap-1">
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={() => {
+                setIsConfirmingDelete(false);
+                onRemove();
+              }}
+              data-type="delete-account"
+              data-action="confirm-delete"
+              className="h-7 px-2.5 text-[10px] font-bold uppercase tracking-wider bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+            >
+              Confirm to delete
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setIsConfirmingDelete(false)} 
+              className="h-7 px-2 text-[10px] text-gray-500 hover:bg-gray-100 rounded"
+            >
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setIsConfirmingDelete(true)} 
+            data-type="delete-account"
+            data-action="delete"
+            className="h-7 w-7 text-gray-400 hover:text-red-600 hover:bg-red-50"
+            title="Delete account"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </Button>
+        )}
       </div>
     </div>
   );
