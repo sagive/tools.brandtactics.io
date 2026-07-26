@@ -20,6 +20,8 @@ interface SocialLink {
   url: string;
   username?: string;
   password?: string;
+  two_fa?: string;
+  rank?: number;
 }
 
 // Separate Sortable Item component because hooks must be at top level
@@ -83,6 +85,7 @@ function SortableSocialItem({
       data-website={websiteBase}
       data-user={social.username || ""}
       data-pass={social.password || ""}
+      data-2fa={social.two_fa || ""}
       data-id={social.id}
       className={cn(
         "group flex items-center justify-between p-3 rounded-md border border-transparent hover:border-gray-200 transition-colors",
@@ -114,6 +117,12 @@ function SortableSocialItem({
             type="hidden" 
             data-website={websiteBase} 
             value={social.url} 
+            readOnly 
+          />
+          <input 
+            type="hidden" 
+            data-2fa={social.two_fa || ""} 
+            value={social.two_fa || ""} 
             readOnly 
           />
         </div>
@@ -226,11 +235,13 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
     url: string;
     username?: string;
     password?: string;
+    two_fa?: string;
   }>({
     title: "",
     url: "",
     username: "",
-    password: ""
+    password: "",
+    two_fa: ""
   });
 
   const sensors = useSensors(
@@ -244,12 +255,13 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
 
   async function fetchSocials() {
     setIsLoading(true);
-    // They used 'resource' as the type for social accounts previously
+    // Fetch socials ordered by rank first, then created_at
     const { data, error } = await supabase
       .from("client_links")
       .select("*")
       .eq("client_id", clientId)
       .eq("type", "resource")
+      .order("rank", { ascending: true })
       .order("created_at", { ascending: true });
     
     if (error) {
@@ -265,7 +277,7 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
 
   const handleOpenAdd = () => {
     setIsEditing(null);
-    setFormData({ title: "", url: "", username: "", password: "" });
+    setFormData({ title: "", url: "", username: "", password: "", two_fa: "" });
     setIsDialogOpen(true);
   };
 
@@ -275,7 +287,8 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
       title: social.title,
       url: social.url,
       username: social.username || "",
-      password: social.password || ""
+      password: social.password || "",
+      two_fa: social.two_fa || ""
     });
     setIsDialogOpen(true);
   };
@@ -298,7 +311,8 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
           title: formData.title || valUrl,
           url: valUrl,
           username: formData.username,
-          password: formData.password
+          password: formData.password,
+          two_fa: formData.two_fa
         })
         .eq("id", isEditing.id);
 
@@ -317,7 +331,9 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
           title: formData.title || valUrl,
           url: valUrl,
           username: formData.username,
-          password: formData.password
+          password: formData.password,
+          two_fa: formData.two_fa,
+          rank: socials.length
         });
 
       if (error) {
@@ -354,9 +370,22 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
         const oldIndex = items.findIndex(item => item.id === active.id);
         const newIndex = items.findIndex(item => item.id === over.id);
         const newItems = arrayMove(items, oldIndex, newIndex);
+
+        // Save new ranks to DB async
+        const updates = newItems.map((item, index) => ({
+          ...item,
+          rank: index
+        }));
+
+        supabase.from("client_links").upsert(updates).then(({ error }) => {
+          if (error) {
+            console.error("Failed to save ranks", error);
+            toast.error("Failed to save reordered socials");
+          }
+        });
+        
         return newItems;
       });
-      // Not saving order to DB because client_links lacks order_index, but we maintain UX visually
     }
   };
 
@@ -396,14 +425,14 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
                   className="font-medium"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Username</label>
                   <Input 
                     value={formData.username || ''} 
                     onChange={(e) => setFormData({...formData, username: e.target.value})} 
                     placeholder="Optional" 
-                    className="font-medium"
+                    className="font-medium text-xs"
                   />
                 </div>
                 <div className="space-y-2">
@@ -412,7 +441,16 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
                     value={formData.password || ''} 
                     onChange={(e) => setFormData({...formData, password: e.target.value})} 
                     placeholder="Optional" 
-                    className="font-medium"
+                    className="font-medium text-xs"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">2FA Password</label>
+                  <Input 
+                    value={formData.two_fa || ''} 
+                    onChange={(e) => setFormData({...formData, two_fa: e.target.value})} 
+                    placeholder="Optional" 
+                    className="font-medium text-xs"
                   />
                 </div>
               </div>
