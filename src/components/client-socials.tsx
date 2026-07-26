@@ -496,6 +496,10 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
             </div>
           </DndContext>
         )}
+        <hr className="mt-4 mb-2.5 border-gray-100" />
+        <p className="text-[11px] text-gray-400 font-normal leading-relaxed">
+          Please note: to have automated tasks work, you need to create a hotmail account with an app password saved under 2fa.
+        </p>
       </CardContent>
     </Card>
   );
