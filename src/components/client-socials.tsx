@@ -501,42 +501,42 @@ export default function ClientSocials({ clientId }: { clientId: string }) {
         <p className="text-[11px] text-gray-400 font-normal leading-relaxed">
           Please note: to have automated tasks work, you need to create a hotmail account with an app password saved under 2fa.{" "}
           <Popover>
-            <PopoverTrigger className="text-blue-600 hover:text-blue-800 underline font-medium cursor-pointer inline-flex items-center gap-0.5">
-              Learn more <ExternalLink className="w-3 h-3 inline" />
+            <PopoverTrigger className="text-gray-500 hover:text-gray-700 underline font-medium cursor-pointer">
+              Learn more
             </PopoverTrigger>
             <PopoverContent align="start" side="top" className="w-[360px] sm:w-[420px] p-4 text-xs shadow-xl border border-gray-200 bg-white rounded-lg z-50">
               <div className="space-y-3">
                 <div className="flex items-center justify-between border-b pb-2">
-                  <h4 className="font-bold text-gray-900 text-xs flex items-center gap-1.5 uppercase tracking-wide">
-                    🔑 Hotmail 2FA & App Password Setup
+                  <h4 className="font-bold text-gray-900 text-xs uppercase tracking-wide">
+                    Hotmail 2FA & App Password Setup
                   </h4>
                 </div>
 
-                <div className="p-2.5 bg-slate-50 rounded-md border border-slate-200/80 space-y-2">
+                <div className="p-2.5 bg-gray-50 rounded-md border border-gray-200/80 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-gray-500 font-bold uppercase">Recovery Email</span>
                     <button 
                       type="button"
-                      className="text-[11px] text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 cursor-pointer"
+                      className="text-[11px] text-gray-700 hover:text-gray-900 font-medium flex items-center gap-1 cursor-pointer"
                       onClick={() => {
                         navigator.clipboard.writeText("growth@brandtactics.io");
                         toast.success("Recovery email copied");
                       }}
                     >
                       growth@brandtactics.io
-                      <Copy className="w-3 h-3" />
+                      <Copy className="w-3 h-3 text-gray-400" />
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between pt-1.5 border-t border-slate-200/60">
+                  <div className="flex items-center justify-between pt-1.5 border-t border-gray-200/60">
                     <span className="text-[10px] text-gray-500 font-bold uppercase">Direct Link</span>
                     <a 
                       href="https://account.live.com/proofs/manage/additional" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-[11px] text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center gap-1 hover:underline"
+                      className="text-[11px] text-gray-700 hover:text-gray-900 font-semibold hover:underline"
                     >
-                      Visit Security Page <ExternalLink className="w-3 h-3" />
+                      Visit Security Page
                     </a>
                   </div>
                 </div>
