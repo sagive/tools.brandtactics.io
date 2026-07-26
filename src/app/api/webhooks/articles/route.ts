@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { generateSeoMeta } from '@/lib/seo';
+import { uploadAndReplaceBase64Images } from '@/lib/article-image-upload';
 
 /**
  * Webhook for external article submissions (e.g., from n8n)
@@ -110,13 +111,16 @@ export async function POST(request: Request) {
       }
     }
 
+    // Process any base64 images into Supabase storage URLs
+    const cleanContent = await uploadAndReplaceBase64Images(content, clientId);
+
     // 6. Insert into Database
     const { data, error } = await supabaseAdmin
       .from('articles')
       .insert({
         client_id: clientId,
         title,
-        content,
+        content: cleanContent,
         type,
         direction,
         length: wordCount,

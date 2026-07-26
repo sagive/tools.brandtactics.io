@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Script from "next/script";
+import { uploadAndReplaceBase64Images } from "@/lib/article-image-upload";
 const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
 export default function ArticleDetail({ params }: { params: Promise<{ id: string, articleId: string }> }) {
@@ -299,6 +300,8 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
     }
 
     try {
+      const cleanContent = await uploadAndReplaceBase64Images(content, clientId);
+
       const { error } = await supabase.from('articles').update({
         title,
         live_url: liveUrl,
@@ -306,7 +309,7 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
         links_count: parseInt(linksCount) || 0,
         type,
         length: wordCount,
-        content,
+        content: cleanContent,
         status,
         direction,
         client_approved: isApproved,
@@ -428,6 +431,9 @@ export default function ArticleDetail({ params }: { params: Promise<{ id: string
                           cleanHTML: {
                             denyTags: false
                           },
+                          askBeforePasteHTML: false,
+                          askBeforePasteFromWord: false,
+                          processPasteHTML: true,
                           uploader: {
                             insertImageAsBase64URI: false,
                             url: `/api/articles/upload?clientId=${clientId}`,
