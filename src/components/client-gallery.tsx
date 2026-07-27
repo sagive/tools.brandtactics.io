@@ -62,10 +62,13 @@ export default function ClientGallery({ clientId }: { clientId: string }) {
     const filePath = `${clientId}/${fileName}`;
 
     try {
-      // 1. Upload to Storage
+      // 1. Upload to Storage with explicit Content-Type header so Chrome retains file extensions
       const { error: uploadError } = await supabase.storage
         .from("client-assets")
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          contentType: file.type || 'image/png',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 

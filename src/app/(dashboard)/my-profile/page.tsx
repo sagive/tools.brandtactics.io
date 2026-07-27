@@ -99,7 +99,10 @@ export default function MyProfilePage() {
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          contentType: file.type || 'image/png',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
