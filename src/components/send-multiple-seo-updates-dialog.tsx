@@ -14,6 +14,7 @@ import { useAuth } from "@/components/auth-provider";
 import { logActivity } from "@/lib/activity-logger";
 import { cn } from "@/lib/utils";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { processAndUploadEmailImages } from "@/lib/email-image-upload";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 
@@ -160,6 +161,10 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
         // A simple naive replacement since Quill wraps everything in <p>
         if (finalBody.includes("<p>[content]</p>")) {
            finalBody = baseBody.replace("<p>[content]</p>", variant.content);
+        }
+
+        if (finalBody.includes("data:image/")) {
+          finalBody = await processAndUploadEmailImages(finalBody, clientId);
         }
 
         const res = await fetch("/api/send-email", {

@@ -14,6 +14,7 @@ import { useAuth } from "@/components/auth-provider";
 import { logActivity } from "@/lib/activity-logger";
 import { cn } from "@/lib/utils";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { processAndUploadEmailImages } from "@/lib/email-image-upload";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 
@@ -118,13 +119,25 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token || '';
 
+      let finalBody = body;
+      if (body.includes("data:image/")) {
+        const toastId = toast.loading("Compressing & uploading image...");
+        try {
+          finalBody = await processAndUploadEmailImages(body, clientId);
+          toast.dismiss(toastId);
+        } catch (err) {
+          toast.dismiss(toastId);
+          console.error("Image processing error:", err);
+        }
+      }
+
       const res = await fetch("/api/send-email", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}` 
         },
-        body: JSON.stringify({ clientId, subject, body, scheduledFor }),
+        body: JSON.stringify({ clientId, subject, body: finalBody, scheduledFor }),
       });
       
       const data = await res.json();
