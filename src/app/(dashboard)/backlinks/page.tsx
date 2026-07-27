@@ -137,7 +137,7 @@ export default function BacklinksDashboard() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="h-40 rounded-xl bg-gray-100 animate-pulse" />
           ))}
@@ -158,7 +158,7 @@ export default function BacklinksDashboard() {
                      </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {categoryBacklinks.map((backlink) => (
                       <BacklinkCard key={backlink.id} backlink={backlink} onDelete={handleDelete} onRefresh={fetchData} />
                     ))}
@@ -206,10 +206,20 @@ function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDele
   }
 
   return (
-    <Card data-name={backlink.website_name} data-id={backlink.id} className="group relative overflow-hidden hover:shadow-md transition-all border-gray-200 bg-white hover:border-blue-200 h-14">
+    <Card 
+      data-type="backlink" 
+      data-url={backlink.url}
+      data-name={backlink.website_name}
+      data-id={backlink.id}
+      data-category={backlink.backlink_categories?.name || backlink.category_id || ''}
+      data-rank={backlink.rank}
+      data-username={backlink.global_username || ''}
+      data-password={backlink.global_password || ''}
+      className="group relative overflow-hidden hover:shadow-md transition-all border-gray-200 bg-white hover:border-blue-200 h-14"
+    >
       <div className="flex items-center h-full px-3 gap-3">
         {/* Main Link Overlay */}
-        <a data-type="url" href={backlink.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0" aria-label={`Open ${backlink.website_name}`}>
+        <a data-type="url" data-url={backlink.url} href={backlink.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0" aria-label={`Open ${backlink.website_name}`}>
           <span className="sr-only">Open {backlink.website_name}</span>
         </a>
 
@@ -219,7 +229,7 @@ function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDele
         </div>
         
         {/* Name & URL */}
-        <div className="flex-1 min-w-0 relative z-10 pointer-events-none">
+        <div className="flex-1 min-w-[120px] relative z-10 pointer-events-none">
           <h3 className="font-bold text-gray-900 text-xs truncate leading-tight group-hover:text-blue-600 transition-colors uppercase">{backlink.website_name}</h3>
           <div className="text-[9px] text-gray-400 truncate leading-tight">
             {backlink.url.replace(/^https?:\/\//, '')}

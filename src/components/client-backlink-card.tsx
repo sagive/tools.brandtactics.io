@@ -115,10 +115,24 @@ export function ClientBacklinkCard({
   };
 
   return (
-    <Card data-name={backlink.website_name} data-id={backlink.id} className={cn(
-      "group transition-all border-gray-200 bg-white overflow-hidden relative",
-      isSelected ? "ring-2 ring-blue-500 border-blue-500 shadow-md" : (isUsed ? "border-blue-200 shadow-sm" : "opacity-75 grayscale-[0.5] hover:grayscale-0 hover:opacity-100")
-    )}>
+    <Card 
+      data-type="backlink"
+      data-url={backlink.url}
+      data-name={backlink.website_name}
+      data-id={backlink.id}
+      data-client-id={clientId}
+      data-category={backlink.backlink_categories?.name || ''}
+      data-rank={backlink.rank}
+      data-used={isUsed}
+      data-tasked={isTasked}
+      data-username={username || backlink.global_username || ''}
+      data-password={password || backlink.global_password || ''}
+      data-livelink={liveLink || ''}
+      className={cn(
+        "group transition-all border-gray-200 bg-white overflow-hidden relative",
+        isSelected ? "ring-2 ring-blue-500 border-blue-500 shadow-md" : (isUsed ? "border-blue-200 shadow-sm" : "opacity-75 grayscale-[0.5] hover:grayscale-0 hover:opacity-100")
+      )}
+    >
       {/* Clickable Top Area for Selection */}
       <div 
         onClick={() => onSelect?.(!isSelected)}
@@ -233,10 +247,10 @@ export function ClientBacklinkCard({
       <CardContent data-url={backlink.url} className="p-4 space-y-4 pt-10">
         {/* Header: Name and Toggle */}
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-[120px]">
             <div className="flex items-center gap-2">
                <h3 className="font-bold text-gray-900 text-sm truncate">{backlink.website_name}</h3>
-               <a data-type="url" href={backlink.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-600 transition-colors">
+               <a data-type="url" data-url={backlink.url} href={backlink.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-600 transition-colors">
                  <ExternalLink className="w-3 h-3" />
                </a>
                <button 

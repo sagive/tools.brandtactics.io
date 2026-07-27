@@ -261,7 +261,7 @@ export default function DashboardPage() {
                   ))}
                 </TabsList>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredTools.length === 0 ? (
                     <div className="col-span-full py-12 text-center border-2 border-dashed rounded-xl bg-gray-50/50">
                        <LayoutGrid className="w-8 h-8 text-gray-300 mx-auto mb-2" />
@@ -297,10 +297,21 @@ function DashboardToolCard({ tool, onDelete, onRefresh }: { tool: any, onDelete:
   };
 
   return (
-    <Card className="group relative overflow-hidden hover:shadow-md transition-all border-gray-200 bg-white hover:border-blue-200 h-14">
+    <Card 
+      data-type="tool" 
+      data-url={tool.url}
+      data-name={tool.name}
+      data-id={tool.id}
+      data-category={tool.category}
+      data-rank={tool.rank}
+      data-username={tool.username || ''}
+      data-password={tool.password || ''}
+      data-icon={tool.icon_name || ''}
+      className="group relative overflow-hidden hover:shadow-md transition-all border-gray-200 bg-white hover:border-blue-200 h-14"
+    >
       <div className="flex items-center h-full px-3 gap-3">
         {/* Main Link Overlay */}
-        <a href={tool.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0" aria-label={`Open ${tool.name}`}>
+        <a data-type="url" data-url={tool.url} href={tool.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0" aria-label={`Open ${tool.name}`}>
           <span className="sr-only">Open {tool.name}</span>
         </a>
 
@@ -310,7 +321,7 @@ function DashboardToolCard({ tool, onDelete, onRefresh }: { tool: any, onDelete:
         </div>
         
         {/* Name & URL */}
-        <div className="flex-1 min-w-0 relative z-10 pointer-events-none">
+        <div className="flex-1 min-w-[120px] relative z-10 pointer-events-none">
           <h3 className="font-bold text-gray-900 text-xs truncate leading-tight group-hover:text-blue-600 transition-colors uppercase tracking-tight">{tool.name}</h3>
           <div className="text-[10px] text-blue-500 truncate leading-tight">
             {tool.url.replace(/^https?:\/\//, '')}
