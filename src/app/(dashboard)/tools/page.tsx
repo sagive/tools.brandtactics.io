@@ -32,6 +32,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { LanguageFlag } from "@/components/language-flag";
 
 const IconRenderer = ({ name, className }: { name: string, className?: string }) => {
   const Icon = (LucideIcons as any)[name] || Blocks;
@@ -219,6 +220,7 @@ function ToolCard({ tool, styles, onDelete, onRefresh }: { tool: any, styles: an
       data-id={tool.id}
       data-category={tool.category}
       data-rank={tool.rank}
+      data-language={tool.language || 'english'}
       data-username={tool.username || ''}
       data-password={tool.password || ''}
       data-icon={tool.icon_name || ''}
@@ -291,10 +293,8 @@ function ToolCard({ tool, styles, onDelete, onRefresh }: { tool: any, styles: an
             </Dialog>
           </div>
 
-          {/* Rank Badge */}
-          <div className="bg-gray-50 text-[10px] font-bold px-1.5 py-0.5 rounded border border-gray-200 text-gray-400 shadow-sm shrink-0 pointer-events-none">
-             #{tool.rank || 0}
-          </div>
+          {/* Language Flag Badge */}
+          <LanguageFlag language={tool.language} />
         </div>
       </div>
     </Card>

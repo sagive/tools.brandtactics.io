@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { EditTaskDialog } from "@/components/edit-task-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { LanguageFlag } from "@/components/language-flag";
 
 interface ClientBacklinkCardProps {
   clientId: string;
@@ -123,6 +124,7 @@ export function ClientBacklinkCard({
       data-client-id={clientId}
       data-category={backlink.backlink_categories?.name || ''}
       data-rank={backlink.rank}
+      data-language={backlink.language || 'english'}
       data-used={isUsed}
       data-tasked={isTasked}
       data-username={username || backlink.global_username || ''}
@@ -250,6 +252,7 @@ export function ClientBacklinkCard({
           <div className="flex-1 min-w-[120px]">
             <div className="flex items-center gap-2">
                <h3 className="font-bold text-gray-900 text-sm truncate">{backlink.website_name}</h3>
+               <LanguageFlag language={backlink.language} />
                <a data-type="url" data-url={backlink.url} href={backlink.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-600 transition-colors">
                  <ExternalLink className="w-3 h-3" />
                </a>

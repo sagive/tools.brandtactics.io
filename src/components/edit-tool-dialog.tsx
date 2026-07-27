@@ -19,6 +19,7 @@ export function EditToolDialog({ tool, onToolSaved }: { tool?: any, onToolSaved?
   const [rank, setRank] = useState(tool?.rank || 0);
   const [username, setUsername] = useState(tool?.username || "");
   const [password, setPassword] = useState(tool?.password || "");
+  const [language, setLanguage] = useState(tool?.language || "english");
   const [isSaving, setIsSaving] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
 
@@ -48,7 +49,8 @@ export function EditToolDialog({ tool, onToolSaved }: { tool?: any, onToolSaved?
         icon_name: iconName, 
         rank: parseInt(rank.toString()) || 0,
         username,
-        password
+        password,
+        language
       };
       
       let error;
@@ -164,13 +166,27 @@ export function EditToolDialog({ tool, onToolSaved }: { tool?: any, onToolSaved?
           </div>
         </div>
       </div>
-      <div className="flex justify-end gap-3 pt-4">
-        <DialogClose>
-          <Button variant="outline">Cancel</Button>
-        </DialogClose>
-        <Button onClick={handleSave} disabled={isSaving}>
-          {isSaving ? "Saving..." : isEditing ? "Save Changes" : "Add Tool"}
-        </Button>
+      <div className="flex items-center justify-between pt-4">
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-gray-500 font-medium">Language:</Label>
+          <Select value={language} onValueChange={setLanguage}>
+            <SelectTrigger className="h-8 w-28 text-xs bg-white">
+              <SelectValue placeholder="Language" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="english" className="text-xs">English 🇺🇸</SelectItem>
+              <SelectItem value="hebrew" className="text-xs">Hebrew 🇮🇱</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-3">
+          <DialogClose>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? "Saving..." : isEditing ? "Save Changes" : "Add Tool"}
+          </Button>
+        </div>
       </div>
     </DialogContent>
   );

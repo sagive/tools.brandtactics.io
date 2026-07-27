@@ -32,6 +32,7 @@ import dynamic from "next/dynamic";
 import { SendSeoUpdateDialog } from "@/components/send-seo-update-dialog";
 import { QuickActionsSidebar } from "@/components/quick-actions-sidebar";
 import { ActivityWidget } from "@/components/activity-widget";
+import { LanguageFlag } from "@/components/language-flag";
 
 const IconRenderer = ({ name, className }: { name: string, className?: string }) => {
   const Icon = (LucideIcons as any)[name] || Blocks;
@@ -304,6 +305,7 @@ function DashboardToolCard({ tool, onDelete, onRefresh }: { tool: any, onDelete:
       data-id={tool.id}
       data-category={tool.category}
       data-rank={tool.rank}
+      data-language={tool.language || 'english'}
       data-username={tool.username || ''}
       data-password={tool.password || ''}
       data-icon={tool.icon_name || ''}
@@ -374,9 +376,7 @@ function DashboardToolCard({ tool, onDelete, onRefresh }: { tool: any, onDelete:
             </Dialog>
           </div>
 
-          <div className="bg-gray-50 text-[10px] font-bold px-1.5 py-0.5 rounded border border-gray-200 text-gray-400 shadow-sm shrink-0 pointer-events-none">
-             #{tool.rank || 0}
-          </div>
+          <LanguageFlag language={tool.language} />
         </div>
       </div>
     </Card>

@@ -30,6 +30,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { LanguageFlag } from "@/components/language-flag";
 
 const CATEGORY_COLORS: Record<string, string> = {
   'General': 'bg-blue-100 text-blue-600',
@@ -213,6 +214,7 @@ function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDele
       data-id={backlink.id}
       data-category={backlink.backlink_categories?.name || backlink.category_id || ''}
       data-rank={backlink.rank}
+      data-language={backlink.language || 'english'}
       data-username={backlink.global_username || ''}
       data-password={backlink.global_password || ''}
       className="group relative overflow-hidden hover:shadow-md transition-all border-gray-200 bg-white hover:border-blue-200 h-14"
@@ -296,10 +298,8 @@ function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDele
             </Dialog>
           </div>
 
-          {/* Rank Badge */}
-          <div className="bg-gray-50 text-[10px] font-bold px-1.5 py-0.5 rounded border border-gray-200 text-gray-400 shadow-sm shrink-0 pointer-events-none">
-             #{backlink.rank || 0}
-          </div>
+          {/* Language Flag Badge */}
+          <LanguageFlag language={backlink.language} />
         </div>
       </div>
     </Card>
