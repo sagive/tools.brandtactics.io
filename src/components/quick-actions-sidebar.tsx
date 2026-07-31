@@ -22,8 +22,8 @@ export function QuickActionsSidebar({ onAction, clientId }: QuickActionsSidebarP
     <div className="space-y-4 w-full">
       {/* Create New Task Action */}
       <Dialog>
-        <DialogTrigger className="w-full text-left">
-          <div className="w-full p-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group flex items-center gap-3 cursor-pointer">
+        <DialogTrigger id="btn-create-new-task" data-name="create-new-task" className="w-full text-left">
+          <div id="action-create-new-task" data-name="create-new-task" className="w-full p-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group flex items-center gap-3 cursor-pointer">
             <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center group-hover:bg-orange-500 transition-colors duration-300">
               <FileText className="w-5 h-5 text-orange-500 group-hover:text-white transition-colors duration-300" />
             </div>
@@ -47,7 +47,7 @@ export function QuickActionsSidebar({ onAction, clientId }: QuickActionsSidebarP
             onAction?.();
           }}
           trigger={
-            <div className="w-full p-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group flex items-center gap-3 cursor-pointer">
+            <div id="btn-send-seo-update" data-name="send-seo-update" className="w-full p-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group flex items-center gap-3 cursor-pointer">
               <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-600 transition-colors duration-300">
                 <Send className="w-5 h-5 text-blue-600 group-hover:text-white transition-colors duration-300" />
               </div>
@@ -68,7 +68,7 @@ export function QuickActionsSidebar({ onAction, clientId }: QuickActionsSidebarP
             onAction?.();
           }}
           trigger={
-            <div className="w-full p-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group flex items-center gap-3 cursor-pointer">
+            <div id="btn-schedule-seo-updates" data-name="schedule-seo-updates" className="w-full p-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group flex items-center gap-3 cursor-pointer">
               <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-600 transition-colors duration-300">
                 <Mails className="w-5 h-5 text-blue-600 group-hover:text-white transition-colors duration-300" />
               </div>
@@ -83,7 +83,7 @@ export function QuickActionsSidebar({ onAction, clientId }: QuickActionsSidebarP
       {/* Reports Hub Action */}
       {isAdmin ? (
         <Link href={`/reports${clientId ? `?clientId=${clientId}` : ''}`} className="w-full">
-          <div className="w-full p-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group flex items-center gap-3 cursor-pointer">
+          <div id="btn-reports-hub" data-name="reports-hub" className="w-full p-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-400 hover:shadow-md transition-all group flex items-center gap-3 cursor-pointer">
             <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center group-hover:bg-purple-600 transition-colors duration-300">
               <TrendingUp className="w-5 h-5 text-purple-600 group-hover:text-white transition-colors duration-300" />
             </div>
@@ -93,7 +93,7 @@ export function QuickActionsSidebar({ onAction, clientId }: QuickActionsSidebarP
           </div>
         </Link>
       ) : (
-        <div className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl shadow-sm opacity-60 flex items-center gap-3 cursor-not-allowed relative overflow-hidden group">
+        <div id="btn-reports-hub" data-name="reports-hub" className="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl shadow-sm opacity-60 flex items-center gap-3 cursor-not-allowed relative overflow-hidden group">
           <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
             <TrendingUp className="w-5 h-5 text-gray-400" />
           </div>
