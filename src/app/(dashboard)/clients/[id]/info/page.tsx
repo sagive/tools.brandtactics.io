@@ -8,6 +8,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Save, Building2, Loader2, CheckCircle } from "lucide-react";
 
+import dynamic from "next/dynamic";
+import "react-quill-new/dist/quill.snow.css";
+
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
+
+const QUILL_MODULES = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ["bold", "italic", "underline", "strike"],
+    ["link"],
+    [{ list: "ordered" }, { list: "bullet" }],
+    ["clean"],
+  ],
+};
+
 interface ClientInfoData {
   company_name_he?: string;
   company_name_en?: string;
@@ -277,11 +292,11 @@ export default function ClientInfoPage({ params }: { params: Promise<{ id: strin
             </table>
           </div>
 
-          {/* Separate Long Textarea Field for Company Description */}
+          {/* Separate Long Rich Text Field for Company Description */}
           <div
             id="row-company-description"
             data-name="company-description"
-            className="border border-gray-200 rounded-lg p-5 bg-white space-y-2 shadow-xs"
+            className="border border-gray-200 rounded-lg p-5 bg-white space-y-3 shadow-xs"
           >
             <div className="flex items-center justify-between">
               <label
@@ -290,18 +305,21 @@ export default function ClientInfoPage({ params }: { params: Promise<{ id: strin
               >
                 <span>תאור החברה (Company Description)</span>
               </label>
-              <span className="text-xs text-gray-400">Long text format for index submissions</span>
+              <span className="text-xs text-gray-400">Rich text format for index submissions (Links, Bold, Headers)</span>
             </div>
-            <Textarea
+            <div
               id="input-company-description"
               data-name="company-description"
-              value={info.company_description || ""}
-              onChange={(e) => handleChange("company_description", e.target.value)}
-              placeholder="הכנס תאור מפורט של החברה המתאים להגשה לאינדקס אתרים..."
-              rows={6}
-              dir="rtl"
-              className="bg-white border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm leading-relaxed"
-            />
+              className="bg-white rounded-md border border-gray-200 shadow-xs overflow-hidden [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-gray-200 [&_.ql-toolbar]:bg-gray-50/70 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[200px] [&_.ql-editor]:text-sm"
+            >
+              <ReactQuill
+                theme="snow"
+                value={info.company_description || ""}
+                onChange={(content) => handleChange("company_description", content)}
+                modules={QUILL_MODULES}
+                placeholder="הכנס תאור מפורט של החברה המתאים להגשה לאינדקס אתרים (כולל קישורים, הדגשות וכותרות)..."
+              />
+            </div>
           </div>
 
           <div className="flex justify-end pt-2 border-t">
