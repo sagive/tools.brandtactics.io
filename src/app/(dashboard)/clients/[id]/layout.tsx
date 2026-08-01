@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, ExternalLink, CheckCircle2, CircleDot } from "lucide-react";
+import { ArrowLeft, ExternalLink, CheckCircle2, CircleDot, Building2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { QuickActionsSidebar } from "@/components/quick-actions-sidebar";
 import { Badge } from "@/components/ui/badge";
@@ -106,7 +106,22 @@ export default function ClientLayout({
               </div>
             </div>
             
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <Link
+                id="btn-client-info"
+                data-name="client-info"
+                href={`/clients/${clientId}/info`}
+                className={cn(
+                  "px-3.5 py-1.5 text-xs font-bold rounded-lg border transition-all flex items-center gap-1.5 cursor-pointer",
+                  pathname.endsWith('/info')
+                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                    : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                )}
+              >
+                <Building2 className="w-3.5 h-3.5" />
+                Client Info
+              </Link>
+
               <Badge className={cn(
                 "border-none px-3 py-1 uppercase text-[10px] font-bold tracking-wider",
                 clientStatus === "Active" 
