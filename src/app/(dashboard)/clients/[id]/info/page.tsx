@@ -43,7 +43,7 @@ export default function ClientInfoPage({ params }: { params: Promise<{ id: strin
       try {
         const { data, error } = await supabase
           .from("clients")
-          .select("official_info, name, website, contact_email")
+          .select("official_info")
           .eq("id", clientId)
           .single();
 
@@ -52,10 +52,10 @@ export default function ClientInfoPage({ params }: { params: Promise<{ id: strin
         } else if (data) {
           const storedInfo = data.official_info || {};
           setInfo({
-            company_name_he: storedInfo.company_name_he ?? data.name ?? "",
+            company_name_he: storedInfo.company_name_he ?? "",
             company_name_en: storedInfo.company_name_en ?? "",
-            official_email: storedInfo.official_email ?? data.contact_email ?? "",
-            official_website: storedInfo.official_website ?? data.website ?? "",
+            official_email: storedInfo.official_email ?? "",
+            official_website: storedInfo.official_website ?? "",
             official_phone: storedInfo.official_phone ?? "",
             official_address: storedInfo.official_address ?? "",
             official_contact_name: storedInfo.official_contact_name ?? "",
