@@ -106,19 +106,19 @@ export default function ClientLayout({
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <Link
                 id="btn-client-info"
                 data-name="client-info"
                 href={`/clients/${clientId}/info`}
                 className={cn(
-                  "px-3.5 py-1.5 text-xs font-bold rounded-lg border transition-all flex items-center gap-1.5 cursor-pointer",
+                  "px-3 py-1 uppercase text-[10px] font-bold tracking-wider rounded-full border transition-all flex items-center gap-1.5 cursor-pointer",
                   pathname.endsWith('/info')
-                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                    : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                    ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                    : "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
                 )}
               >
-                <Building2 className="w-3.5 h-3.5" />
+                <Building2 className="w-3 h-3" />
                 Client Info
               </Link>
 
