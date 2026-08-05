@@ -4,7 +4,19 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Save, Loader2, GripVertical, ExternalLink } from "lucide-react";
+import { 
+  Plus, 
+  Trash2, 
+  Save, 
+  Loader2, 
+  GripVertical, 
+  ExternalLink,
+  FileJson,
+  Upload,
+  Info,
+  CheckCircle2,
+  AlertCircle
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -12,6 +24,23 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { CSS } from '@dnd-kit/utilities';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Textarea } from "@/components/ui/textarea";
+
 
 interface KeywordEntry {
   id: string; // Required for dnd-kit
@@ -374,6 +403,255 @@ function SortableKeywordRow({
   );
 }
 
+function ImportKeywordsModal({ 
+  onImport, 
+  triggerVariant = "header" 
+}: { 
+  onImport: (newKeywords: KeywordEntry[], replace: boolean) => void;
+  triggerVariant?: "header" | "bottom";
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [jsonText, setJsonText] = useState("");
+  const [replaceMode, setReplaceMode] = useState(false);
+  const [parseResult, setParseResult] = useState<{
+    valid: boolean;
+    entries: KeywordEntry[];
+    error?: string;
+  }>({ valid: false, entries: [] });
+
+  const sampleJson = `[
+  {
+    "keyword": "מילת מפתח דוגמה",
+    "target_url": "https://example.com/page-1",
+    "search_volume": 1200,
+    "importance": "high"
+  },
+  {
+    "keyword": "קידום אתרים",
+    "url": "https://example.com/seo",
+    "search_volume": 500,
+    "importance": "normal"
+  }
+]`;
+
+  const parseJsonInput = (text: string) => {
+    if (!text.trim()) {
+      setParseResult({ valid: false, entries: [] });
+      return;
+    }
+    try {
+      const parsed = JSON.parse(text);
+      const arr = Array.isArray(parsed) ? parsed : [parsed];
+
+      const entries: KeywordEntry[] = arr.map((item: Record<string, unknown>) => {
+        const kw = (item.keyword || item.kw || item.name || item.term || "") as string;
+        const rawUrl = (item.target_url || item.targetUrl || item.url || item.link || item.page || "") as string;
+        let url = typeof rawUrl === 'string' ? rawUrl.trim() : '';
+        if (url && !/^https?:\/\//i.test(url)) {
+          url = `https://${url}`;
+        }
+        const vol = parseInt(String(item.search_volume ?? item.searchVolume ?? item.volume ?? 0)) || 0;
+        let imp: 'low' | 'normal' | 'high' = 'normal';
+        const rawImp = String(item.importance || item.priority || '').toLowerCase();
+        if (['high', 'low', 'normal'].includes(rawImp)) {
+          imp = rawImp as 'low' | 'normal' | 'high';
+        }
+
+        return {
+          id: Math.random().toString(36).substr(2, 9),
+          keyword: String(kw),
+          target_url: url,
+          search_volume: vol,
+          importance: imp
+        };
+      }).filter((e) => e.keyword || e.target_url);
+
+      if (entries.length === 0) {
+        setParseResult({
+          valid: false,
+          entries: [],
+          error: "No valid keyword items found in JSON."
+        });
+      } else {
+        setParseResult({
+          valid: true,
+          entries
+        });
+      }
+    } catch (err: unknown) {
+      setParseResult({
+        valid: false,
+        entries: [],
+        error: "Invalid JSON syntax: " + (err instanceof Error ? err.message : String(err))
+      });
+    }
+  };
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const text = e.target.value;
+    setJsonText(text);
+    parseJsonInput(text);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      setJsonText(content);
+      parseJsonInput(content);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleConfirm = () => {
+    if (parseResult.valid && parseResult.entries.length > 0) {
+      onImport(parseResult.entries, replaceMode);
+      setIsOpen(false);
+      setJsonText("");
+      setParseResult({ valid: false, entries: [] });
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger render={
+        triggerVariant === "header" ? (
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="h-8 px-3 text-xs gap-1.5 border-gray-300 hover:border-gray-400 bg-white"
+          >
+            <FileJson className="w-3.5 h-3.5 text-blue-600" />
+            <span>Import JSON</span>
+          </Button>
+        ) : (
+          <Button 
+            variant="outline" 
+            className="border-dashed border-2 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 transition-all font-medium py-6 px-6 gap-2"
+          >
+            <FileJson className="w-4 h-4 text-blue-600" />
+            <span>Import JSON</span>
+          </Button>
+        )
+      } />
+
+      <DialogContent className="sm:max-w-lg p-6 bg-white rounded-xl shadow-xl">
+        <DialogHeader className="space-y-1">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <FileJson className="w-5 h-5 text-blue-600" />
+              Import Keywords JSON
+            </DialogTitle>
+            
+            {/* Hover Tooltip showing structure */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger render={
+                  <div className="inline-flex items-center gap-1.5 cursor-pointer text-xs text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full border border-blue-200 font-medium transition-colors">
+                    <Info className="w-3.5 h-3.5" />
+                    <span>Hover for Structure Example</span>
+                  </div>
+                } />
+                <TooltipContent side="left" className="bg-gray-900 text-gray-100 p-3 max-w-sm rounded-lg shadow-xl text-xs ltr border border-gray-700">
+                  <p className="font-semibold text-white mb-1">Expected JSON Structure Example:</p>
+                  <pre className="bg-gray-950 text-emerald-400 p-2.5 rounded text-[11px] overflow-x-auto font-mono leading-relaxed border border-gray-800">
+{sampleJson}
+                  </pre>
+                  <p className="text-[10px] text-gray-400 mt-1.5">
+                    Supports keys: <code className="text-gray-300">keyword</code> / <code className="text-gray-300">kw</code>, <code className="text-gray-300">target_url</code> / <code className="text-gray-300">url</code>, <code className="text-gray-300">search_volume</code>, <code className="text-gray-300">importance</code> (low/normal/high).
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <DialogDescription className="text-xs text-gray-500">
+            Upload a JSON file or paste JSON content directly. Each item should include a keyword and target page URL.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          {/* File Upload Option */}
+          <div className="flex items-center gap-3">
+            <label className="flex-1 flex items-center justify-center gap-2 border border-dashed border-gray-300 hover:border-blue-500 bg-gray-50 hover:bg-blue-50/50 p-3 rounded-lg cursor-pointer transition-colors text-xs text-gray-600 font-medium">
+              <Upload className="w-4 h-4 text-gray-500" />
+              <span>Choose .json file</span>
+              <input type="file" accept=".json,application/json" onChange={handleFileUpload} className="hidden" />
+            </label>
+          </div>
+
+          <div className="relative flex items-center">
+            <div className="flex-grow border-t border-gray-200"></div>
+            <span className="flex-shrink mx-3 text-[11px] text-gray-400 font-medium uppercase tracking-wider">or paste json</span>
+            <div className="flex-grow border-t border-gray-200"></div>
+          </div>
+
+          {/* Textarea */}
+          <div>
+            <Textarea
+              value={jsonText}
+              onChange={handleTextChange}
+              placeholder={sampleJson}
+              className="font-mono text-xs h-36 border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-gray-50/50"
+            />
+          </div>
+
+          {/* Validation Banner */}
+          {jsonText.trim() && (
+            <div>
+              {parseResult.valid ? (
+                <div className="flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                  <span>Valid JSON format! <strong>{parseResult.entries.length}</strong> keywords ready to import.</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-xs text-red-700 bg-red-50 border border-red-200 p-2.5 rounded-lg">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+                  <span>{parseResult.error || "Invalid JSON structure."}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Import Mode */}
+          <div className="flex items-center justify-between pt-1 border-t border-gray-100 text-xs">
+            <label className="flex items-center gap-2 text-gray-700 cursor-pointer select-none font-medium">
+              <input 
+                type="checkbox"
+                checked={replaceMode}
+                onChange={(e) => setReplaceMode(e.target.checked)}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
+              />
+              <span>Replace existing keywords (otherwise appends to current list)</span>
+            </label>
+          </div>
+        </div>
+
+        <DialogFooter className="flex items-center justify-end gap-2 pt-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setIsOpen(false)}
+            className="text-xs h-9 px-4"
+          >
+            Cancel
+          </Button>
+          <Button 
+            size="sm"
+            onClick={handleConfirm}
+            disabled={!parseResult.valid || parseResult.entries.length === 0}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-9 px-4 font-medium disabled:opacity-50"
+          >
+            Import {parseResult.entries.length > 0 ? `(${parseResult.entries.length})` : ''} Keywords
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function KeywordsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: clientId } = React.use(params);
   const [keywords, setKeywords] = useState<KeywordEntry[]>([]);
@@ -430,6 +708,16 @@ export default function KeywordsPage({ params }: { params: Promise<{ id: string 
       importance: 'normal'
     }]);
     setIsDirty(true);
+  };
+
+  const handleImportKeywords = (imported: KeywordEntry[], replace: boolean) => {
+    if (replace) {
+      setKeywords(imported);
+    } else {
+      setKeywords(prev => [...prev, ...imported]);
+    }
+    setIsDirty(true);
+    toast.success(`Successfully imported ${imported.length} keyword(s). Make sure to click 'Save Changes'.`);
   };
 
   const handleRemoveRow = (index: number) => {
@@ -519,18 +807,21 @@ export default function KeywordsPage({ params }: { params: Promise<{ id: string 
           <Card className="shadow-sm border-gray-200 overflow-hidden bg-white">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
               <h2 className="text-[17px] font-semibold text-gray-900 tracking-tight">Manage Keywords</h2>
-              <Button 
-                onClick={handleSave} 
-                disabled={!isDirty || isSaving}
-                className="bg-[#7B96E4] hover:bg-[#6882E0] text-white shadow-none h-8 px-4 text-xs font-medium rounded-[6px]"
-              >
-                {isSaving ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
-                ) : (
-                  <Save className="w-3 h-3 mr-1.5" />
-                )}
-                Save Changes
-              </Button>
+              <div className="flex items-center gap-2">
+                <ImportKeywordsModal onImport={handleImportKeywords} triggerVariant="header" />
+                <Button 
+                  onClick={handleSave} 
+                  disabled={!isDirty || isSaving}
+                  className="bg-[#7B96E4] hover:bg-[#6882E0] text-white shadow-none h-8 px-4 text-xs font-medium rounded-[6px]"
+                >
+                  {isSaving ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                  ) : (
+                    <Save className="w-3 h-3 mr-1.5" />
+                  )}
+                  Save Changes
+                </Button>
+              </div>
             </div>
 
             <CardContent className="p-0">
@@ -572,15 +863,16 @@ export default function KeywordsPage({ params }: { params: Promise<{ id: string 
                 </div>
               </DndContext>
               
-              <div className="p-4 bg-gray-50/30 border-t border-gray-100">
+              <div className="p-4 bg-gray-50/30 border-t border-gray-100 flex gap-3">
                 <Button 
                   variant="outline" 
                   onClick={handleAddRow}
-                  className="w-full border-dashed border-2 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 transition-all font-medium py-6"
+                  className="flex-1 border-dashed border-2 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 transition-all font-medium py-6"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Keyword Row
                 </Button>
+                <ImportKeywordsModal onImport={handleImportKeywords} triggerVariant="bottom" />
               </div>
             </CardContent>
           </Card>
@@ -596,3 +888,4 @@ export default function KeywordsPage({ params }: { params: Promise<{ id: string 
     </div>
   );
 }
+
