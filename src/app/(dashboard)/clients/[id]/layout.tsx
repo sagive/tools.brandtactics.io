@@ -78,7 +78,7 @@ export default function ClientLayout({
         <span className="text-gray-900">{clientName || "Loading..."}</span>
       </div>
 
-      <div className="flex flex-col xl:flex-row gap-6">
+      <div className="flex flex-col md:flex-row gap-6">
         {/* Main Content Area */}
         <div className="flex-1 min-w-0 space-y-6">
           
@@ -163,8 +163,8 @@ export default function ClientLayout({
           </div>
         </div>
 
-        {/* Right Sidebar: Quick Actions (Moved up) */}
-        <div className="w-full xl:w-64 shrink-0 space-y-4">
+        {/* Right Sidebar: Quick Actions (Side by side on 768px+) */}
+        <div className="w-full md:w-52 lg:w-60 xl:w-64 shrink-0 space-y-4">
           <QuickActionsSidebar clientId={clientId as string} />
         </div>
       </div>

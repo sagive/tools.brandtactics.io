@@ -120,38 +120,29 @@ export default function ClientEmailsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50/50 text-[10px] uppercase tracking-widest font-bold text-gray-500 border-b border-gray-100">
-                  <th className="px-6 py-4">Recipient</th>
-                  <th className="px-6 py-4">Topic (Subject)</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Date & Time</th>
-                  <th className="px-6 py-4 text-right">Action</th>
+                  <th className="px-4 sm:px-6 py-3.5">Topic (Subject)</th>
+                  <th className="px-4 sm:px-6 py-3.5">Status</th>
+                  <th className="px-4 sm:px-6 py-3.5">Date & Time</th>
+                  <th className="px-4 sm:px-6 py-3.5 text-right">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-500">
+                    <td colSpan={4} className="px-6 py-12 text-center text-sm text-gray-500">
                       Loading updates...
                     </td>
                   </tr>
                 ) : emails.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-500">
+                    <td colSpan={4} className="px-6 py-12 text-center text-sm text-gray-500">
                       No updates sent yet.
                     </td>
                   </tr>
                 ) : (
                   emails.map((email) => (
                     <tr key={email.id} className="border-b border-gray-100 last:border-none hover:bg-gray-50/50 transition-colors group">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-600 shrink-0">
-                            {client?.name?.substring(0, 1).toUpperCase() || "C"}
-                          </div>
-                          <span className="text-sm font-semibold text-gray-900">{client?.name || "Client"}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 min-w-[300px] max-w-[400px]">
+                      <td className="px-4 sm:px-6 py-3.5 min-w-[200px] max-w-[400px]">
                         <Dialog>
                           <DialogTrigger render={
                             <button 
@@ -175,7 +166,7 @@ export default function ClientEmailsPage() {
                           </DialogContent>
                         </Dialog>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 sm:px-6 py-3.5 whitespace-nowrap">
                         {email.status === 'Scheduled' ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-100">
                             Scheduled
@@ -186,8 +177,8 @@ export default function ClientEmailsPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-[14px] font-medium text-gray-600">
+                      <td className="px-4 sm:px-6 py-3.5 whitespace-nowrap">
+                        <span className="text-xs sm:text-[13px] font-medium text-gray-600">
                           {email.scheduled_for 
                             ? format(new Date(email.scheduled_for), "HH:mm - dd/MM/yyyy") 
                             : email.created_at 
@@ -195,25 +186,27 @@ export default function ClientEmailsPage() {
                               : "N/A"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right flex justify-end gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0 text-gray-400 hover:text-blue-600"
-                          title="Resend this exact email"
-                          onClick={() => handleResend(email)}
-                        >
-                          <Mail className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
-                          title="Delete this log"
-                          onClick={() => handleDelete(email.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                      <td className="px-4 sm:px-6 py-3.5 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end gap-1 sm:gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0 text-gray-400 hover:text-blue-600"
+                            title="Resend this exact email"
+                            onClick={() => handleResend(email)}
+                          >
+                            <Mail className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
+                            title="Delete this log"
+                            onClick={() => handleDelete(email.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))
