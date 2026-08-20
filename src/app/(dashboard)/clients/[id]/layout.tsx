@@ -164,7 +164,7 @@ export default function ClientLayout({
         </div>
 
         {/* Right Sidebar: Quick Actions (Side by side on 768px+) */}
-        <div className="w-full md:w-52 lg:w-60 xl:w-64 shrink-0 space-y-4">
+        <div className="w-full md:w-40 lg:w-44 shrink-0 space-y-3">
           <QuickActionsSidebar clientId={clientId as string} />
         </div>
       </div>
