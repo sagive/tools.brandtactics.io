@@ -117,39 +117,39 @@ export default function ClientEmailsPage() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse table-auto">
               <thead>
                 <tr className="bg-gray-50/50 text-[10px] uppercase tracking-widest font-bold text-gray-500 border-b border-gray-100">
-                  <th className="px-4 sm:px-6 py-3.5">Topic (Subject)</th>
-                  <th className="px-4 sm:px-6 py-3.5">Status</th>
-                  <th className="px-4 sm:px-6 py-3.5">Date & Time</th>
-                  <th className="px-4 sm:px-6 py-3.5 text-right">Action</th>
+                  <th className="px-4 py-3.5">Topic (Subject)</th>
+                  <th className="px-3 py-3.5 w-28">Status</th>
+                  <th className="px-3 py-3.5 w-36 whitespace-nowrap">Date & Time</th>
+                  <th className="px-4 py-3.5 text-right w-24 whitespace-nowrap">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-sm text-gray-500">
+                    <td colSpan={4} className="px-4 py-12 text-center text-sm text-gray-500">
                       Loading updates...
                     </td>
                   </tr>
                 ) : emails.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-sm text-gray-500">
+                    <td colSpan={4} className="px-4 py-12 text-center text-sm text-gray-500">
                       No updates sent yet.
                     </td>
                   </tr>
                 ) : (
                   emails.map((email) => (
                     <tr key={email.id} className="border-b border-gray-100 last:border-none hover:bg-gray-50/50 transition-colors group">
-                      <td className="px-4 sm:px-6 py-3.5 min-w-[200px] max-w-[400px]">
+                      <td className="px-4 py-3.5 min-w-0">
                         <Dialog>
                           <DialogTrigger render={
                             <button 
-                              className="text-sm text-gray-700 hover:text-blue-600 font-medium text-left truncate w-full decoration-dashed hover:underline underline-offset-4 focus:outline-none" 
+                              className="text-sm text-gray-700 hover:text-blue-600 font-medium text-left truncate block w-full max-w-[220px] sm:max-w-none decoration-dashed hover:underline underline-offset-4 focus:outline-none" 
                               title="Click to view full message"
                             >
-                              {truncate(email.title, 55) || "No Subject"}
+                              {truncate(email.title, 50) || "No Subject"}
                             </button>
                           } />
                           <DialogContent className="max-w-4xl sm:max-w-4xl w-[90vw] max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0 bg-white rounded-xl">
@@ -166,7 +166,7 @@ export default function ClientEmailsPage() {
                           </DialogContent>
                         </Dialog>
                       </td>
-                      <td className="px-4 sm:px-6 py-3.5 whitespace-nowrap">
+                      <td className="px-3 py-3.5 whitespace-nowrap w-28">
                         {email.status === 'Scheduled' ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-100">
                             Scheduled
@@ -177,7 +177,7 @@ export default function ClientEmailsPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 sm:px-6 py-3.5 whitespace-nowrap">
+                      <td className="px-3 py-3.5 whitespace-nowrap w-36">
                         <span className="text-xs sm:text-[13px] font-medium text-gray-600">
                           {email.scheduled_for 
                             ? format(new Date(email.scheduled_for), "HH:mm - dd/MM/yyyy") 
@@ -186,12 +186,12 @@ export default function ClientEmailsPage() {
                               : "N/A"}
                         </span>
                       </td>
-                      <td className="px-4 sm:px-6 py-3.5 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-1 sm:gap-2">
+                      <td className="px-4 py-3.5 whitespace-nowrap text-right w-24">
+                        <div className="flex items-center justify-end gap-1">
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            className="h-8 w-8 p-0 text-gray-400 hover:text-blue-600"
+                            className="h-8 w-8 p-0 text-gray-400 hover:text-blue-600 shrink-0"
                             title="Resend this exact email"
                             onClick={() => handleResend(email)}
                           >
@@ -200,7 +200,7 @@ export default function ClientEmailsPage() {
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
+                            className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 shrink-0"
                             title="Delete this log"
                             onClick={() => handleDelete(email.id)}
                           >
