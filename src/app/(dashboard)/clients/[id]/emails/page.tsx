@@ -9,6 +9,7 @@ import { Send, Trash2, Mail, Loader2, AlertTriangle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { SendSeoUpdateDialog } from "@/components/send-seo-update-dialog";
+import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
 export default function ClientEmailsPage() {
@@ -179,14 +180,33 @@ export default function ClientEmailsPage() {
                               {truncate(email.title, 50) || "No Subject"}
                             </button>
                           } />
-                          <DialogContent className="max-w-4xl sm:max-w-4xl w-[90vw] max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0 bg-white rounded-xl">
-                            <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 shrink-0">
-                              <h4 className="font-bold text-base text-gray-900 leading-tight pr-8">
+                          <DialogContent className="max-w-3xl sm:max-w-3xl w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 bg-white rounded-xl shadow-2xl">
+                            <div className="bg-gray-50/90 px-6 py-4 border-b border-gray-200/80 shrink-0">
+                              <h4 className="font-bold text-base text-gray-900 leading-tight pr-8" dir="auto">
                                 {email.title || "No Subject"}
                               </h4>
+                              <div className="flex items-center gap-2 text-xs text-gray-500 mt-1.5">
+                                <span className={cn(
+                                  "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider",
+                                  email.status === 'Delivered' ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
+                                )}>
+                                  {email.status || 'Scheduled'}
+                                </span>
+                                <span>•</span>
+                                <span>
+                                  {email.scheduled_for 
+                                    ? format(new Date(email.scheduled_for), "dd/MM/yyyy • HH:mm") 
+                                    : email.created_at 
+                                      ? format(new Date(email.created_at), "dd/MM/yyyy • HH:mm") 
+                                      : ""}
+                                </span>
+                              </div>
                             </div>
-                            <div className="p-6 overflow-y-auto flex-1">
-                              <div className="text-[14px] text-gray-700 leading-relaxed w-full prose prose-sm prose-p:my-2 prose-a:text-blue-600 [&>p]:whitespace-pre-wrap">
+                            <div className="p-4 sm:p-6 overflow-y-auto overflow-x-hidden flex-1 bg-gray-50/40 flex justify-center">
+                              <div 
+                                className="w-full max-w-2xl bg-white p-4 sm:p-6 rounded-lg border border-gray-200/80 shadow-2xs text-[14px] text-gray-800 leading-relaxed overflow-x-hidden [&_table]:max-w-full [&_table]:w-full [&_table]:table-auto [&_img]:max-w-full [&_img]:h-auto [&_*]:max-w-full break-words" 
+                                dir="auto"
+                              >
                                 <div dangerouslySetInnerHTML={{ __html: email.body || "No content." }} />
                               </div>
                             </div>
