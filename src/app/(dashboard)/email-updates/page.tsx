@@ -95,16 +95,27 @@ export default function EmailUpdatesPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this log entry?")) return;
     
-    const { error } = await supabase
-      .from("email_updates")
-      .delete()
-      .eq("id", id);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
 
-    if (error) {
-      toast.error("Failed to delete log entry");
-    } else {
+      const res = await fetch(`/api/email-updates?id=${id}`, {
+        method: "DELETE",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to delete log entry");
+      }
+
       toast.success("Log entry deleted");
-      setUpdates(updates.filter(u => u.id !== id));
+      setUpdates(prev => prev.filter(u => u.id !== id));
+    } catch (err: any) {
+      console.error("Delete error:", err);
+      toast.error(err.message || "Failed to delete log entry");
     }
   };
 
