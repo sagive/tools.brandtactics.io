@@ -38,13 +38,14 @@ export default function ClientLayout({
   const [clientName, setClientName] = useState("");
   const [clientWebsite, setClientWebsite] = useState("");
   const [clientStatus, setClientStatus] = useState("Active");
+  const [clientLanguage, setClientLanguage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
   React.useEffect(() => {
     async function getClient() {
       const { data } = await supabase
         .from("clients")
-        .select("name, website, status")
+        .select("name, website, status, official_info")
         .eq("id", clientId)
         .single();
         
@@ -52,11 +53,20 @@ export default function ClientLayout({
         setClientName(data.name);
         setClientWebsite(data.website);
         setClientStatus(data.status || "Active");
+        setClientLanguage(data.official_info?.client_language || "");
         document.title = `${data.name} — BrandTactics Tools`;
       }
       setIsLoading(false);
     }
     getClient();
+
+    const handleInfoUpdated = (e: any) => {
+      if (e.detail?.client_language !== undefined) {
+        setClientLanguage(e.detail.client_language);
+      }
+    };
+    window.addEventListener("client-info-updated", handleInfoUpdated);
+    return () => window.removeEventListener("client-info-updated", handleInfoUpdated);
   }, [clientId]);
 
   const inputClasses = "h-auto px-2 py-1 -ml-2 w-full bg-transparent hover:bg-gray-50 border-transparent hover:border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-gray-900 shadow-none";
@@ -110,6 +120,7 @@ export default function ClientLayout({
               <Link
                 id="btn-client-info"
                 data-name="client-info"
+                {...(clientLanguage ? { "data-lang": clientLanguage } : {})}
                 href={`/clients/${clientId}/info`}
                 className={cn(
                   "px-3 py-1 uppercase text-[10px] font-bold tracking-wider rounded-full border transition-all flex items-center gap-1.5 cursor-pointer",

@@ -122,6 +122,7 @@ export default function ClientInfoPage({ params }: { params: Promise<{ id: strin
       } else {
         toast.success("Official Client Info saved successfully!");
         setSavedSuccess(true);
+        window.dispatchEvent(new CustomEvent("client-info-updated", { detail: info }));
         setTimeout(() => setSavedSuccess(false), 3000);
       }
     } catch (err: any) {
