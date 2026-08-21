@@ -22,8 +22,10 @@ import {
   User, 
   ExternalLink,
   Check,
-  ChevronsUpDown
+  ChevronsUpDown,
+  Loader2
 } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { 
   Popover, 
   PopoverContent, 
@@ -48,6 +50,10 @@ export default function EmailUpdatesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [openClientFilter, setOpenClientFilter] = useState(false);
+  
+  // Delete modal state
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -68,6 +74,7 @@ export default function EmailUpdatesPage() {
       .select(`
         *,
         clients (
+          id,
           name
         )
       `)
@@ -92,30 +99,41 @@ export default function EmailUpdatesPage() {
     setIsLoading(false);
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this log entry?")) return;
-    
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget?.id) return;
+    setIsDeleting(true);
+
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
 
-      const res = await fetch(`/api/email-updates?id=${id}`, {
+      const res = await fetch(`/api/email-updates?id=${deleteTarget.id}`, {
         method: "DELETE",
         headers: {
+          "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {})
         }
       });
 
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to delete log entry");
+        const { error: directErr } = await supabase
+          .from("email_updates")
+          .delete()
+          .eq("id", deleteTarget.id);
+        
+        if (directErr) {
+          throw new Error(directErr.message);
+        }
       }
 
-      toast.success("Log entry deleted");
-      setUpdates(prev => prev.filter(u => u.id !== id));
+      toast.success("Log entry deleted successfully");
+      setUpdates(prev => prev.filter(u => u.id !== deleteTarget.id));
+      setDeleteTarget(null);
     } catch (err: any) {
       console.error("Delete error:", err);
       toast.error(err.message || "Failed to delete log entry");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -330,9 +348,9 @@ export default function EmailUpdatesPage() {
                         <Button 
                           variant="ghost" 
                           size="icon-sm" 
-                          className="text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                           title="Delete this log"
-                          onClick={() => handleDelete(update.id)}
+                          onClick={() => setDeleteTarget(update)}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -345,6 +363,68 @@ export default function EmailUpdatesPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && !isDeleting && setDeleteTarget(null)}>
+        <DialogContent className="max-w-md w-[92vw] p-6 bg-white rounded-xl shadow-2xl">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-gray-900">אישור מחיקת עדכון SEO</h3>
+                <p className="text-xs text-gray-500">Delete SEO Update Log</p>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 p-3.5 rounded-lg border border-gray-200/80 space-y-1.5 text-xs text-gray-700">
+              <p className="font-semibold text-gray-900 line-clamp-2" dir="auto">
+                {deleteTarget?.title || "ללא כותרת"}
+              </p>
+              <div className="flex items-center justify-between text-gray-500 text-[11px] pt-1.5 border-t border-gray-200/60">
+                <span>לקוח: {deleteTarget?.clients?.name || "Client"}</span>
+                <span>סטטוס: {deleteTarget?.status || "Scheduled"}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-600 leading-relaxed" dir="rtl">
+              האם אתה בטוח שברצונך למחוק עדכון זה? הפעולה תסיר את העדכון לחלוטין ממסד הנתונים ולא ניתן לשחזרה.
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-gray-100">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isDeleting}
+                onClick={() => setDeleteTarget(null)}
+                className="text-xs font-semibold cursor-pointer"
+              >
+                ביטול / Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={isDeleting}
+                onClick={handleConfirmDelete}
+                className="text-xs font-bold gap-1.5 bg-red-600 hover:bg-red-700 text-white cursor-pointer"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    מוחק...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    מחק עדכון
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

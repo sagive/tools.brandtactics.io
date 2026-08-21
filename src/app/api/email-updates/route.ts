@@ -2,13 +2,27 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.btools_SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseServiceKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.btools_SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.btools_SUPABASE_SECRET_KEY ||
+  process.env.SUPABASE_SECRET_KEY ||
+  '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
+    let id = searchParams.get('id');
+
+    if (!id) {
+      try {
+        const body = await req.json();
+        id = body?.id;
+      } catch (e) {
+        // ignore parse error
+      }
+    }
 
     if (!id) {
       return NextResponse.json({ error: 'Missing email update ID' }, { status: 400 });
@@ -16,9 +30,11 @@ export async function DELETE(req: Request) {
 
     const authHeader = req.headers.get('Authorization');
 
-    // Use service role if available for reliable deletion, otherwise authenticated anon client
+    // Create client using service key if available, otherwise authenticated anon client
     const supabaseClient = supabaseServiceKey
-      ? createClient(supabaseUrl, supabaseServiceKey)
+      ? createClient(supabaseUrl, supabaseServiceKey, {
+          auth: { persistSession: false }
+        })
       : createClient(supabaseUrl, supabaseAnonKey, {
           global: {
             headers: {
@@ -27,17 +43,18 @@ export async function DELETE(req: Request) {
           },
         });
 
-    const { error } = await supabaseClient
+    const { error, data } = await supabaseClient
       .from('email_updates')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .select();
 
     if (error) {
       console.error('Failed to delete email update from DB:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, id });
+    return NextResponse.json({ success: true, id, data });
   } catch (err: any) {
     console.error('Exception during email update delete:', err);
     return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
