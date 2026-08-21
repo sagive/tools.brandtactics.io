@@ -26,6 +26,26 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { EditTaskDialog } from "@/components/edit-task-dialog";
 import { SendSeoUpdateDialog } from "@/components/send-seo-update-dialog";
 
+const REQUIRED_INFO_FIELDS = [
+  "company_name_he",
+  "company_name_en",
+  "client_language",
+  "official_email",
+  "official_website",
+  "official_phone",
+  "official_address",
+  "official_contact_name",
+  "company_description",
+];
+
+function checkIsMissingInfo(officialInfo: any): boolean {
+  if (!officialInfo || typeof officialInfo !== "object") return true;
+  return REQUIRED_INFO_FIELDS.some((field) => {
+    const val = officialInfo[field];
+    return !val || (typeof val === "string" && val.trim() === "") || val === "<p><br></p>";
+  });
+}
+
 export function TopNav() {
   const { user, profile } = useAuth();
   const router = useRouter();
@@ -38,6 +58,38 @@ export function TopNav() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isNewTaskOpen, setIsNewTaskOpen] = useState(false);
   const [isSeoUpdateOpen, setIsSeoUpdateOpen] = useState(false);
+  const [isMissingClientInfo, setIsMissingClientInfo] = useState(false);
+
+  useEffect(() => {
+    if (!clientId) {
+      setIsMissingClientInfo(false);
+      return;
+    }
+
+    async function checkClientInfo() {
+      const { data } = await supabase
+        .from("clients")
+        .select("official_info")
+        .eq("id", clientId)
+        .single();
+      
+      if (data) {
+        setIsMissingClientInfo(checkIsMissingInfo(data.official_info));
+      } else {
+        setIsMissingClientInfo(true);
+      }
+    }
+
+    checkClientInfo();
+
+    const handleInfoUpdated = (e: any) => {
+      if (e.detail) {
+        setIsMissingClientInfo(checkIsMissingInfo(e.detail));
+      }
+    };
+    window.addEventListener("client-info-updated", handleInfoUpdated);
+    return () => window.removeEventListener("client-info-updated", handleInfoUpdated);
+  }, [clientId]);
 
   const fetchNotifications = async () => {
     if (!profile?.email) return;
@@ -134,6 +186,22 @@ export function TopNav() {
           />
         </div>
       </div>
+
+      {/* Required Info Alert for Current Client */}
+      {clientId && isMissingClientInfo && (
+        <div className="flex items-center mx-2 sm:mx-4">
+          <Link
+            id="btn-topbar-required-info"
+            data-name="topbar-required-info"
+            href={`/clients/${clientId}/info`}
+            className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold rounded-full transition-all shadow-xs animate-pulse hover:animate-none cursor-pointer"
+            title="Official client details are missing. Click to complete."
+          >
+            <span>Required Info</span>
+            <span>⚠️</span>
+          </Link>
+        </div>
+      )}
 
       <div className="flex items-center gap-3 sm:gap-4 ml-auto">
         <span className="text-xs font-semibold text-gray-400 select-none">v1.0.3</span>
