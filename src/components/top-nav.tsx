@@ -204,7 +204,7 @@ export function TopNav() {
       )}
 
       <div className="flex items-center gap-3 sm:gap-4 ml-auto">
-        <span className="text-xs font-semibold text-gray-400 select-none">v1.0.3</span>
+        <span className="text-xs font-semibold text-gray-400 select-none">v1.0.4</span>
         
         <div className="h-5 w-px bg-gray-200" />
 
