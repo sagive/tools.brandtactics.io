@@ -246,52 +246,93 @@ export function ClientBacklinkCard({
         </div>
       )}
 
-      <CardContent data-url={backlink.url} className="p-4 space-y-4 pt-10">
-        {/* Header: Name and Toggle */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-[120px]">
-            <div className="flex items-center gap-2">
-               <h3 className="font-bold text-gray-900 text-sm truncate">{backlink.website_name}</h3>
-               <LanguageFlag language={backlink.language} />
-               <a data-type="url" data-url={backlink.url} href={backlink.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-600 transition-colors">
-                 <ExternalLink className="w-3 h-3" />
-               </a>
-               <button 
-                 onClick={(e) => {
-                   e.preventDefault();
-                   const url = new URL(window.location.href);
-                   url.searchParams.set("search", backlink.website_name);
-                   navigator.clipboard.writeText(url.toString());
-                   toast.success(`Share link for ${backlink.website_name} copied!`);
-                 }}
-                 className="text-gray-400 hover:text-blue-600 transition-colors"
-                 title="Copy link to this website"
-               >
-                 <Share2 className="w-3 h-3" />
-               </button>
-            </div>
-            <p className="text-[10px] text-gray-500 font-medium uppercase tracking-tight">
+      <CardContent data-url={backlink.url} className="p-4 space-y-3.5 pt-10">
+        {/* Line 1: Blog Name & URL */}
+        <div className="space-y-0.5 min-w-0 pr-1">
+          <h3 className="font-bold text-gray-900 text-sm truncate" title={backlink.website_name}>
+            {backlink.website_name}
+          </h3>
+          {backlink.url && (
+            <a 
+              data-type="url" 
+              data-url={backlink.url} 
+              href={backlink.url} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-[11px] text-gray-400 hover:text-blue-600 truncate block hover:underline transition-colors leading-tight"
+              title={backlink.url}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {backlink.url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
+            </a>
+          )}
+        </div>
+
+        {/* Line 2: Category, Language, Link, Share & Tasked/Used Controls */}
+        <div className="flex items-center justify-between gap-2 pt-1 border-t border-gray-100">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-[10px] text-gray-500 font-semibold uppercase tracking-tight truncate max-w-[85px]" title={backlink.backlink_categories?.name || "General"}>
               {backlink.backlink_categories?.name || "General"}
-            </p>
+            </span>
+            <LanguageFlag language={backlink.language} />
+            <a 
+              data-type="url" 
+              data-url={backlink.url} 
+              href={backlink.url} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-gray-400 hover:text-blue-600 transition-colors p-0.5 rounded hover:bg-gray-100"
+              title="Open Website"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ExternalLink className="w-3 h-3" />
+            </a>
+            <button 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const url = new URL(window.location.href);
+                url.searchParams.set("search", backlink.website_name);
+                navigator.clipboard.writeText(url.toString());
+                toast.success(`Share link for ${backlink.website_name} copied!`);
+              }}
+              className="text-gray-400 hover:text-blue-600 transition-colors p-0.5 rounded hover:bg-gray-100 cursor-pointer"
+              title="Copy link to this website"
+            >
+              <Share2 className="w-3 h-3" />
+            </button>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex flex-col items-center gap-1">
+
+          <div className="flex items-center gap-2.5 shrink-0">
+            <div className="flex items-center gap-1">
               <Checkbox 
                 data-name="tasked"
+                id={`tasked-${backlink.id}`}
                 checked={isTasked} 
                 onCheckedChange={toggleTasked}
-                className="h-5 w-5 border-blue-200 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                className="h-4 w-4 border-blue-200 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 cursor-pointer"
               />
-              <span className="text-[9px] font-bold text-gray-400 uppercase">Tasked</span>
+              <label 
+                htmlFor={`tasked-${backlink.id}`}
+                className="text-[9px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer"
+              >
+                Tasked
+              </label>
             </div>
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center gap-1">
               <Checkbox 
                 data-name="used"
+                id={`used-${backlink.id}`}
                 checked={isUsed} 
                 onCheckedChange={toggleUsed}
-                className="h-5 w-5"
+                className="h-4 w-4 cursor-pointer"
               />
-              <span className="text-[9px] font-bold text-gray-400 uppercase">Used</span>
+              <label 
+                htmlFor={`used-${backlink.id}`}
+                className="text-[9px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer"
+              >
+                Used
+              </label>
             </div>
           </div>
         </div>
