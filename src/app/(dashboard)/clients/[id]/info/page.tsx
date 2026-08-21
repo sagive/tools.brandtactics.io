@@ -5,6 +5,13 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { Save, Building2, Loader2, CheckCircle } from "lucide-react";
 
@@ -26,6 +33,7 @@ const QUILL_MODULES = {
 interface ClientInfoData {
   company_name_he?: string;
   company_name_en?: string;
+  client_language?: string;
   official_email?: string;
   official_website?: string;
   official_phone?: string;
@@ -41,6 +49,7 @@ export default function ClientInfoPage({ params }: { params: Promise<{ id: strin
   const [info, setInfo] = useState<ClientInfoData>({
     company_name_he: "",
     company_name_en: "",
+    client_language: "hebrew",
     official_email: "",
     official_website: "",
     official_phone: "",
@@ -69,6 +78,7 @@ export default function ClientInfoPage({ params }: { params: Promise<{ id: strin
           setInfo({
             company_name_he: storedInfo.company_name_he ?? "",
             company_name_en: storedInfo.company_name_en ?? "",
+            client_language: storedInfo.client_language ?? "hebrew",
             official_email: storedInfo.official_email ?? "",
             official_website: storedInfo.official_website ?? "",
             official_phone: storedInfo.official_phone ?? "",
@@ -157,6 +167,14 @@ export default function ClientInfoPage({ params }: { params: Promise<{ id: strin
       dataName: "company-name-en",
       direction: "ltr",
       placeholder: "Enter English Company Name",
+    },
+    {
+      key: "client_language",
+      labelHe: "שפת הלקוח",
+      labelEn: "Client Language",
+      id: "client-language",
+      dataName: "client-language",
+      type: "select",
     },
     {
       key: "official_email",
@@ -275,16 +293,39 @@ export default function ClientInfoPage({ params }: { params: Promise<{ id: strin
                       </div>
                     </td>
                     <td className="px-3 py-2">
-                      <Input
-                        id={`input-${field.id}`}
-                        data-name={field.dataName}
-                        type={field.type || "text"}
-                        value={info[field.key] || ""}
-                        onChange={(e) => handleChange(field.key, e.target.value)}
-                        placeholder={field.placeholder}
-                        dir={field.direction}
-                        className="bg-white border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      />
+                      {field.type === "select" ? (
+                        <Select
+                          value={info[field.key] || "hebrew"}
+                          onValueChange={(val) => handleChange(field.key, val)}
+                        >
+                          <SelectTrigger
+                            id={`input-${field.id}`}
+                            data-name={field.dataName}
+                            className="w-full bg-white border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 h-9 text-sm"
+                          >
+                            <SelectValue placeholder="Select Language / בחר שפה" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="hebrew" className="cursor-pointer text-sm">
+                              <span className="flex items-center gap-2">עברית (Hebrew) 🇮🇱</span>
+                            </SelectItem>
+                            <SelectItem value="english" className="cursor-pointer text-sm">
+                              <span className="flex items-center gap-2">English (אנגלית) 🇺🇸</span>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          id={`input-${field.id}`}
+                          data-name={field.dataName}
+                          type={field.type || "text"}
+                          value={info[field.key] || ""}
+                          onChange={(e) => handleChange(field.key, e.target.value)}
+                          placeholder={field.placeholder}
+                          dir={field.direction}
+                          className="bg-white border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        />
+                      )}
                     </td>
                   </tr>
                 ))}
