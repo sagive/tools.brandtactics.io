@@ -18,11 +18,15 @@ export function DateTimePicker({
   onChange,
   isDateOnly = false,
   className,
+  id,
+  "data-name": dataName,
 }: {
   value: string; // ISO string like 2026-03-15T04:14 or 2026-03-15
   onChange: (dateStr: string) => void;
   isDateOnly?: boolean;
   className?: string;
+  id?: string;
+  "data-name"?: string;
 }) {
   // Parse incoming value
   let date: Date | undefined = undefined;
@@ -75,6 +79,8 @@ export function DateTimePicker({
     <Popover>
       <PopoverTrigger render={
         <Button
+          id={id}
+          data-name={dataName}
           variant={"outline"}
           className={cn(
             "w-full justify-start text-left font-normal bg-white",

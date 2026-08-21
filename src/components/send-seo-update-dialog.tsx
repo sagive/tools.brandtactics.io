@@ -191,6 +191,8 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
               <Popover open={openClientDropdown} onOpenChange={setOpenClientDropdown}>
                 <PopoverTrigger render={
                   <Button
+                    id="seoUpdateClient"
+                    data-name="seo update client"
                     variant="outline"
                     role="combobox"
                     aria-expanded={openClientDropdown}
@@ -212,7 +214,7 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
                 }/>
                 <PopoverContent className="w-[var(--base-ui-popover-trigger-width)] p-0" align="start">
                   <Command className="w-full">
-                    <CommandInput placeholder="Search clients..." className="h-10" />
+                    <CommandInput id="seoUpdateClientSearch" data-name="seo update client search" placeholder="Search clients..." className="h-10" />
                     <CommandList className="max-h-[300px]">
                       <CommandEmpty>No client found.</CommandEmpty>
                       <CommandGroup>
@@ -261,6 +263,8 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
               <Popover open={openTemplateDropdown} onOpenChange={setOpenTemplateDropdown}>
                 <PopoverTrigger render={
                   <Button
+                    id="seoUpdateTemplate"
+                    data-name="seo update template"
                     variant="outline"
                     role="combobox"
                     aria-expanded={openTemplateDropdown}
@@ -280,7 +284,7 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
                 }/>
                 <PopoverContent className="w-[var(--base-ui-popover-trigger-width)] min-w-[300px] p-0" align="start">
                   <Command className="w-full">
-                    <CommandInput placeholder="Search templates..." className="h-10" />
+                    <CommandInput id="seoUpdateTemplateSearch" data-name="seo update template search" placeholder="Search templates..." className="h-10" />
                     <CommandList className="max-h-[300px]">
                       {templates.length === 0 ? (
                         <CommandEmpty className="py-6 text-center text-sm text-gray-500">
@@ -323,11 +327,13 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Subject</Label>
-              <Input value={subject} onChange={e => setSubject(e.target.value)} className="bg-white" />
+              <Input id="seoUpdateSubject" data-name="seo update subject" value={subject} onChange={e => setSubject(e.target.value)} className="bg-white" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Schedule Send (Optional)</Label>
               <DateTimePicker
+                id="seoUpdateSchedule"
+                data-name="seo update schedule"
                 value={scheduledFor} 
                 onChange={setScheduledFor} 
                 className="bg-white" 
@@ -336,7 +342,7 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
           </div>
           <div className="space-y-2">
             <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Message</Label>
-            <div className="bg-white rounded-md border border-input shadow-sm [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[200px]">
+            <div id="seoUpdateMessage" data-name="seo update message" className="bg-white rounded-md border border-input shadow-sm [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[200px]">
               <ReactQuill 
                 theme="snow" 
                 value={body} 
@@ -347,6 +353,8 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
           </div>
           <div className="flex justify-end pt-2">
             <Button 
+              id="seoUpdateSubmitBtn"
+              data-name="seo update submit"
               type="submit" 
               disabled={sending || !clientId || !selectedClient?.contact_email} 
               className="bg-blue-600 hover:bg-blue-700 text-white min-w-[150px] font-bold uppercase tracking-tight"
