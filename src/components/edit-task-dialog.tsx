@@ -39,13 +39,36 @@ function stripHtml(html: string) {
 
 const STORAGE_KEY = 'last_task_choices';
 
+function getStoredTaskChoices() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY) || localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveStoredTaskChoices(choices: any) {
+  if (typeof window === 'undefined') return;
+  try {
+    const str = JSON.stringify(choices);
+    sessionStorage.setItem(STORAGE_KEY, str);
+    localStorage.setItem(STORAGE_KEY, str);
+  } catch {}
+}
+
+function clearStoredTaskChoices() {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {}
+}
+
 export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTaskCreated }: { task?: any, defaultClientId?: string, defaultDescription?: string, onTaskCreated?: () => void }) {
   const isEditing = !!task;
-  const [isOpen, setIsOpen] = useState(true); // Internal state for Dialog if needed, but we typically use DialogClose or parent state.
-  // Actually, the dialog is controlled by the parent <Dialog> in sortable-task-item and client-tasks.
-  // However, DialogClose can be triggered via a ref or by just clicking it.
-  // But wait, the standard way in Shadcn is to provide an onOpenChange.
-  // Let's check how it's called.
+  const [isOpen, setIsOpen] = useState(true);
   const [newComment, setNewComment] = useState("");
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentText, setEditingCommentText] = useState("");
@@ -54,33 +77,34 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
   const pathname = usePathname();
   const pathnameClientId = pathname?.match(/\/clients\/([a-f0-9-]{36})/i)?.[1] || null;
 
-  const [title, setTitle] = useState(task?.title || "");
-  const [description, setDescription] = useState(task?.description || (defaultDescription ? `<p>${defaultDescription}</p>` : ""));
-  const [status, setStatus] = useState(task?.status || "Pending");
-  const [priority, setPriority] = useState(task?.priority || "Medium");
-  const [assignee, setAssignee] = useState(task?.assignee || "");
-  const [assignees, setAssignees] = useState<string[]>([]);
-  const [requester, setRequester] = useState(task?.requester || "");
-  const [comments, setComments] = useState<any[]>(task?.comments || []);
-  const [selectedClientIds, setSelectedClientIds] = useState<string[]>(
-    task?.client_id ? [task.client_id] 
-    : defaultClientId ? [defaultClientId] 
-    : pathnameClientId ? [pathnameClientId] 
-    : []
-  );
-  const [isEditingDesc, setIsEditingDesc] = useState(!isEditing);
-  
-  // Sync selectedClientIds with defaultClientId or pathnameClientId when they change (for new tasks)
-  useEffect(() => {
-    if (!isEditing) {
-      const target = defaultClientId || pathnameClientId;
-      if (target && selectedClientIds.length === 0) {
-        setSelectedClientIds([target]);
-      }
-    }
-  }, [defaultClientId, pathnameClientId, isEditing]);
+  const savedChoices = !isEditing ? getStoredTaskChoices() : null;
 
-  const [dueDate, setDueDate] = useState<string>(task?.end_date ? new Date(task.end_date).toISOString().split('T')[0] : "");
+  const [title, setTitle] = useState(task?.title || savedChoices?.title || "");
+  const [description, setDescription] = useState(task?.description || (defaultDescription ? `<p>${defaultDescription}</p>` : ""));
+  const [status, setStatus] = useState(task?.status || savedChoices?.status || "Pending");
+  const [priority, setPriority] = useState(task?.priority || savedChoices?.priority || "Medium");
+  const [assignee, setAssignee] = useState(task?.assignee || "");
+  const [assignees, setAssignees] = useState<string[]>(() => {
+    if (task?.assignee) return [task.assignee];
+    if (savedChoices?.assignee) {
+      return savedChoices.assignee.split(',').filter(Boolean);
+    }
+    return [];
+  });
+  const [requester, setRequester] = useState(task?.requester || savedChoices?.requester || "");
+  const [comments, setComments] = useState<any[]>(task?.comments || []);
+  const [selectedClientIds, setSelectedClientIds] = useState<string[]>(() => {
+    if (task?.client_id) return [task.client_id];
+    if (savedChoices?.selectedClientIds && Array.isArray(savedChoices.selectedClientIds) && savedChoices.selectedClientIds.length > 0) {
+      return savedChoices.selectedClientIds;
+    }
+    if (defaultClientId) return [defaultClientId];
+    if (pathnameClientId) return [pathnameClientId];
+    return [];
+  });
+  const [isEditingDesc, setIsEditingDesc] = useState(!isEditing);
+
+  const [dueDate, setDueDate] = useState<string>(task?.end_date ? new Date(task.end_date).toISOString().split('T')[0] : (savedChoices?.dueDate || ""));
   const [clients, setClients] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [isCreating, setIsCreating] = useState(false);
@@ -97,59 +121,36 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
     } catch {}
   }, []);
 
-  // Load from localStorage on mount for new tasks
-  useEffect(() => {
-    if (!isEditing) {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (parsed.title) setTitle(parsed.title);
-          if (parsed.status) setStatus(parsed.status);
-          if (parsed.priority) setPriority(parsed.priority);
-          if (parsed.assignee) {
-            const list = parsed.assignee.split(',').filter(Boolean);
-            setAssignees(list);
-            setAssignee(list[0] || "");
-          }
-          if (parsed.requester) setRequester(parsed.requester);
-          if (parsed.dueDate) setDueDate(parsed.dueDate);
-          
-          const target = defaultClientId || pathnameClientId;
-          if (target) {
-            setSelectedClientIds([target]);
-          } else if (parsed.selectedClientIds && Array.isArray(parsed.selectedClientIds)) {
-            setSelectedClientIds(parsed.selectedClientIds);
-          } else if (parsed.clientId) {
-            // Backward compatibility with old saved format
-            setSelectedClientIds([parsed.clientId]);
-          }
-        } catch (e) {
-          console.error("Failed to parse saved task choices", e);
-        }
-      } else {
-        const target = defaultClientId || pathnameClientId;
-        if (target && selectedClientIds.length === 0) {
-          setSelectedClientIds([target]);
-        }
-      }
-    }
-  }, [isEditing, defaultClientId, pathnameClientId]);
-
-  // Auto-set requester to current user for new tasks (if not already set by localStorage)
+  // Auto-set requester to current user for new tasks (if not already set)
   useEffect(() => {
     if (!isEditing && profile && !requester) {
       setRequester(profile.full_name || profile.email || "");
     }
   }, [isEditing, profile, requester]);
 
-  // Save to localStorage whenever these change (only for new tasks)
+  // Save to storage whenever choices change (only for new tasks)
   useEffect(() => {
     if (!isEditing) {
       const choices = { title, status, priority, assignee: assignees.join(','), requester, selectedClientIds, dueDate };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(choices));
+      saveStoredTaskChoices(choices);
     }
   }, [isEditing, title, status, priority, assignees, requester, selectedClientIds, dueDate]);
+
+  const toggleClient = (clientId: string) => {
+    setSelectedClientIds(prev => 
+      prev.includes(clientId) 
+        ? prev.filter(id => id !== clientId)
+        : [...prev, clientId]
+    );
+  };
+
+  const toggleAssignee = (userVal: string) => {
+    setAssignees(prev =>
+      prev.includes(userVal)
+        ? prev.filter(a => a !== userVal)
+        : [...prev, userVal]
+    );
+  };
 
   const handleResetFields = () => {
     setTitle("");
@@ -158,10 +159,10 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
     setPriority("Medium");
     setAssignee("");
     setAssignees([]);
-    setRequester("");
-    setSelectedClientIds(defaultClientId ? [defaultClientId] : []);
+    setRequester(profile?.full_name || profile?.email || "");
+    setSelectedClientIds(defaultClientId ? [defaultClientId] : pathnameClientId ? [pathnameClientId] : []);
     setDueDate("");
-    localStorage.removeItem(STORAGE_KEY);
+    clearStoredTaskChoices();
     toast.success("Fields reset");
   };
 
@@ -527,10 +528,8 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
         });
       }
       
-      // Keep dialog open but reset content
+      // Keep dialog open and retain selected clients and assignees for consecutive entry
       setDescription("");
-      setAssignees([]);
-      setSelectedClientIds([]);
       
     } catch (err: any) {
       toast.error(err.message || "Failed to create task");
@@ -628,14 +627,8 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                 <Label className="text-gray-900 font-bold text-base">Assign to clients <span className="text-red-500">*</span></Label>
                 <select
                   multiple
-                  size={Math.min(clients.length, 5)}
+                  size={Math.min(Math.max(clients.length, 3), 6)}
                   value={selectedClientIds}
-                  onMouseDown={(e) => {
-                    const target = e.target as HTMLElement;
-                    if (target.tagName !== 'OPTION') return;
-                    e.preventDefault();
-                    (target as HTMLOptionElement).selected = !(target as HTMLOptionElement).selected;
-                  }}
                   onChange={(e) => {
                     setSelectedClientIds(Array.from(e.currentTarget.selectedOptions, o => o.value));
                   }}
@@ -644,7 +637,17 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                   data-type="clients"
                 >
                   {clients.map(c => (
-                    <option key={c.id} value={c.id} data-name={c.name}>{c.name}</option>
+                    <option 
+                      key={c.id} 
+                      value={c.id} 
+                      data-name={c.name}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        toggleClient(c.id);
+                      }}
+                    >
+                      {c.name}
+                    </option>
                   ))}
                 </select>
                 {selectedClientIds.length > 0 && (
@@ -694,14 +697,8 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
               <Label className="text-gray-900 font-bold text-base">Assigned to</Label>
               <select
                 multiple
-                size={Math.min(users.length, 5)}
+                size={Math.min(Math.max(users.length, 3), 6)}
                 value={isEditing ? (assignee ? [assignee] : []) : assignees}
-                onMouseDown={(e) => {
-                  const target = e.target as HTMLElement;
-                  if (target.tagName !== 'OPTION') return;
-                  e.preventDefault();
-                  (target as HTMLOptionElement).selected = !(target as HTMLOptionElement).selected;
-                }}
                 onChange={(e) => {
                   const selected = Array.from(e.currentTarget.selectedOptions, o => o.value);
                   if (isEditing) {
@@ -716,11 +713,24 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                 data-name="task-assignee"
                 data-type="assignee"
               >
-                {users.map(u => (
-                  <option key={u.id} value={u.full_name || u.email} data-name={u.full_name || u.email}>
-                    {u.full_name || u.email}
-                  </option>
-                ))}
+                {users.map(u => {
+                  const userVal = u.full_name || u.email;
+                  return (
+                    <option 
+                      key={u.id} 
+                      value={userVal} 
+                      data-name={userVal}
+                      onMouseDown={(e) => {
+                        if (!isEditing) {
+                          e.preventDefault();
+                          toggleAssignee(userVal);
+                        }
+                      }}
+                    >
+                      {userVal}
+                    </option>
+                  );
+                })}
               </select>
               {!isEditing && assignees.length > 0 && (
                 <p className="text-[11px] text-gray-400 mt-0.5">{assignees.length} person(s) selected</p>
