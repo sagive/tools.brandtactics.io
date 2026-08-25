@@ -458,8 +458,14 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
 
   const handleCreateTask = async () => {
     const plainText = stripHtml(description);
-    if (!plainText) { toast.error("Description is required"); return; }
-    if (selectedClientIds.length === 0) { toast.error("At least one client is required"); return; }
+    if (selectedClientIds.length === 0) {
+      toast.error("Please assign to at least one client");
+      return;
+    }
+    if (!plainText) {
+      toast.error("Task text is required");
+      return;
+    }
     
     const generatedTitle = plainText.substring(0, 100);
 
@@ -969,7 +975,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
               data-name="task-create"
               data-type="create"
               onClick={handleCreateTask} 
-              disabled={isCreating || !stripHtml(description) || selectedClientIds.length === 0}
+              disabled={isCreating}
               className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm font-semibold"
             >
               {isCreating ? "Creating..." : "Create Task"}
