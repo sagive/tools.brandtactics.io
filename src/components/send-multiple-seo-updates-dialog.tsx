@@ -54,6 +54,7 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
   const [currentVariantDate, setCurrentVariantDate] = useState("");
   const [currentVariantContent, setCurrentVariantContent] = useState("");
   const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
+  const [jumpDays, setJumpDays] = useState<number | string>(1);
 
   const [sending, setSending] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
@@ -108,9 +109,10 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
       setVariants(prev => [...prev, { ...newItem, id: Math.random().toString(36).substr(2, 9) }]);
     }
     
-    // Auto increment default date for the next item (default +1 day)
+    // Auto increment default date for the next item (based on configured jump days, default +1 day)
+    const daysToAdd = Math.max(1, typeof jumpDays === "number" ? jumpDays : (parseInt(jumpDays as string, 10) || 1));
     const prevDate = new Date(currentVariantDate);
-    prevDate.setDate(prevDate.getDate() + 1);
+    prevDate.setDate(prevDate.getDate() + daysToAdd);
     prevDate.setMinutes(prevDate.getMinutes() - prevDate.getTimezoneOffset());
     setCurrentVariantDate(prevDate.toISOString().slice(0, 16));
     
@@ -391,17 +393,32 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
                
                {/* Add Variant Form */}
                <div className="p-4 border-b bg-white">
-                  <div className="flex items-end gap-3 mb-3">
-                     <div className="space-y-1.5 flex-1">
-                       <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Scheduled Time</Label>
-                       <DateTimePicker 
-                         value={currentVariantDate} 
-                         onChange={setCurrentVariantDate} 
-                         className="h-9" 
-                       />
-                       <p className="text-[10px] text-gray-400 mt-1">Note: a 5-minute difference is possible due to server limits.</p>
-                     </div>
-                  </div>
+                   <div className="flex items-start gap-3 mb-3">
+                      <div className="space-y-1.5 flex-1 min-w-0">
+                        <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Scheduled Time</Label>
+                        <DateTimePicker 
+                          value={currentVariantDate} 
+                          onChange={setCurrentVariantDate} 
+                          className="h-9" 
+                        />
+                        <p className="text-[10px] text-gray-400 mt-1">Note: a 5-minute difference is possible due to server limits.</p>
+                      </div>
+                      <div className="space-y-1.5 w-24 shrink-0">
+                        <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Jumps</Label>
+                        <Input 
+                          type="number"
+                          min={1}
+                          max={365}
+                          value={jumpDays}
+                          onChange={(e) => setJumpDays(e.target.value === "" ? "" : Math.max(1, parseInt(e.target.value, 10) || 1))}
+                          onBlur={() => {
+                            if (!jumpDays || Number(jumpDays) < 1) setJumpDays(1);
+                          }}
+                          className="h-9 text-center bg-white"
+                          placeholder="1"
+                        />
+                      </div>
+                   </div>
                   <div className="space-y-1.5 mb-3">
                      <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Variant text</Label>
                      <div className="bg-white rounded-md border shadow-sm [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[100px] [&_.ql-editor]:max-h-[200px] overflow-y-auto">
