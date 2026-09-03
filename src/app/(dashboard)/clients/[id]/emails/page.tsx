@@ -51,11 +51,17 @@ export default function ClientEmailsPage() {
       const { data, error } = await supabase
         .from("email_updates")
         .select("*")
-        .eq("client_id", clientId)
-        .order("created_at", { ascending: false });
+        .eq("client_id", clientId);
 
       if (error) throw error;
-      setEmails(data || []);
+      
+      const sorted = (data || []).sort((a: any, b: any) => {
+        const dateA = new Date(a.scheduled_for || a.sent_date || a.created_at).getTime();
+        const dateB = new Date(b.scheduled_for || b.sent_date || b.created_at).getTime();
+        return dateB - dateA;
+      });
+
+      setEmails(sorted);
     } catch (err: any) {
       toast.error("Failed to load email updates");
     } finally {

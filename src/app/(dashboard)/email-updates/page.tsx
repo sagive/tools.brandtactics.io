@@ -77,13 +77,17 @@ export default function EmailUpdatesPage() {
           id,
           name
         )
-      `)
-      .order("sent_date", { ascending: false });
+      `);
 
     if (updatesError) {
       toast.error("Failed to fetch email updates");
     } else {
-      setUpdates(updatesData || []);
+      const sorted = (updatesData || []).sort((a: any, b: any) => {
+        const dateA = new Date(a.scheduled_for || a.sent_date || a.created_at).getTime();
+        const dateB = new Date(b.scheduled_for || b.sent_date || b.created_at).getTime();
+        return dateB - dateA;
+      });
+      setUpdates(sorted);
     }
 
     // Fetch clients for filter
@@ -309,7 +313,7 @@ export default function EmailUpdatesPage() {
                       <TableCell className="text-sm text-gray-600 font-medium">
                         <div className="flex items-center">
                           <Calendar className="w-3.5 h-3.5 mr-2 text-gray-400" />
-                          {format(new Date(update.sent_date), "MMM d, yyyy • HH:mm")}
+                          {format(new Date(update.scheduled_for || update.sent_date || update.created_at), "MMM d, yyyy • HH:mm")}
                         </div>
                       </TableCell>
                       <TableCell>
