@@ -15,6 +15,8 @@ import { logActivity } from "@/lib/activity-logger";
 import { cn } from "@/lib/utils";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { processAndUploadEmailImages } from "@/lib/email-image-upload";
+import { sanitizeAndFixLinks } from "@/lib/link-utils";
+import { QUILL_MODULES } from "@/components/send-seo-update-dialog";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 
@@ -165,8 +167,11 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
            finalBody = baseBody.replace("<p>[content]</p>", variant.content);
         }
 
+        finalBody = sanitizeAndFixLinks(finalBody);
+
         if (finalBody.includes("data:image/")) {
           finalBody = await processAndUploadEmailImages(finalBody, clientId);
+          finalBody = sanitizeAndFixLinks(finalBody);
         }
 
         const res = await fetch("/api/send-email", {
@@ -381,6 +386,7 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
                        theme="snow" 
                        value={baseBody} 
                        onChange={setBaseBody}
+                        modules={QUILL_MODULES}
                        className="flex-1 flex flex-col"
                      />
                    </div>
@@ -426,6 +432,7 @@ export function SendMultipleSeoUpdatesDialog({ defaultClientId, trigger, onSucce
                          theme="snow" 
                          value={currentVariantContent} 
                          onChange={setCurrentVariantContent}
+                          modules={QUILL_MODULES}
                        />
                      </div>
                   </div>

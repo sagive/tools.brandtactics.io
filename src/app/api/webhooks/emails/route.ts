@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import { sanitizeAndFixLinks } from '@/lib/link-utils';
 
 /**
  * Webhook for external email dispatch (e.g., from n8n)
@@ -71,7 +72,8 @@ export async function POST(request: Request) {
 
     // 5. Prepare Email Content
     const htmlTemplate = settings?.email_template || '<div>[content]</div>';
-    const finalHtml = htmlTemplate.replace('[content]', content);
+    const sanitizedContent = sanitizeAndFixLinks(content);
+    const finalHtml = sanitizeAndFixLinks(htmlTemplate.replace('[content]', sanitizedContent));
 
     // 6. Send Email via Resend
     let status = 'Queued';

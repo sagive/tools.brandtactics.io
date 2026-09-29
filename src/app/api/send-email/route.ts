@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { sanitizeAndFixLinks } from '@/lib/link-utils';
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
@@ -60,7 +61,8 @@ export async function POST(req: Request) {
     }
 
     // 3. Prepare the HTML content
-    const finalHtml = htmlTemplate.replace('[content]', body);
+    const sanitizedBody = sanitizeAndFixLinks(body);
+    const finalHtml = sanitizeAndFixLinks(htmlTemplate.replace('[content]', sanitizedBody));
 
     // 4. Send Email logic
     let status = scheduledFor ? 'Scheduled' : 'Queued';

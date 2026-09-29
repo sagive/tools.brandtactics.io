@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import { sanitizeAndFixLinks } from '@/lib/link-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,12 +51,13 @@ export async function GET(request: Request) {
 
     // 2. Process each email
     for (const email of pendingEmails) {
+       const safeHtml = sanitizeAndFixLinks(email.body || '');
        if (resend) {
           const emailPayload = {
             from: 'BrandTactics <updates@tools.brandtactics.io>',
             to: email.recipient_email.split(',').map((e: string) => e.trim()).filter((e: string) => e.length > 0),
             subject: email.title,
-            html: email.body,
+            html: safeHtml,
           };
           
           const response = await resend.emails.send(emailPayload);

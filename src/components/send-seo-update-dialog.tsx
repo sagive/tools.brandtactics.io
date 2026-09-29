@@ -20,7 +20,9 @@ import "react-quill-new/dist/quill.snow.css";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
-const QUILL_MODULES = {
+import { sanitizeAndFixLinks } from "@/lib/link-utils";
+
+export const QUILL_MODULES = {
   toolbar: [
     [{ 'header': [1, 2, false] }],
     ['bold', 'italic', 'underline', 'strike'],
@@ -49,6 +51,20 @@ const QUILL_MODULES = {
           const after = str.slice(lastIndex);
           if (after) ops.push({ insert: after });
           return { ops };
+        }
+        return delta;
+      }],
+      ['a', (node: any, delta: any) => {
+        const text = (node.textContent || '').trim();
+        // If the inner text of an <a> element is a URL, override the link attribute to match the text
+        if (/^https?:\/\/[^\s]+/i.test(text)) {
+          if (delta && delta.ops) {
+            delta.ops.forEach((op: any) => {
+              if (op.attributes) {
+                op.attributes.link = text;
+              }
+            });
+          }
         }
         return delta;
       }]
@@ -119,11 +135,12 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token || '';
 
-      let finalBody = body;
+      let finalBody = sanitizeAndFixLinks(body);
       if (body.includes("data:image/")) {
         const toastId = toast.loading("Compressing & uploading image...");
         try {
-          finalBody = await processAndUploadEmailImages(body, clientId);
+          finalBody = await processAndUploadEmailImages(finalBody, clientId);
+          finalBody = sanitizeAndFixLinks(finalBody);
           toast.dismiss(toastId);
         } catch (err) {
           toast.dismiss(toastId);
