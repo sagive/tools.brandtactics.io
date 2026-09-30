@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     // 5. Prepare Email Content
     const htmlTemplate = settings?.email_template || '<div>[content]</div>';
     const sanitizedContent = sanitizeAndFixLinks(content);
-    const finalHtml = sanitizeAndFixLinks(htmlTemplate.replace('[content]', sanitizedContent));
+    const finalHtml = htmlTemplate.replace('[content]', sanitizedContent);
 
     // 6. Send Email via Resend
     let status = 'Queued';

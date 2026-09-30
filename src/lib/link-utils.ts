@@ -4,23 +4,24 @@
 
 /**
  * Ensures that all URLs in HTML content are properly hyperlinked and synchronized.
- * 1. If an <a> tag contains a URL as its text (e.g. starts with http://, https://, or www.),
+ * 1. If an <a> tag contains a URL as its visible text (e.g. starts with http://, https://, or www.),
  *    its href attribute is automatically synchronized to that exact URL.
- * 2. Any unlinked plain text URLs (not inside an <a> tag) are automatically converted into clickable <a> tags.
+ * 2. Any unlinked plain text URLs in text nodes (strictly outside of any HTML tags, attributes, and <a> tags)
+ *    are automatically converted into clickable <a> tags.
+ * 3. Never modifies HTML tags or their attributes (such as <img src="..."> or <div style="...">).
  */
 export function sanitizeAndFixLinks(html: string): string {
   if (!html) return html;
 
   // Step 1: Synchronize existing <a> tags where the inner text is a URL
-  let processed = html.replace(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi, (fullMatch, attrs, innerText) => {
+  const processed = html.replace(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi, (fullMatch, attrs, innerText) => {
     // Strip HTML tags from inner text to get the actual visible URL text
-    const cleanText = innerText.replace(/<[^>]*>?/gm, '').trim();
+    const cleanText = innerText.replace(/<[^>]+>/g, '').trim();
 
-    // Check if the visible text is a URL
-    const urlMatch = cleanText.match(/^((https?:\/\/)|(www\.))[^\s<]+/i);
-    if (urlMatch) {
-      let targetUrl = urlMatch[0];
-      if (!targetUrl.toLowerCase().startsWith('http')) {
+    // Check if the visible text is strictly a URL (starts with http://, https://, or www. without internal whitespace)
+    if (/^(https?:\/\/|www\.)[^\s]+$/i.test(cleanText)) {
+      let targetUrl = cleanText.replace(/[.,;:!?)\]]+$/, '');
+      if (!/^https?:\/\//i.test(targetUrl)) {
         targetUrl = 'https://' + targetUrl;
       }
 
@@ -46,18 +47,65 @@ export function sanitizeAndFixLinks(html: string): string {
     return fullMatch;
   });
 
-  // Step 2: Auto-link any plain URLs not already inside an <a> tag
-  const parts = processed.split(/(<a\b[^>]*>[\s\S]*?<\/a>)/gi);
-  for (let i = 0; i < parts.length; i += 2) {
-    // Even indices are text outside of <a> tags
-    parts[i] = parts[i].replace(/(((https?:\/\/)|(www\.))[^\s<"']+)/gi, (url) => {
-      let href = url;
-      if (!href.toLowerCase().startsWith('http')) {
-        href = 'https://' + href;
+  // Step 2: Auto-link any plain URLs in text nodes (strictly OUTSIDE of any HTML tag and outside <a>...</a>)
+  // Tokenize by HTML tags: (<...>)
+  const tokens = processed.split(/(<[^>]+>)/g);
+  let insideAnchor = false;
+  let insideIgnoredTag = false; // e.g., <style>, <script>, <head>
+
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (!token) continue;
+
+    if (token.startsWith('<')) {
+      // It is an HTML tag
+      if (/^<a\b/i.test(token)) {
+        insideAnchor = true;
+      } else if (/^<\/a\s*>/i.test(token)) {
+        insideAnchor = false;
+      } else if (/^<(style|script|head)\b/i.test(token)) {
+        insideIgnoredTag = true;
+      } else if (/^<\/(style|script|head)\s*>/i.test(token)) {
+        insideIgnoredTag = false;
       }
-      return `<a href="${href}" target="_blank" rel="noopener noreferrer">${url}</a>`;
-    });
+      // Never alter attributes inside any HTML tag!
+      continue;
+    }
+
+    // It is a text node
+    if (!insideAnchor && !insideIgnoredTag) {
+      // Auto-link URLs in plain text:
+      tokens[i] = token.replace(/(^|[\s(>])((?:https?:\/\/|www\.)[^\s<>"']+)/gi, (match, prefix, url) => {
+        let trailingPunct = '';
+        const punctMatch = url.match(/[.,;:!?)\]]+$/);
+        if (punctMatch) {
+          trailingPunct = punctMatch[0];
+          url = url.slice(0, -trailingPunct.length);
+        }
+
+        if (!url) return match;
+
+        let href = url;
+        if (!/^https?:\/\//i.test(href)) {
+          href = 'https://' + href;
+        }
+
+        return `${prefix}<a href="${href}" target="_blank" rel="noopener noreferrer">${url}</a>${trailingPunct}`;
+      });
+    }
   }
 
-  return parts.join('');
+  return tokens.join('');
+}
+
+/**
+ * Repairs email HTML if an earlier version accidentally corrupted the DOCTYPE or <html> tag
+ * by turning W3C DTD or xmlns schema URLs into <a> tags.
+ */
+export function repairCorruptedEmailDoctype(html: string): string {
+  if (!html) return html;
+  return html.replace(
+    /<!DOCTYPE html PUBLIC "[^"]*?" "<a href="[^"]*?"[^>]*?>http:\/\/www\.w3\.org\/TR\/xhtml1\/DTD\/xhtml1-transitional\.dtd<\/a>">\s*<html xmlns="<a href="[^"]*?"[^>]*?>http:\/\/www\.w3\.org\/1999\/xhtml<\/a>"/gi,
+    '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n<html xmlns="http://www.w3.org/1999/xhtml"'
+  );
 }

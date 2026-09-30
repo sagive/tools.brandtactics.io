@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
-import { sanitizeAndFixLinks } from '@/lib/link-utils';
+import { repairCorruptedEmailDoctype } from '@/lib/link-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
 
     // 2. Process each email
     for (const email of pendingEmails) {
-       const safeHtml = sanitizeAndFixLinks(email.body || '');
+       const safeHtml = repairCorruptedEmailDoctype(email.body || '');
        if (resend) {
           const emailPayload = {
             from: 'BrandTactics <updates@tools.brandtactics.io>',

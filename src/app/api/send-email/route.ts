@@ -62,7 +62,7 @@ export async function POST(req: Request) {
 
     // 3. Prepare the HTML content
     const sanitizedBody = sanitizeAndFixLinks(body);
-    const finalHtml = sanitizeAndFixLinks(htmlTemplate.replace('[content]', sanitizedBody));
+    const finalHtml = htmlTemplate.replace('[content]', sanitizedBody);
 
     // 4. Send Email logic
     let status = scheduledFor ? 'Scheduled' : 'Queued';
