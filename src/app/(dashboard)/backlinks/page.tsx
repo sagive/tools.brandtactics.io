@@ -219,14 +219,14 @@ function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDele
       data-password={backlink.global_password || ''}
       className="group relative overflow-hidden hover:shadow-md transition-all border-gray-200 bg-white hover:border-blue-200 min-h-[3.5rem] h-auto py-2.5 min-[1200px]:h-14 min-[1200px]:py-0"
     >
-      <div className="flex items-center h-full px-3 gap-2.5 min-[1200px]:gap-3">
+      <div className="flex items-start min-[1200px]:items-center h-full px-3 gap-2.5 min-[1200px]:gap-3">
         {/* Main Link Overlay */}
         <a data-type="url" data-url={backlink.url} href={backlink.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0" aria-label={`Open ${backlink.website_name}`}>
           <span className="sr-only">Open {backlink.website_name}</span>
         </a>
 
         {/* Icon (Generic Globe or Link) */}
-        <div className="p-2 rounded-lg bg-blue-50 text-blue-600 shrink-0 relative z-10 pointer-events-none self-center">
+        <div className="p-2 rounded-lg bg-blue-50 text-blue-600 shrink-0 relative z-10 pointer-events-none self-start min-[1200px]:self-center">
           <Globe className="w-4 h-4" />
         </div>
         
