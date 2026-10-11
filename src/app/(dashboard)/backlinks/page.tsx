@@ -183,7 +183,7 @@ function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDele
 
   if (showDeleteConfirm) {
     return (
-      <Card className="relative overflow-hidden border-red-200 bg-red-50 h-14">
+      <Card className="relative overflow-hidden border-red-200 bg-red-50 min-h-[3.5rem] h-auto py-2.5 min-[1200px]:h-14 min-[1200px]:py-0">
         <div className="flex items-center h-full px-3 gap-2">
           <Trash2 className="w-4 h-4 text-red-500 shrink-0" />
           <span className="text-xs font-semibold text-red-700 flex-1 truncate">Delete &quot;{backlink.website_name}&quot;?</span>
@@ -217,89 +217,95 @@ function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDele
       data-language={backlink.language || 'english'}
       data-username={backlink.global_username || ''}
       data-password={backlink.global_password || ''}
-      className="group relative overflow-hidden hover:shadow-md transition-all border-gray-200 bg-white hover:border-blue-200 h-14"
+      className="group relative overflow-hidden hover:shadow-md transition-all border-gray-200 bg-white hover:border-blue-200 min-h-[3.5rem] h-auto py-2.5 min-[1200px]:h-14 min-[1200px]:py-0"
     >
-      <div className="flex items-center h-full px-3 gap-3">
+      <div className="flex items-center h-full px-3 gap-2.5 min-[1200px]:gap-3">
         {/* Main Link Overlay */}
         <a data-type="url" data-url={backlink.url} href={backlink.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0" aria-label={`Open ${backlink.website_name}`}>
           <span className="sr-only">Open {backlink.website_name}</span>
         </a>
 
         {/* Icon (Generic Globe or Link) */}
-        <div className="p-2 rounded-lg bg-blue-50 text-blue-600 shrink-0 relative z-10 pointer-events-none">
+        <div className="p-2 rounded-lg bg-blue-50 text-blue-600 shrink-0 relative z-10 pointer-events-none self-center">
           <Globe className="w-4 h-4" />
         </div>
         
-        {/* Name & URL */}
-        <div className="flex-1 min-w-[120px] relative z-10 pointer-events-none">
-          <h3 className="font-bold text-gray-900 text-xs truncate leading-tight group-hover:text-blue-600 transition-colors uppercase">{backlink.website_name}</h3>
-          <div className="text-[9px] text-gray-400 truncate leading-tight">
-            {backlink.url.replace(/^https?:\/\//, '')}
-          </div>
-        </div>
-
-        {/* Actions Area */}
-        <div className="flex items-center gap-2 shrink-0 relative z-20">
-           {/* Global Credentials (Peek) */}
-           <div className="flex items-center gap-1">
-             {backlink.global_username && (
-               <button 
-                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); copyToClipboard(backlink.global_username, "Username"); }}
-                 className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-50 hover:bg-gray-100 border border-gray-100 text-[8px] text-gray-500 transition-colors"
-                 title={`Copy Global User: ${backlink.global_username}`}
-               >
-                 <User className="w-2.5 h-2.5" />
-                 <span className="max-w-[45px] truncate">{backlink.global_username}</span>
-               </button>
-             )}
-             {backlink.global_password && (
-               <button 
-                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); copyToClipboard(backlink.global_password, "Password"); }}
-                 className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50/50 hover:bg-blue-100/50 border border-blue-100/30 text-[8px] text-blue-600 transition-colors"
-                 title={`Copy Global Pass: ${backlink.global_password}`}
-               >
-                 <Lock className="w-2.5 h-2.5" />
-                 <span className="max-w-[45px] truncate">********</span>
-               </button>
-             )}
-           </div>
-
-          {/* Edit/Settings Dropdown */}
-          <div className="transition-opacity">
-            <Dialog>
-              <DropdownMenu>
-                <DropdownMenuTrigger render={
-                  <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-blue-600 bg-gray-50/50 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all" title="Edit backlink settings">
-                    <Settings2 className="w-3.5 h-3.5" />
-                  </Button>
-                }/>
-                <DropdownMenuContent align="end">
-                  <DialogTrigger render={
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs gap-2">
-                       <Plus className="w-3.5 h-3.5" /> Edit Source
-                    </DropdownMenuItem>
-                  }/>
-                  <DropdownMenuItem className="text-xs text-red-600 gap-2">
-                    <button
-                      type="button"
-                      className="flex items-center gap-2 cursor-pointer bg-transparent border-0 p-0 text-inherit text-xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log("[backlink-delete] button clicked");
-                        setShowDeleteConfirm(true);
-                      }}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" /> Delete
-                    </button>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <EditBacklinkDialog backlink={backlink} onBacklinkSaved={onRefresh} />
-            </Dialog>
+        {/* Content & Actions Container */}
+        <div className="flex-1 min-w-0 flex flex-col min-[1200px]:flex-row min-[1200px]:items-center min-[1200px]:justify-between gap-1.5 min-[1200px]:gap-2">
+          {/* Name & URL */}
+          <div className="min-w-0 relative z-10 pointer-events-none">
+            <h3 className="font-bold text-gray-900 text-xs truncate leading-tight group-hover:text-blue-600 transition-colors uppercase">{backlink.website_name}</h3>
+            <div className="text-[9px] text-gray-400 truncate leading-tight">
+              {backlink.url.replace(/^https?:\/\//, '')}
+            </div>
           </div>
 
-          {/* Language Flag Badge */}
-          <LanguageFlag language={backlink.language} />
+          {/* Actions Area */}
+          <div className="flex items-center justify-between min-[1200px]:justify-end gap-2 shrink-0 relative z-20">
+            {/* Global Credentials (Peek) */}
+            <div className="flex items-center gap-1">
+              {backlink.global_username && (
+                <button 
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); copyToClipboard(backlink.global_username, "Username"); }}
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-50 hover:bg-gray-100 border border-gray-100 text-[8px] text-gray-500 transition-colors"
+                  title={`Copy Global User: ${backlink.global_username}`}
+                >
+                  <User className="w-2.5 h-2.5" />
+                  <span className="max-w-[70px] min-[1200px]:max-w-[45px] truncate">{backlink.global_username}</span>
+                </button>
+              )}
+              {backlink.global_password && (
+                <button 
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); copyToClipboard(backlink.global_password, "Password"); }}
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50/50 hover:bg-blue-100/50 border border-blue-100/30 text-[8px] text-blue-600 transition-colors"
+                  title={`Copy Global Pass: ${backlink.global_password}`}
+                >
+                  <Lock className="w-2.5 h-2.5" />
+                  <span className="max-w-[45px] truncate">********</span>
+                </button>
+              )}
+            </div>
+
+            {/* Settings & Language */}
+            <div className="flex items-center gap-1.5 min-[1200px]:gap-2 ml-auto min-[1200px]:ml-0">
+              {/* Edit/Settings Dropdown */}
+              <div className="transition-opacity">
+                <Dialog>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger render={
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-blue-600 bg-gray-50/50 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all" title="Edit backlink settings">
+                        <Settings2 className="w-3.5 h-3.5" />
+                      </Button>
+                    }/>
+                    <DropdownMenuContent align="end">
+                      <DialogTrigger render={
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs gap-2">
+                           <Plus className="w-3.5 h-3.5" /> Edit Source
+                        </DropdownMenuItem>
+                      }/>
+                      <DropdownMenuItem className="text-xs text-red-600 gap-2">
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 cursor-pointer bg-transparent border-0 p-0 text-inherit text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            console.log("[backlink-delete] button clicked");
+                            setShowDeleteConfirm(true);
+                          }}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Delete
+                        </button>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <EditBacklinkDialog backlink={backlink} onBacklinkSaved={onRefresh} />
+                </Dialog>
+              </div>
+
+              {/* Language Flag Badge */}
+              <LanguageFlag language={backlink.language} />
+            </div>
+          </div>
         </div>
       </div>
     </Card>
