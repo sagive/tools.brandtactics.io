@@ -754,9 +754,25 @@ export default function StrategyPage({ params }: { params: Promise<{ id: string 
                     </SortableContext>
                   </DndContext>
                   
-                  <Button variant="ghost" size="sm" onClick={() => addItem(group.id)} className="w-full mt-3 text-blue-600 hover:bg-blue-50 hover:text-blue-700 text-[11px] font-bold border border-dashed border-blue-100 rounded-lg py-4">
-                    <Plus className="w-3 h-3 mr-1" /> Add New Item
-                  </Button>
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => addItem(group.id)} 
+                      className="flex-1 text-blue-600 hover:bg-blue-50 hover:text-blue-700 text-xs font-semibold border border-dashed border-blue-200 rounded-lg h-9"
+                    >
+                      <Plus className="w-3.5 h-3.5 mr-1" /> Add New Item
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={handleSave} 
+                      disabled={isSaving} 
+                      className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm h-9 px-4 text-xs font-semibold rounded-lg shrink-0"
+                    >
+                      {isSaving ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1.5" />}
+                      Save Strategy
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
