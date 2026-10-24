@@ -210,7 +210,6 @@ function BacklinkCard({
   onSaved: (savedBacklink?: any) => void 
 }) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
   const copyToClipboard = (text: string, type: string) => {
     if (!text) return;
     navigator.clipboard.writeText(text);
@@ -306,7 +305,7 @@ function BacklinkCard({
             <div className="flex items-center gap-1.5 min-[1200px]:gap-2 ml-auto min-[1200px]:ml-0">
               {/* Edit/Settings Dropdown */}
               <div className="transition-opacity">
-                <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                <Dialog>
                   <DropdownMenu>
                     <DropdownMenuTrigger render={
                       <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-blue-600 bg-gray-50/50 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all" title="Edit backlink settings">
@@ -314,9 +313,11 @@ function BacklinkCard({
                       </Button>
                     }/>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onSelect={() => setIsEditOpen(true)} className="text-xs gap-2 cursor-pointer">
-                         <Plus className="w-3.5 h-3.5" /> Edit Source
-                      </DropdownMenuItem>
+                      <DialogTrigger render={
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs gap-2 cursor-pointer">
+                           <Plus className="w-3.5 h-3.5" /> Edit Source
+                        </DropdownMenuItem>
+                      }/>
                       <DropdownMenuItem className="text-xs text-red-600 gap-2">
                         <button
                           type="button"
@@ -334,11 +335,7 @@ function BacklinkCard({
                   </DropdownMenu>
                   <EditBacklinkDialog 
                     backlink={backlink} 
-                    onBacklinkSaved={(saved) => {
-                      setIsEditOpen(false);
-                      onSaved(saved);
-                    }}
-                    onClose={() => setIsEditOpen(false)}
+                    onBacklinkSaved={onSaved}
                   />
                 </Dialog>
               </div>

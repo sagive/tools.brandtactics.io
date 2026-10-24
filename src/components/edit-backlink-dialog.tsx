@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,7 @@ export function EditBacklinkDialog({
   onBacklinkSaved?: (savedBacklink?: any) => void,
   onClose?: () => void
 }) {
+  const closeRef = useRef<HTMLButtonElement>(null);
   const isEditing = !!backlink;
   const [websiteName, setWebsiteName] = useState(backlink?.website_name || "");
   const [url, setUrl] = useState(backlink?.url || "");
@@ -115,7 +116,9 @@ export function EditBacklinkDialog({
       }
       
       // Close dialog
-      if (onClose) {
+      if (closeRef.current) {
+        closeRef.current.click();
+      } else if (onClose) {
         onClose();
       } else {
         const closeButton = document.querySelector('[data-slot="dialog-close"]') as HTMLButtonElement;
@@ -226,7 +229,7 @@ export function EditBacklinkDialog({
           </Select>
         </div>
         <div className="flex items-center gap-3">
-          <DialogClose>
+          <DialogClose ref={closeRef}>
             <Button variant="outline">Cancel</Button>
           </DialogClose>
           <Button onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700">
