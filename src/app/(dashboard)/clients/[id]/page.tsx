@@ -130,7 +130,7 @@ export default function ClientOverview({ params }: { params: Promise<{ id: strin
     <div className="w-full space-y-6">
       <div className="grid grid-cols-1 gap-6">
         {/* Socials & Resources */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <ClientSocials clientId={id} />
           <ClientResources clientId={id} />
         </div>
