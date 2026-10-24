@@ -46,12 +46,8 @@ export default function BacklinksDashboard() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  async function fetchData() {
-    setLoading(true);
+  async function fetchData(silent = false) {
+    if (!silent) setLoading(true);
     const [backRes, catsRes] = await Promise.all([
       supabase.from("backlinks").select("*, backlink_categories(name)").order("rank", { ascending: false }).limit(10000),
       supabase.from("backlink_categories").select("*").order("rank")
@@ -59,19 +55,45 @@ export default function BacklinksDashboard() {
     
     if (backRes.data) setBacklinks(backRes.data);
     if (catsRes.data) setCategories(catsRes.data);
-    setLoading(false);
+    if (!silent) setLoading(false);
   }
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleBacklinkSaved = (savedBacklink?: any) => {
+    if (savedBacklink) {
+      setBacklinks((prev) => {
+        const index = prev.findIndex((b) => b.id === savedBacklink.id);
+        if (index >= 0) {
+          const updated = [...prev];
+          updated[index] = { ...updated[index], ...savedBacklink };
+          return updated;
+        } else {
+          return [savedBacklink, ...prev];
+        }
+      });
+      // Silently sync in background to ensure ordering and relations are completely fresh
+      fetchData(true);
+    } else {
+      fetchData(true);
+    }
+  };
 
   const handleDelete = async (id: string) => {
     console.log("[backlink-delete] deleting:", id);
+    // Optimistic removal: remove immediately from state
+    setBacklinks(prev => prev.filter(b => b.id !== id));
+    
     const { data, error } = await supabase.from('backlinks').delete().eq('id', id).select();
     console.log("[backlink-delete] response:", { data, error });
     if (error) {
       console.error("[backlink-delete] error:", error);
       toast.error("Failed to delete backlink");
+      fetchData(true);
     } else {
       toast.success("Backlink deleted");
-      fetchData();
     }
   };
 
@@ -114,7 +136,7 @@ export default function BacklinksDashboard() {
                  <Settings2 className="w-4 h-4" /> Categories
                </Button>
              }/>
-             <ManageBacklinkCategoriesDialog onCategoriesChanged={fetchData} />
+             <ManageBacklinkCategoriesDialog onCategoriesChanged={() => fetchData(true)} />
           </Dialog>
 
           <Dialog>
@@ -123,7 +145,7 @@ export default function BacklinksDashboard() {
                  <LayoutGrid className="w-4 h-4" /> Bulk Add
                </Button>
              }/>
-             <BulkAddBacklinkDialog onBacklinksSaved={fetchData} />
+             <BulkAddBacklinkDialog onBacklinksSaved={() => fetchData(true)} />
           </Dialog>
 
           <Dialog>
@@ -132,7 +154,7 @@ export default function BacklinksDashboard() {
                  <Plus className="w-4 h-4" /> Add Source
                </Button>
              }/>
-             <EditBacklinkDialog onBacklinkSaved={fetchData} />
+             <EditBacklinkDialog onBacklinkSaved={handleBacklinkSaved} />
           </Dialog>
         </div>
       </div>
@@ -161,7 +183,12 @@ export default function BacklinksDashboard() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {categoryBacklinks.map((backlink) => (
-                      <BacklinkCard key={backlink.id} backlink={backlink} onDelete={handleDelete} onRefresh={fetchData} />
+                      <BacklinkCard 
+                        key={backlink.id} 
+                        backlink={backlink} 
+                        onDelete={handleDelete} 
+                        onSaved={handleBacklinkSaved} 
+                      />
                     ))}
                   </div>
                 </section>
@@ -173,8 +200,17 @@ export default function BacklinksDashboard() {
   );
 }
 
-function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDelete: (id: string) => void, onRefresh: () => void }) {
+function BacklinkCard({ 
+  backlink, 
+  onDelete, 
+  onSaved 
+}: { 
+  backlink: any, 
+  onDelete: (id: string) => void, 
+  onSaved: (savedBacklink?: any) => void 
+}) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const copyToClipboard = (text: string, type: string) => {
     if (!text) return;
     navigator.clipboard.writeText(text);
@@ -270,7 +306,7 @@ function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDele
             <div className="flex items-center gap-1.5 min-[1200px]:gap-2 ml-auto min-[1200px]:ml-0">
               {/* Edit/Settings Dropdown */}
               <div className="transition-opacity">
-                <Dialog>
+                <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                   <DropdownMenu>
                     <DropdownMenuTrigger render={
                       <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-blue-600 bg-gray-50/50 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all" title="Edit backlink settings">
@@ -278,15 +314,13 @@ function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDele
                       </Button>
                     }/>
                     <DropdownMenuContent align="end">
-                      <DialogTrigger render={
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs gap-2">
-                           <Plus className="w-3.5 h-3.5" /> Edit Source
-                        </DropdownMenuItem>
-                      }/>
+                      <DropdownMenuItem onSelect={() => setIsEditOpen(true)} className="text-xs gap-2 cursor-pointer">
+                         <Plus className="w-3.5 h-3.5" /> Edit Source
+                      </DropdownMenuItem>
                       <DropdownMenuItem className="text-xs text-red-600 gap-2">
                         <button
                           type="button"
-                          className="flex items-center gap-2 cursor-pointer bg-transparent border-0 p-0 text-inherit text-xs"
+                          className="flex items-center gap-2 cursor-pointer bg-transparent border-0 p-0 text-inherit text-xs w-full text-left"
                           onClick={(e) => {
                             e.stopPropagation();
                             console.log("[backlink-delete] button clicked");
@@ -298,7 +332,14 @@ function BacklinkCard({ backlink, onDelete, onRefresh }: { backlink: any, onDele
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  <EditBacklinkDialog backlink={backlink} onBacklinkSaved={onRefresh} />
+                  <EditBacklinkDialog 
+                    backlink={backlink} 
+                    onBacklinkSaved={(saved) => {
+                      setIsEditOpen(false);
+                      onSaved(saved);
+                    }}
+                    onClose={() => setIsEditOpen(false)}
+                  />
                 </Dialog>
               </div>
 

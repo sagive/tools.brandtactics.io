@@ -8,9 +8,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { Link2, X, Plus, Settings2, User, Lock } from "lucide-react";
 
-export function EditBacklinkDialog({ backlink, onBacklinkSaved }: { backlink?: any, onBacklinkSaved?: () => void }) {
+export function EditBacklinkDialog({ 
+  backlink, 
+  onBacklinkSaved,
+  onClose
+}: { 
+  backlink?: any, 
+  onBacklinkSaved?: (savedBacklink?: any) => void,
+  onClose?: () => void
+}) {
   const isEditing = !!backlink;
   const [websiteName, setWebsiteName] = useState(backlink?.website_name || "");
   const [url, setUrl] = useState(backlink?.url || "");
@@ -25,6 +32,18 @@ export function EditBacklinkDialog({ backlink, onBacklinkSaved }: { backlink?: a
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    if (backlink) {
+      setWebsiteName(backlink.website_name || "");
+      setUrl(backlink.url || "");
+      setCategoryId(backlink.category_id || "");
+      setRank(backlink.rank || 0);
+      setGlobalUsername(backlink.global_username || "");
+      setGlobalPassword(backlink.global_password || "");
+      setLanguage(backlink.language || "english");
+    }
+  }, [backlink]);
 
   async function fetchCategories() {
     const { data } = await supabase.from('backlink_categories').select('*').order('rank');
@@ -52,16 +71,40 @@ export function EditBacklinkDialog({ backlink, onBacklinkSaved }: { backlink?: a
       };
       
       let error;
+      let savedRecord: any = null;
       if (isEditing) {
-        ({ error } = await supabase.from('backlinks').update(payload).eq('id', backlink.id));
+        const res = await supabase
+          .from('backlinks')
+          .update(payload)
+          .eq('id', backlink.id)
+          .select('*, backlink_categories(name)')
+          .single();
+        error = res.error;
+        savedRecord = res.data;
       } else {
-        ({ error } = await supabase.from('backlinks').insert([payload]));
+        const res = await supabase
+          .from('backlinks')
+          .insert([payload])
+          .select('*, backlink_categories(name)')
+          .single();
+        error = res.error;
+        savedRecord = res.data;
       }
 
       if (error) throw error;
 
+      const selectedCategory = categories.find(c => c.id === categoryId);
+      const finalSaved = savedRecord || {
+        ...payload,
+        id: backlink?.id,
+        backlink_categories: selectedCategory ? { name: selectedCategory.name } : undefined
+      };
+      if (finalSaved && !finalSaved.backlink_categories && selectedCategory) {
+        finalSaved.backlink_categories = { name: selectedCategory.name };
+      }
+
       toast.success(`Backlink ${isEditing ? 'updated' : 'added'} successfully`);
-      onBacklinkSaved?.();
+      onBacklinkSaved?.(finalSaved);
       
       // Clear fields if adding a new backlink
       if (!isEditing) {
@@ -72,8 +115,12 @@ export function EditBacklinkDialog({ backlink, onBacklinkSaved }: { backlink?: a
       }
       
       // Close dialog
-      const closeButton = document.querySelector('[data-slot="dialog-close"]') as HTMLButtonElement;
-      if (closeButton) closeButton.click();
+      if (onClose) {
+        onClose();
+      } else {
+        const closeButton = document.querySelector('[data-slot="dialog-close"]') as HTMLButtonElement;
+        if (closeButton) closeButton.click();
+      }
     } catch (err: any) {
       toast.error(err.message || "Failed to save backlink");
     } finally {
