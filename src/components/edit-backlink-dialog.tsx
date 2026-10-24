@@ -138,12 +138,20 @@ export function EditBacklinkDialog({
       </DialogHeader>
       <div className="space-y-4 py-4">
         <div className="space-y-2">
-          <Label>Website Name</Label>
-          <Input data-type="website_name" data-value={websiteName} value={websiteName} onChange={(e) => setWebsiteName(e.target.value)} placeholder="e.g. Clutch.co" />
+          <Label htmlFor="backlink-name">Website Name</Label>
+          <Input 
+            id="backlink-name"
+            data-type="website_name" 
+            data-value={websiteName} 
+            value={websiteName} 
+            onChange={(e) => setWebsiteName(e.target.value)} 
+            placeholder="e.g. Clutch.co" 
+          />
         </div>
         <div className="space-y-2">
-          <Label>Website URL</Label>
+          <Label htmlFor="backlink-url">Website URL</Label>
           <Input 
+            id="backlink-url"
             data-type="url"
             data-value={url}
             value={url} 
@@ -163,10 +171,10 @@ export function EditBacklinkDialog({
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Category</Label>
+            <Label htmlFor="backlink-category">Category</Label>
             {categories.length > 0 ? (
               <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger data-type="category" data-value={categoryId} className="w-full">
+                <SelectTrigger id="backlink-category" data-type="category" data-value={categoryId} className="w-full">
                   <SelectValue>
                     {categories.find(c => c.id === categoryId)?.name || "Select category"}
                   </SelectValue>
@@ -182,9 +190,9 @@ export function EditBacklinkDialog({
             )}
           </div>
           <div className="space-y-2">
-            <Label>Rank</Label>
+            <Label htmlFor="backlink-rank">Rank</Label>
             <Select value={rank.toString()} onValueChange={(val) => setRank(parseInt(val))}>
-              <SelectTrigger data-type="rank" data-value={rank.toString()} className="w-full">
+              <SelectTrigger id="backlink-rank" data-type="rank" data-value={rank.toString()} className="w-full">
                 <SelectValue placeholder="Rank" />
               </SelectTrigger>
               <SelectContent>
@@ -200,26 +208,40 @@ export function EditBacklinkDialog({
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="flex justify-between">
+            <Label htmlFor="backlink-username" className="flex justify-between">
               Global User
               <span className="text-[10px] text-gray-400 font-normal">Optional</span>
             </Label>
-            <Input data-type="global_username" data-value={globalUsername} value={globalUsername} onChange={(e) => setGlobalUsername(e.target.value)} placeholder="Username" />
+            <Input 
+              id="backlink-username"
+              data-type="global_username" 
+              data-value={globalUsername} 
+              value={globalUsername} 
+              onChange={(e) => setGlobalUsername(e.target.value)} 
+              placeholder="Username" 
+            />
           </div>
           <div className="space-y-2">
-            <Label className="flex justify-between">
+            <Label htmlFor="backlink-password" className="flex justify-between">
               Global Pass
               <span className="text-[10px] text-gray-400 font-normal">Optional</span>
             </Label>
-            <Input data-type="global_password" data-value={globalPassword} value={globalPassword} onChange={(e) => setGlobalPassword(e.target.value)} placeholder="Password" />
+            <Input 
+              id="backlink-password"
+              data-type="global_password" 
+              data-value={globalPassword} 
+              value={globalPassword} 
+              onChange={(e) => setGlobalPassword(e.target.value)} 
+              placeholder="Password" 
+            />
           </div>
         </div>
       </div>
       <div className="flex items-center justify-between pt-4">
         <div className="flex items-center gap-2">
-          <Label className="text-xs text-gray-500 font-medium">Language:</Label>
+          <Label htmlFor="backlink-language" className="text-xs text-gray-500 font-medium">Language:</Label>
           <Select value={language} onValueChange={setLanguage}>
-            <SelectTrigger className="h-8 w-28 text-xs bg-white">
+            <SelectTrigger id="backlink-language" className="h-8 w-28 text-xs bg-white">
               <SelectValue placeholder="Language" />
             </SelectTrigger>
             <SelectContent>
@@ -232,7 +254,7 @@ export function EditBacklinkDialog({
           <DialogClose ref={closeRef}>
             <Button variant="outline">Cancel</Button>
           </DialogClose>
-          <Button onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700">
+          <Button id="backlink-submit" onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700">
             {isSaving ? "Saving..." : isEditing ? "Save Changes" : "Add Backlink"}
           </Button>
         </div>
