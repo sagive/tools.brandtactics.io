@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getSearchConsoleStats, getAnalyticsStats } from '@/lib/google-stats';
+import { getSearchConsoleStats, getAnalyticsStats, listAvailableAccounts } from '@/lib/google-stats';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +17,11 @@ function getSupabase() {
   return createClient(supabaseUrl, supabaseServiceKey);
 }
 
+function getErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  return String(err);
+}
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> | { id: string } }
@@ -27,10 +32,11 @@ export async function GET(
 
     const { searchParams } = new URL(req.url);
     let gscSiteUrl = searchParams.get('gscSiteUrl') || '';
+    let website = searchParams.get('website') || '';
     let ga4PropertyId = searchParams.get('ga4PropertyId') || '';
 
-    // If not supplied in query, fetch from client settings
-    if (!gscSiteUrl || !ga4PropertyId) {
+    // If needed, fetch client record from database
+    if (!gscSiteUrl || !website || !ga4PropertyId) {
       if (supabaseUrl && supabaseServiceKey) {
         const supabase = getSupabase();
         const { data: client } = await supabase
@@ -46,10 +52,40 @@ export async function GET(
           if (!gscSiteUrl) {
             gscSiteUrl = seoStats.gsc_site_url || '';
           }
+          if (!website) {
+            website = client.website || official.official_website || '';
+          }
           if (!ga4PropertyId) {
             ga4PropertyId = seoStats.ga4_property_id || '';
           }
         }
+      }
+    }
+
+    // Auto-resolve Search Console property from website if not explicitly given
+    if (!gscSiteUrl && website) {
+      const cleanDomain = website.replace(/^https?:\/\//i, '').replace(/\/+$/, '').toLowerCase();
+      try {
+        const accounts = await listAvailableAccounts();
+        const matched = accounts.gscSites.find((s) => {
+          const sClean = s.siteUrl.replace(/^sc-domain:/i, '').replace(/^https?:\/\//i, '').replace(/\/+$/, '').toLowerCase();
+          return sClean === cleanDomain;
+        });
+        gscSiteUrl = matched ? matched.siteUrl : `https://${cleanDomain}/`;
+      } catch {
+        gscSiteUrl = `https://${cleanDomain}/`;
+      }
+    } else if (gscSiteUrl && !gscSiteUrl.startsWith('http://') && !gscSiteUrl.startsWith('https://') && !gscSiteUrl.startsWith('sc-domain:')) {
+      const cleanDomain = gscSiteUrl.replace(/\/+$/, '').toLowerCase();
+      try {
+        const accounts = await listAvailableAccounts();
+        const matched = accounts.gscSites.find((s) => {
+          const sClean = s.siteUrl.replace(/^sc-domain:/i, '').replace(/^https?:\/\//i, '').replace(/\/+$/, '').toLowerCase();
+          return sClean === cleanDomain;
+        });
+        gscSiteUrl = matched ? matched.siteUrl : `https://${cleanDomain}/`;
+      } catch {
+        gscSiteUrl = `https://${cleanDomain}/`;
       }
     }
 
@@ -72,7 +108,7 @@ export async function GET(
 
     const promises: Promise<any>[] = [];
 
-    // Query Search Console if site URL provided
+    // Query Search Console if site URL resolved
     if (gscSiteUrl) {
       promises.push(
         getSearchConsoleStats({
@@ -85,9 +121,9 @@ export async function GET(
           .then((res) => {
             gscData = res;
           })
-          .catch((err: any) => {
-            console.error('GSC query error:', err?.message || err);
-            gscError = err?.message || 'Search Console query error';
+          .catch((err: unknown) => {
+            console.error('GSC query error:', getErrorMessage(err));
+            gscError = getErrorMessage(err);
           })
       );
     }
@@ -105,9 +141,9 @@ export async function GET(
           .then((res) => {
             ga4Data = res;
           })
-          .catch((err: any) => {
-            console.error('GA4 query error:', err?.message || err);
-            ga4Error = err?.message || 'Google Analytics query error';
+          .catch((err: unknown) => {
+            console.error('GA4 query error:', getErrorMessage(err));
+            ga4Error = getErrorMessage(err);
           })
       );
     }
@@ -116,6 +152,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
+      clientWebsite: website,
       dates: {
         startDate,
         endDate,
@@ -133,10 +170,10 @@ export async function GET(
         ga4: ga4Error,
       },
     });
-  } catch (err: any) {
-    console.error('Error in stats route:', err);
+  } catch (err: unknown) {
+    console.error('Error in stats route:', getErrorMessage(err));
     return NextResponse.json(
-      { success: false, error: err?.message || 'Failed to fetch statistics' },
+      { success: false, error: getErrorMessage(err) || 'Failed to fetch statistics' },
       { status: 500 }
     );
   }
