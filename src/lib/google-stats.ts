@@ -181,7 +181,7 @@ export async function getSearchConsoleStats(params: {
       dimensions: ['page'],
       rowLimit: 50,
     },
-  });
+  }).catch(() => ({ data: { rows: [] } }));
 
   // 5. Daily trend
   const dailyPromise = searchconsole.searchanalytics.query({
@@ -192,7 +192,7 @@ export async function getSearchConsoleStats(params: {
       dimensions: ['date'],
       rowLimit: 500,
     },
-  });
+  }).catch(() => ({ data: { rows: [] } }));
 
   // 6. Devices breakdown
   const devicesPromise = searchconsole.searchanalytics.query({
@@ -202,19 +202,101 @@ export async function getSearchConsoleStats(params: {
       endDate,
       dimensions: ['device'],
     },
-  });
+  }).catch(() => ({ data: { rows: [] } }));
 
-  const [primaryRes, compareRes, queriesRes, pagesRes, dailyRes, devicesRes] = await Promise.all([
-    primaryPromise,
-    comparePromise,
-    queriesPromise,
+  // 7. Countries breakdown
+  const countriesPromise = searchconsole.searchanalytics.query({
+    siteUrl,
+    requestBody: {
+      startDate,
+      endDate,
+      dimensions: ['country'],
+      rowLimit: 30,
+    },
+  }).catch(() => ({ data: { rows: [] } }));
+
+  // 8. Compare queries for Winners & Losers (if compare period exists)
+  const compareQueriesPromise = (compareStartDate && compareEndDate)
+    ? searchconsole.searchanalytics.query({
+        siteUrl,
+        requestBody: {
+          startDate: compareStartDate,
+          endDate: compareEndDate,
+          dimensions: ['query'],
+          rowLimit: 100,
+        },
+      }).catch(() => ({ data: { rows: [] } }))
+    : Promise.resolve({ data: { rows: [] } });
+
+  // 9. Search Appearance (Rich Results)
+  const appearancePromise = searchconsole.searchanalytics.query({
+    siteUrl,
+    requestBody: {
+      startDate,
+      endDate,
+      dimensions: ['searchAppearance'],
+      rowLimit: 20,
+    },
+  }).catch(() => ({ data: { rows: [] } }));
+
+  const [
+    primaryRes,
+    compareRes,
+    queriesRes,
+    pagesRes,
+    dailyRes,
+    devicesRes,
+    countriesRes,
+    compareQueriesRes,
+    appearanceRes,
+  ] = await Promise.all([
+    primaryPromise.catch(() => ({ data: { rows: [] } })),
+    comparePromise.catch(() => ({ data: { rows: [] } })),
+    queriesPromise.catch(() => ({ data: { rows: [] } })),
     pagesPromise,
     dailyPromise,
     devicesPromise,
+    countriesPromise,
+    compareQueriesPromise,
+    appearancePromise,
   ]);
 
   const pRow = primaryRes.data.rows?.[0] || { clicks: 0, impressions: 0, ctr: 0, position: 0 };
   const cRow = compareRes.data.rows?.[0] || null;
+
+  const currentQueries = (queriesRes.data.rows || []).map((r) => ({
+    query: r.keys?.[0] || '',
+    clicks: r.clicks || 0,
+    impressions: r.impressions || 0,
+    ctr: r.ctr ? Number((r.ctr * 100).toFixed(2)) : 0,
+    position: r.position ? Number(r.position.toFixed(1)) : 0,
+  }));
+
+  const pastQueriesMap = new Map<string, { clicks: number; position: number }>();
+  (compareQueriesRes.data.rows || []).forEach((r) => {
+    const q = r.keys?.[0] || '';
+    if (q) {
+      pastQueriesMap.set(q, {
+        clicks: r.clicks || 0,
+        position: r.position ? Number(r.position.toFixed(1)) : 0,
+      });
+    }
+  });
+
+  // Calculate Winners & Losers
+  const enrichedQueries = currentQueries.map((q) => {
+    const past = pastQueriesMap.get(q.query);
+    const prevClicks = past ? past.clicks : 0;
+    const clicksDiff = q.clicks - prevClicks;
+    const prevPos = past ? past.position : q.position;
+    const posDiff = Number((prevPos - q.position).toFixed(1)); // positive means rank improved
+    return {
+      ...q,
+      clicksDiff,
+      posDiff,
+      isNew: !past,
+    };
+  });
 
   return {
     summary: {
@@ -231,13 +313,7 @@ export async function getSearchConsoleStats(params: {
           position: cRow.position ? Number(cRow.position.toFixed(1)) : 0,
         }
       : null,
-    topQueries: (queriesRes.data.rows || []).map((r) => ({
-      query: r.keys?.[0] || '',
-      clicks: r.clicks || 0,
-      impressions: r.impressions || 0,
-      ctr: r.ctr ? Number((r.ctr * 100).toFixed(2)) : 0,
-      position: r.position ? Number(r.position.toFixed(1)) : 0,
-    })),
+    topQueries: enrichedQueries,
     topPages: (pagesRes.data.rows || []).map((r) => ({
       page: r.keys?.[0] || '',
       clicks: r.clicks || 0,
@@ -247,6 +323,20 @@ export async function getSearchConsoleStats(params: {
     })),
     devices: (devicesRes.data.rows || []).map((r) => ({
       device: r.keys?.[0] || 'DESKTOP',
+      clicks: r.clicks || 0,
+      impressions: r.impressions || 0,
+      ctr: r.ctr ? Number((r.ctr * 100).toFixed(2)) : 0,
+      position: r.position ? Number(r.position.toFixed(1)) : 0,
+    })),
+    countries: (countriesRes.data.rows || []).map((r) => ({
+      country: (r.keys?.[0] || 'unknown').toLowerCase(),
+      clicks: r.clicks || 0,
+      impressions: r.impressions || 0,
+      ctr: r.ctr ? Number((r.ctr * 100).toFixed(2)) : 0,
+      position: r.position ? Number(r.position.toFixed(1)) : 0,
+    })),
+    appearances: (appearanceRes.data.rows || []).map((r) => ({
+      appearance: r.keys?.[0] || 'Other',
       clicks: r.clicks || 0,
       impressions: r.impressions || 0,
       ctr: r.ctr ? Number((r.ctr * 100).toFixed(2)) : 0,
@@ -344,14 +434,53 @@ export async function getAnalyticsStats(params: {
       orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
       limit: '25',
     },
-  });
+  }).catch(() => ({ data: { rows: [] } }));
 
-  const [primaryRes, compareRes, dailyRes, channelsRes, landingRes] = await Promise.all([
-    primaryPromise,
-    comparePromise,
-    dailyPromise,
-    channelsPromise,
+  // 6. Pages with Titles
+  const pagesWithTitlesPromise = analyticsdata.properties.runReport({
+    property,
+    requestBody: {
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [{ name: 'pageTitle' }, { name: 'pagePath' }],
+      metrics: [
+        { name: 'screenPageViews' },
+        { name: 'activeUsers' },
+        { name: 'sessions' },
+        { name: 'bounceRate' },
+      ],
+      orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
+      limit: '50',
+    },
+  }).catch(() => ({ data: { rows: [] } }));
+
+  // 7. Events & Conversions (Key Events)
+  const eventsPromise = analyticsdata.properties.runReport({
+    property,
+    requestBody: {
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [{ name: 'eventName' }],
+      metrics: [{ name: 'eventCount' }, { name: 'conversions' }],
+      orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+      limit: '30',
+    },
+  }).catch(() => ({ data: { rows: [] } }));
+
+  const [
+    primaryRes,
+    compareRes,
+    dailyRes,
+    channelsRes,
+    landingRes,
+    pagesWithTitlesRes,
+    eventsRes,
+  ] = await Promise.all([
+    primaryPromise.catch(() => ({ data: { rows: [] } })),
+    comparePromise.catch(() => ({ data: { rows: [] } })),
+    dailyPromise.catch(() => ({ data: { rows: [] } })),
+    channelsPromise.catch(() => ({ data: { rows: [] } })),
     landingPagesPromise,
+    pagesWithTitlesPromise,
+    eventsPromise,
   ]);
 
   const pMetrics = primaryRes.data.rows?.[0]?.metricValues || [];
@@ -405,6 +534,19 @@ export async function getAnalyticsStats(params: {
       sessions: Number(r.metricValues?.[0]?.value || 0),
       activeUsers: Number(r.metricValues?.[1]?.value || 0),
       pageViews: Number(r.metricValues?.[2]?.value || 0),
+    })),
+    pagesWithTitles: (pagesWithTitlesRes.data.rows || []).map((r) => ({
+      title: r.dimensionValues?.[0]?.value || '(Untitled)',
+      path: r.dimensionValues?.[1]?.value || '/',
+      views: Number(r.metricValues?.[0]?.value || 0),
+      activeUsers: Number(r.metricValues?.[1]?.value || 0),
+      sessions: Number(r.metricValues?.[2]?.value || 0),
+      bounceRate: Number((Number(r.metricValues?.[3]?.value || 0) * 100).toFixed(1)),
+    })),
+    events: (eventsRes.data.rows || []).map((r) => ({
+      eventName: r.dimensionValues?.[0]?.value || '',
+      count: Number(r.metricValues?.[0]?.value || 0),
+      conversions: Number(r.metricValues?.[1]?.value || 0),
     })),
   };
 }

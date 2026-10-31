@@ -46,6 +46,13 @@ import {
   Laptop,
   Smartphone,
   Tablet,
+  Target,
+  Award,
+  Flag,
+  ArrowUpRight,
+  ArrowDownRight,
+  FileText,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
@@ -59,6 +66,7 @@ import {
   CartesianGrid,
   BarChart,
   Bar,
+  Legend,
 } from "recharts";
 
 interface StatsData {
@@ -80,6 +88,9 @@ interface StatsData {
     impressions: number;
     ctr: number;
     position: number;
+    clicksDiff?: number;
+    posDiff?: number;
+    isNew?: boolean;
   }>;
   topPages: Array<{
     page: string;
@@ -97,6 +108,20 @@ interface StatsData {
   }>;
   devices?: Array<{
     device: string;
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+  }>;
+  countries?: Array<{
+    country: string;
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+  }>;
+  appearances?: Array<{
+    appearance: string;
     clicks: number;
     impressions: number;
     ctr: number;
@@ -135,6 +160,19 @@ interface GA4StatsData {
     sessions: number;
     activeUsers: number;
     pageViews: number;
+  }>;
+  pagesWithTitles?: Array<{
+    title: string;
+    path: string;
+    views: number;
+    activeUsers: number;
+    sessions: number;
+    bounceRate: number;
+  }>;
+  events?: Array<{
+    eventName: string;
+    count: number;
+    conversions: number;
   }>;
 }
 
@@ -339,6 +377,40 @@ export default function ClientStatsPage({
     };
   };
 
+  // Country names and flags mapping
+  const COUNTRY_MAP: Record<string, { name: string; flag: string }> = {
+    isr: { name: "ישראל (Israel)", flag: "🇮🇱" },
+    usa: { name: "ארצות הברית (USA)", flag: "🇺🇸" },
+    gbr: { name: "בריטניה (UK)", flag: "🇬🇧" },
+    fra: { name: "צרפת (France)", flag: "🇫🇷" },
+    deu: { name: "גרמניה (Germany)", flag: "🇩🇪" },
+    can: { name: "קנדה (Canada)", flag: "🇨🇦" },
+    rus: { name: "רוסיה (Russia)", flag: "🇷🇺" },
+    ukr: { name: "אוקראינה (Ukraine)", flag: "🇺🇦" },
+    esp: { name: "ספרד (Spain)", flag: "🇪🇸" },
+    ita: { name: "איטליה (Italy)", flag: "🇮🇹" },
+    nld: { name: "הולנד (Netherlands)", flag: "🇳🇱" },
+    aus: { name: "אוסטרליה (Australia)", flag: "🇦🇺" },
+    bra: { name: "ברזיל (Brazil)", flag: "🇧🇷" },
+    ind: { name: "הודו (India)", flag: "🇮🇳" },
+    tur: { name: "טורקיה (Turkey)", flag: "🇹🇷" },
+    che: { name: "שוויץ (Switzerland)", flag: "🇨🇭" },
+    bel: { name: "בלגיה (Belgium)", flag: "🇧🇪" },
+    swe: { name: "שוודיה (Sweden)", flag: "🇸🇪" },
+    pol: { name: "פולין (Poland)", flag: "🇵🇱" },
+    grc: { name: "יוון (Greece)", flag: "🇬🇷" },
+    cyp: { name: "קפריסין (Cyprus)", flag: "🇨🇾" },
+    are: { name: "איחוד האמירויות (UAE)", flag: "🇦🇪" },
+  };
+
+  function formatCountry(code: string) {
+    const lower = code.toLowerCase();
+    if (COUNTRY_MAP[lower]) {
+      return `${COUNTRY_MAP[lower].flag} ${COUNTRY_MAP[lower].name}`;
+    }
+    return `🌐 ${code.toUpperCase()}`;
+  }
+
   // Filter queries
   const filteredQueries = useMemo(() => {
     if (!gscData?.topQueries) return [];
@@ -347,6 +419,60 @@ export default function ClientStatsPage({
       q.query.toLowerCase().includes(querySearch.toLowerCase())
     );
   }, [gscData?.topQueries, querySearch]);
+
+  // Striking Distance: queries ranked between #8 and #20 (high potential fast wins)
+  const strikingQueries = useMemo(() => {
+    if (!gscData?.topQueries) return [];
+    return gscData.topQueries
+      .filter((q) => q.position >= 8 && q.position <= 20)
+      .sort((a, b) => b.impressions - a.impressions);
+  }, [gscData?.topQueries]);
+
+  // Winners: queries with positive growth in clicks or rank
+  const winners = useMemo(() => {
+    if (!gscData?.topQueries) return [];
+    return [...gscData.topQueries]
+      .filter((q) => (q.clicksDiff ?? 0) > 0 || (q.posDiff ?? 0) > 0)
+      .sort((a, b) => (b.clicksDiff ?? 0) - (a.clicksDiff ?? 0) || (b.posDiff ?? 0) - (a.posDiff ?? 0));
+  }, [gscData?.topQueries]);
+
+  // Losers: queries with drop in clicks or rank
+  const losers = useMemo(() => {
+    if (!gscData?.topQueries) return [];
+    return [...gscData.topQueries]
+      .filter((q) => (q.clicksDiff ?? 0) < 0 || (q.posDiff ?? 0) < 0)
+      .sort((a, b) => (a.clicksDiff ?? 0) - (b.clicksDiff ?? 0) || (a.posDiff ?? 0) - (b.posDiff ?? 0));
+  }, [gscData?.topQueries]);
+
+  // Countries sorted
+  const sortedCountries = useMemo(() => {
+    if (!gscData?.countries) return [];
+    if (!querySearch.trim()) return gscData.countries;
+    const term = querySearch.toLowerCase();
+    return gscData.countries.filter(
+      (c) =>
+        c.country.toLowerCase().includes(term) ||
+        formatCountry(c.country).toLowerCase().includes(term)
+    );
+  }, [gscData?.countries, querySearch]);
+
+  // Filter GA4 pages with titles
+  const filteredGa4Pages = useMemo(() => {
+    if (!ga4Data?.pagesWithTitles) return [];
+    if (!pageSearch.trim()) return ga4Data.pagesWithTitles;
+    const term = pageSearch.toLowerCase();
+    return ga4Data.pagesWithTitles.filter(
+      (p) => p.title.toLowerCase().includes(term) || p.path.toLowerCase().includes(term)
+    );
+  }, [ga4Data?.pagesWithTitles, pageSearch]);
+
+  // Filter GA4 Events & Conversions
+  const filteredEvents = useMemo(() => {
+    if (!ga4Data?.events) return [];
+    if (!querySearch.trim()) return ga4Data.events;
+    const term = querySearch.toLowerCase();
+    return ga4Data.events.filter((e) => e.eventName.toLowerCase().includes(term));
+  }, [ga4Data?.events, querySearch]);
 
   function decodePath(url: string): string {
     try {
@@ -598,358 +724,291 @@ export default function ClientStatsPage({
 
       {/* Main Stats Display */}
       <div className="space-y-6">
-        {/* GSC KPI Scorecards */}
-        {gscData && (
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Search className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-semibold tracking-tight">Google Search Console Performance</h3>
-              <span className="text-xs text-muted-foreground">({clientWebsite})</span>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {/* Total Clicks */}
-              <Card className="shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground">Total Clicks</span>
-                    <MousePointerClick className="w-4 h-4 text-blue-500 opacity-80" />
-                  </div>
-                  <div className="text-2xl font-bold mt-2">
-                    {gscData.summary.clicks.toLocaleString()}
-                  </div>
-                  {compareEnabled && gscData.compareSummary && (() => {
-                    const ch = calcChange(gscData.summary.clicks, gscData.compareSummary.clicks);
-                    if (!ch) return null;
-                    return (
-                      <div className={`flex items-center gap-1 text-xs mt-1.5 ${ch.isPositive ? "text-emerald-500" : "text-rose-500"}`}>
-                        {ch.isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                        <span>{ch.value}%</span>
-                        <span className="text-muted-foreground text-[11px]">vs prev period</span>
-                      </div>
-                    );
-                  })()}
-                </CardContent>
-              </Card>
-
-              {/* Total Impressions */}
-              <Card className="shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground">Total Impressions</span>
-                    <Eye className="w-4 h-4 text-purple-500 opacity-80" />
-                  </div>
-                  <div className="text-2xl font-bold mt-2">
-                    {gscData.summary.impressions.toLocaleString()}
-                  </div>
-                  {compareEnabled && gscData.compareSummary && (() => {
-                    const ch = calcChange(gscData.summary.impressions, gscData.compareSummary.impressions);
-                    if (!ch) return null;
-                    return (
-                      <div className={`flex items-center gap-1 text-xs mt-1.5 ${ch.isPositive ? "text-emerald-500" : "text-rose-500"}`}>
-                        {ch.isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                        <span>{ch.value}%</span>
-                        <span className="text-muted-foreground text-[11px]">vs prev period</span>
-                      </div>
-                    );
-                  })()}
-                </CardContent>
-              </Card>
-
-              {/* Average CTR */}
-              <Card className="shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground">Average CTR</span>
-                    <Percent className="w-4 h-4 text-emerald-500 opacity-80" />
-                  </div>
-                  <div className="text-2xl font-bold mt-2">
-                    {gscData.summary.ctr}%
-                  </div>
-                  {compareEnabled && gscData.compareSummary && (() => {
-                    const diff = Number((gscData.summary.ctr - gscData.compareSummary.ctr).toFixed(2));
-                    const isPos = diff >= 0;
-                    return (
-                      <div className={`flex items-center gap-1 text-xs mt-1.5 ${isPos ? "text-emerald-500" : "text-rose-500"}`}>
-                        {isPos ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                        <span>{Math.abs(diff)}%</span>
-                        <span className="text-muted-foreground text-[11px]">vs prev period</span>
-                      </div>
-                    );
-                  })()}
-                </CardContent>
-              </Card>
-
-              {/* Average Position */}
-              <Card className="shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground">Average Position</span>
-                    <TrendingUp className="w-4 h-4 text-amber-500 opacity-80" />
-                  </div>
-                  <div className="text-2xl font-bold mt-2">
-                    {gscData.summary.position || "—"}
-                  </div>
-                  {compareEnabled && gscData.compareSummary && (() => {
-                    const diff = Number((gscData.summary.position - gscData.compareSummary.position).toFixed(1));
-                    const improved = diff < 0;
-                    return (
-                      <div className={`flex items-center gap-1 text-xs mt-1.5 ${improved ? "text-emerald-500" : "text-rose-500"}`}>
-                        {improved ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                        <span>{Math.abs(diff)} pos</span>
-                        <span className="text-muted-foreground text-[11px]">{improved ? "improved" : "dropped"}</span>
-                      </div>
-                    );
-                  })()}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )}
-
-        {/* GA4 KPI Scorecards (if connected) */}
-        {ga4Data && (
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <BarChart3 className="w-4 h-4 text-emerald-500" />
-              <h3 className="text-sm font-semibold tracking-tight">Google Analytics 4 Overview</h3>
-              <span className="text-xs text-muted-foreground">(Property {ga4PropertyId})</span>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {/* Active Users */}
-              <Card className="shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground">Active Users</span>
-                    <Users className="w-4 h-4 text-emerald-500 opacity-80" />
-                  </div>
-                  <div className="text-2xl font-bold mt-2">
-                    {ga4Data.summary.activeUsers.toLocaleString()}
-                  </div>
-                  {compareEnabled && ga4Data.compareSummary && (() => {
-                    const ch = calcChange(ga4Data.summary.activeUsers, ga4Data.compareSummary.activeUsers);
-                    if (!ch) return null;
-                    return (
-                      <div className={`flex items-center gap-1 text-xs mt-1.5 ${ch.isPositive ? "text-emerald-500" : "text-rose-500"}`}>
-                        {ch.isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                        <span>{ch.value}%</span>
-                        <span className="text-muted-foreground text-[11px]">vs prev period</span>
-                      </div>
-                    );
-                  })()}
-                </CardContent>
-              </Card>
-
-              {/* Sessions */}
-              <Card className="shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground">Total Sessions</span>
-                    <Activity className="w-4 h-4 text-blue-500 opacity-80" />
-                  </div>
-                  <div className="text-2xl font-bold mt-2">
-                    {ga4Data.summary.sessions.toLocaleString()}
-                  </div>
-                  {compareEnabled && ga4Data.compareSummary && (() => {
-                    const ch = calcChange(ga4Data.summary.sessions, ga4Data.compareSummary.sessions);
-                    if (!ch) return null;
-                    return (
-                      <div className={`flex items-center gap-1 text-xs mt-1.5 ${ch.isPositive ? "text-emerald-500" : "text-rose-500"}`}>
-                        {ch.isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                        <span>{ch.value}%</span>
-                        <span className="text-muted-foreground text-[11px]">vs prev period</span>
-                      </div>
-                    );
-                  })()}
-                </CardContent>
-              </Card>
-
-              {/* Page Views */}
-              <Card className="shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground">Page Views</span>
-                    <Layers className="w-4 h-4 text-purple-500 opacity-80" />
-                  </div>
-                  <div className="text-2xl font-bold mt-2">
-                    {ga4Data.summary.pageViews.toLocaleString()}
-                  </div>
-                  {compareEnabled && ga4Data.compareSummary && (() => {
-                    const ch = calcChange(ga4Data.summary.pageViews, ga4Data.compareSummary.pageViews);
-                    if (!ch) return null;
-                    return (
-                      <div className={`flex items-center gap-1 text-xs mt-1.5 ${ch.isPositive ? "text-emerald-500" : "text-rose-500"}`}>
-                        {ch.isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                        <span>{ch.value}%</span>
-                        <span className="text-muted-foreground text-[11px]">vs prev period</span>
-                      </div>
-                    );
-                  })()}
-                </CardContent>
-              </Card>
-
-              {/* Bounce Rate */}
-              <Card className="shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground">Bounce Rate</span>
-                    <Percent className="w-4 h-4 text-amber-500 opacity-80" />
-                  </div>
-                  <div className="text-2xl font-bold mt-2">
-                    {ga4Data.summary.bounceRate}%
-                  </div>
-                  {compareEnabled && ga4Data.compareSummary && (() => {
-                    const diff = Number((ga4Data.summary.bounceRate - ga4Data.compareSummary.bounceRate).toFixed(1));
-                    const improved = diff <= 0;
-                    return (
-                      <div className={`flex items-center gap-1 text-xs mt-1.5 ${improved ? "text-emerald-500" : "text-rose-500"}`}>
-                        {improved ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                        <span>{Math.abs(diff)}%</span>
-                        <span className="text-muted-foreground text-[11px]">{improved ? "improved" : "increased"}</span>
-                      </div>
-                    );
-                  })()}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )}
-
-        {/* Visual Performance Charts */}
-        {gscData?.dailyTrend && gscData.dailyTrend.length > 0 && (
-          <Card className="shadow-sm">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-primary" />
-                    Search Console Daily Trend
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Daily clicks and organic impressions over the selected timeframe
-                  </CardDescription>
-                </div>
+        {/* KPI Scorecards Container - Single row on screens >= 960px */}
+        <div className={`grid grid-cols-1 ${ga4Data ? "min-[960px]:grid-cols-2" : ""} gap-4`}>
+          {/* GSC Scorecards */}
+          {gscData && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Search className="w-3.5 h-3.5 text-primary" />
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Search Console
+                </h3>
               </div>
-            </CardHeader>
-            <CardContent className="pt-2">
-              <div className="h-72 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart
-                    data={gscData.dailyTrend}
-                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                  >
-                    <defs>
-                      <linearGradient id="clicksGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
-                      </linearGradient>
-                      <linearGradient id="impressionsGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#a855f7" stopOpacity={0.0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
-                    <XAxis
-                      dataKey="date"
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fontSize: 11 }}
-                      tickFormatter={(str) => str.slice(5)}
-                    />
-                    <YAxis
-                      yAxisId="left"
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fontSize: 11 }}
-                    />
-                    <YAxis
-                      yAxisId="right"
-                      orientation="right"
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fontSize: 11 }}
-                    />
-                    <RechartsTooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        borderColor: "hsl(var(--border))",
-                        borderRadius: "8px",
-                        fontSize: "12px",
-                      }}
-                    />
-                    <Area
-                      yAxisId="left"
-                      type="monotone"
-                      dataKey="clicks"
-                      name="Clicks"
-                      stroke="#3b82f6"
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#clicksGrad)"
-                    />
-                    <Area
-                      yAxisId="right"
-                      type="monotone"
-                      dataKey="impressions"
-                      name="Impressions"
-                      stroke="#a855f7"
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#impressionsGrad)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
-        {/* Search Console Devices Breakdown */}
-        {gscData?.devices && gscData.devices.length > 0 && (
-          <Card className="shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Laptop className="w-4 h-4 text-primary" />
-                Search Traffic by Device (Google Search Console)
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Clicks and organic impressions across Desktop, Mobile, and Tablet
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-2">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {gscData.devices.map((dev) => {
-                  const isMobile = dev.device.toUpperCase() === "MOBILE";
-                  const isTablet = dev.device.toUpperCase() === "TABLET";
-                  const Icon = isMobile ? Smartphone : isTablet ? Tablet : Laptop;
-                  const label = isMobile ? "Mobile (טלפונים)" : isTablet ? "Tablet (טאבלטים)" : "Desktop (מחשבים)";
-
-                  return (
-                    <div key={dev.device} className="p-3 rounded-lg border bg-muted/20 flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold">{label}</p>
-                          <p className="text-[11px] text-muted-foreground">
-                            {dev.impressions.toLocaleString()} חשיפות ({dev.ctr}% CTR)
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-base font-bold text-foreground">
-                          {dev.clicks.toLocaleString()}
-                        </span>
-                        <span className="text-[11px] text-muted-foreground block">קליקים</span>
-                      </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {/* Clicks */}
+                <Card className="shadow-sm">
+                  <CardContent className="p-2.5 sm:p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-medium text-muted-foreground">Clicks</span>
+                      <MousePointerClick className="w-3.5 h-3.5 text-blue-500 opacity-80" />
                     </div>
-                  );
-                })}
+                    <div className="text-xl font-bold mt-1">
+                      {gscData.summary.clicks.toLocaleString()}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Impressions */}
+                <Card className="shadow-sm">
+                  <CardContent className="p-2.5 sm:p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-medium text-muted-foreground">Impressions</span>
+                      <Eye className="w-3.5 h-3.5 text-purple-500 opacity-80" />
+                    </div>
+                    <div className="text-xl font-bold mt-1">
+                      {gscData.summary.impressions.toLocaleString()}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* CTR */}
+                <Card className="shadow-sm">
+                  <CardContent className="p-2.5 sm:p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-medium text-muted-foreground">CTR</span>
+                      <Percent className="w-3.5 h-3.5 text-emerald-500 opacity-80" />
+                    </div>
+                    <div className="text-xl font-bold mt-1">
+                      {gscData.summary.ctr}%
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Position */}
+                <Card className="shadow-sm">
+                  <CardContent className="p-2.5 sm:p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-medium text-muted-foreground">Position</span>
+                      <TrendingUp className="w-3.5 h-3.5 text-amber-500 opacity-80" />
+                    </div>
+                    <div className="text-xl font-bold mt-1">
+                      {gscData.summary.position || "—"}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          )}
+
+          {/* GA4 Scorecards */}
+          {ga4Data && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-3.5 h-3.5 text-emerald-500" />
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Google Analytics (GA4)
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {/* Users */}
+                <Card className="shadow-sm">
+                  <CardContent className="p-2.5 sm:p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-medium text-muted-foreground">Users</span>
+                      <Users className="w-3.5 h-3.5 text-emerald-500 opacity-80" />
+                    </div>
+                    <div className="text-xl font-bold mt-1">
+                      {ga4Data.summary.activeUsers.toLocaleString()}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Sessions */}
+                <Card className="shadow-sm">
+                  <CardContent className="p-2.5 sm:p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-medium text-muted-foreground">Sessions</span>
+                      <Activity className="w-3.5 h-3.5 text-blue-500 opacity-80" />
+                    </div>
+                    <div className="text-xl font-bold mt-1">
+                      {ga4Data.summary.sessions.toLocaleString()}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Page Views */}
+                <Card className="shadow-sm">
+                  <CardContent className="p-2.5 sm:p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-medium text-muted-foreground">Page Views</span>
+                      <Layers className="w-3.5 h-3.5 text-purple-500 opacity-80" />
+                    </div>
+                    <div className="text-xl font-bold mt-1">
+                      {ga4Data.summary.pageViews.toLocaleString()}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Bounce Rate */}
+                <Card className="shadow-sm">
+                  <CardContent className="p-2.5 sm:p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-medium text-muted-foreground">Bounce Rate</span>
+                      <Percent className="w-3.5 h-3.5 text-rose-500 opacity-80" />
+                    </div>
+                    <div className="text-xl font-bold mt-1">
+                      {ga4Data.summary.bounceRate}%
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Visual Performance Charts & Device Breakdown side-by-side */}
+        {gscData?.dailyTrend && gscData.dailyTrend.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
+            {/* Daily Trend Chart (2 columns on desktop) */}
+            <Card className="shadow-sm lg:col-span-2 flex flex-col justify-between">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-primary" />
+                      Search Console Daily Trend
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      Daily clicks and organic impressions over the selected timeframe
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-2 flex-1">
+                <div className="h-72 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={gscData.dailyTrend}
+                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient id="clicksGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.35} />
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
+                        </linearGradient>
+                        <linearGradient id="impressionsGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#a855f7" stopOpacity={0.25} />
+                          <stop offset="95%" stopColor="#a855f7" stopOpacity={0.0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
+                      <XAxis
+                        dataKey="date"
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={(str) => str.slice(5)}
+                      />
+                      <YAxis
+                        yAxisId="left"
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fontSize: 11 }}
+                      />
+                      <YAxis
+                        yAxisId="right"
+                        orientation="right"
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fontSize: 11 }}
+                      />
+                      <RechartsTooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          borderColor: "hsl(var(--border))",
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                        }}
+                      />
+                      <Legend
+                        verticalAlign="top"
+                        align="right"
+                        iconType="circle"
+                        wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
+                        formatter={(val) => (val === "Clicks" ? "קליקים (Clicks)" : "חשיפות (Impressions)")}
+                      />
+                      <Area
+                        yAxisId="left"
+                        type="linear"
+                        dot={{ r: 2.5, strokeWidth: 1 }}
+                        activeDot={{ r: 5 }}
+                        dataKey="clicks"
+                        name="Clicks"
+                        stroke="#3b82f6"
+                        strokeWidth={2}
+                        fillOpacity={1}
+                        fill="url(#clicksGrad)"
+                      />
+                      <Area
+                        yAxisId="right"
+                        type="linear"
+                        dot={{ r: 2, strokeWidth: 1 }}
+                        activeDot={{ r: 5 }}
+                        dataKey="impressions"
+                        name="Impressions"
+                        stroke="#a855f7"
+                        strokeWidth={2}
+                        fillOpacity={1}
+                        fill="url(#impressionsGrad)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Devices Breakdown (1 column on desktop) */}
+            <Card className="shadow-sm lg:col-span-1 flex flex-col justify-between">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Laptop className="w-4 h-4 text-primary" />
+                  Search Traffic by Device
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Clicks & organic impressions by device type
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-2 flex-1 flex flex-col justify-around gap-2.5">
+                {gscData.devices && gscData.devices.length > 0 ? (
+                  gscData.devices.map((dev) => {
+                    const isMobile = dev.device.toUpperCase() === "MOBILE";
+                    const isTablet = dev.device.toUpperCase() === "TABLET";
+                    const Icon = isMobile ? Smartphone : isTablet ? Tablet : Laptop;
+                    const label = isMobile ? "Mobile (טלפונים)" : isTablet ? "Tablet (טאבלטים)" : "Desktop (מחשבים)";
+
+                    return (
+                      <div key={dev.device} className="p-3 rounded-lg border bg-muted/20 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold">{label}</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {dev.impressions.toLocaleString()} חשיפות ({dev.ctr}% CTR)
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-base font-bold text-foreground">
+                            {dev.clicks.toLocaleString()}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground block">קליקים</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-xs text-muted-foreground text-center py-8">
+                    No device data available
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {/* GA4 Channels & Daily Traffic (if connected) */}
@@ -1064,17 +1123,43 @@ export default function ClientStatsPage({
         {/* In-depth Data Tables */}
         <Card className="shadow-sm">
           <CardHeader className="pb-3 border-b border-border/40">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
-                <TabsList className="h-9">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto overflow-x-auto">
+                <TabsList className="h-9 flex flex-wrap gap-1 bg-muted/40 p-1">
                   <TabsTrigger value="gsc" className="text-xs gap-1.5">
                     <Search className="w-3.5 h-3.5" />
-                    Top Search Queries ({filteredQueries.length})
+                    Top Queries ({filteredQueries.length})
                   </TabsTrigger>
                   <TabsTrigger value="pages" className="text-xs gap-1.5">
                     <Globe className="w-3.5 h-3.5" />
-                    Top Landing Pages ({filteredPages.length})
+                    Landing Pages ({filteredPages.length})
                   </TabsTrigger>
+                  <TabsTrigger value="striking" className="text-xs gap-1.5">
+                    <Target className="w-3.5 h-3.5 text-amber-500" />
+                    Striking Distance ({strikingQueries.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="winners" className="text-xs gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                    Winners & Losers
+                  </TabsTrigger>
+                  {gscData?.countries && gscData.countries.length > 0 && (
+                    <TabsTrigger value="countries" className="text-xs gap-1.5">
+                      <Flag className="w-3.5 h-3.5 text-blue-500" />
+                      Countries ({gscData.countries.length})
+                    </TabsTrigger>
+                  )}
+                  {ga4Data?.pagesWithTitles && ga4Data.pagesWithTitles.length > 0 && (
+                    <TabsTrigger value="ga4pages" className="text-xs gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-indigo-500" />
+                      GA4 Pages & Titles ({ga4Data.pagesWithTitles.length})
+                    </TabsTrigger>
+                  )}
+                  {ga4Data?.events && ga4Data.events.length > 0 && (
+                    <TabsTrigger value="events" className="text-xs gap-1.5">
+                      <Award className="w-3.5 h-3.5 text-purple-500" />
+                      Key Events & Goals ({ga4Data.events.length})
+                    </TabsTrigger>
+                  )}
                 </TabsList>
               </Tabs>
 
@@ -1082,20 +1167,33 @@ export default function ClientStatsPage({
               <div className="relative w-full sm:w-64">
                 <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
                 <Input
-                  placeholder={activeTab === "gsc" ? "Filter queries..." : "Filter pages..."}
-                  className="h-8 pl-8 text-xs"
-                  value={activeTab === "gsc" ? querySearch : pageSearch}
-                  onChange={(e) =>
-                    activeTab === "gsc"
-                      ? setQuerySearch(e.target.value)
-                      : setPageSearch(e.target.value)
+                  placeholder={
+                    activeTab === "pages"
+                      ? "Filter pages..."
+                      : activeTab === "countries"
+                      ? "Filter countries..."
+                      : activeTab === "events"
+                      ? "Filter events..."
+                      : activeTab === "ga4pages"
+                      ? "Filter titles & paths..."
+                      : "Filter queries..."
                   }
+                  className="h-8 pl-8 text-xs"
+                  value={activeTab === "pages" || activeTab === "ga4pages" ? pageSearch : querySearch}
+                  onChange={(e) => {
+                    if (activeTab === "pages" || activeTab === "ga4pages") {
+                      setPageSearch(e.target.value);
+                    } else {
+                      setQuerySearch(e.target.value);
+                    }
+                  }}
                 />
               </div>
             </div>
           </CardHeader>
 
           <CardContent className="p-0">
+            {/* 1. GSC Top Queries */}
             {activeTab === "gsc" && (
               <div className="overflow-x-auto">
                 <Table>
@@ -1111,7 +1209,7 @@ export default function ClientStatsPage({
                   <TableBody>
                     {filteredQueries.length > 0 ? (
                       filteredQueries.slice(0, 50).map((row, idx) => (
-                        <TableRow key={idx} className="text-xs">
+                        <TableRow key={idx} className="text-xs hover:bg-muted/40">
                           <TableCell className="font-medium text-foreground max-w-xs truncate" title={row.query}>
                             {row.query}
                           </TableCell>
@@ -1152,6 +1250,7 @@ export default function ClientStatsPage({
               </div>
             )}
 
+            {/* 2. GSC Landing Pages */}
             {activeTab === "pages" && (
               <div className="overflow-x-auto">
                 <Table>
@@ -1210,10 +1309,10 @@ export default function ClientStatsPage({
                                 variant="outline"
                                 className={`text-[11px] font-mono font-normal ${
                                   row.position <= 3
-                                    ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
-                                    : row.position <= 10
-                                    ? "bg-blue-500/10 text-blue-600 border-blue-500/30"
-                                    : "bg-muted text-muted-foreground"
+                                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+                                  : row.position <= 10
+                                  ? "bg-blue-500/10 text-blue-600 border-blue-500/30"
+                                  : "bg-muted text-muted-foreground"
                                 }`}
                               >
                                 #{row.position}
@@ -1226,6 +1325,258 @@ export default function ClientStatsPage({
                       <TableRow>
                         <TableCell colSpan={5} className="h-28 text-center text-xs text-muted-foreground">
                           {isDataLoading ? "Loading landing pages..." : "No landing pages found for this period."}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {/* 3. Striking Distance (Positions 8 to 20) */}
+            {activeTab === "striking" && (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="w-[45%] text-xs">High-Potential Keyword (Rank #8 – #20)</TableHead>
+                      <TableHead className="text-right text-xs">Clicks</TableHead>
+                      <TableHead className="text-right text-xs">Impressions</TableHead>
+                      <TableHead className="text-right text-xs">CTR</TableHead>
+                      <TableHead className="text-right text-xs">Current Position</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {strikingQueries.length > 0 ? (
+                      strikingQueries.slice(0, 50).map((row, idx) => (
+                        <TableRow key={idx} className="text-xs hover:bg-muted/40">
+                          <TableCell className="font-medium text-foreground max-w-xs truncate" title={row.query}>
+                            <span className="flex items-center gap-1.5">
+                              <Target className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                              <span>{row.query}</span>
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {row.clicks.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right text-muted-foreground">
+                            {row.impressions.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right text-muted-foreground">
+                            {row.ctr}%
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant="outline" className="text-[11px] font-mono bg-amber-500/10 text-amber-600 border-amber-500/30">
+                              #{row.position}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-28 text-center text-xs text-muted-foreground">
+                          No striking distance keywords (#8 to #20) found in this timeframe.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {/* 4. Winners & Losers */}
+            {activeTab === "winners" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
+                {/* Winners */}
+                <div className="p-3">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-2">
+                    <TrendingUp className="w-4 h-4" />
+                    <span>Top Growth Queries (זינקו בתוצאות)</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {winners.slice(0, 15).map((row, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2 rounded border bg-muted/20 text-xs">
+                        <span className="font-medium truncate max-w-[200px]" title={row.query}>{row.query}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-emerald-500 font-bold">
+                            +{(row.clicksDiff ?? 0) > 0 ? `${row.clicksDiff} clicks` : `${row.posDiff} pos`}
+                          </span>
+                          <Badge variant="outline" className="text-[10px]">#{row.position}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                    {winners.length === 0 && (
+                      <p className="text-xs text-muted-foreground text-center py-6">No growth comparisons available</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Losers */}
+                <div className="p-3">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 mb-2">
+                    <TrendingDown className="w-4 h-4" />
+                    <span>Queries Needing Refresh (ירדו בביצועים)</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {losers.slice(0, 15).map((row, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2 rounded border bg-muted/20 text-xs">
+                        <span className="font-medium truncate max-w-[200px]" title={row.query}>{row.query}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-rose-500 font-bold">
+                            {(row.clicksDiff ?? 0) < 0 ? `${row.clicksDiff} clicks` : `${row.posDiff} pos`}
+                          </span>
+                          <Badge variant="outline" className="text-[10px]">#{row.position}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                    {losers.length === 0 && (
+                      <p className="text-xs text-muted-foreground text-center py-6">No declining queries in this timeframe</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 5. Countries */}
+            {activeTab === "countries" && (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="w-[45%] text-xs">Country / Region</TableHead>
+                      <TableHead className="text-right text-xs">Clicks</TableHead>
+                      <TableHead className="text-right text-xs">Impressions</TableHead>
+                      <TableHead className="text-right text-xs">CTR</TableHead>
+                      <TableHead className="text-right text-xs">Avg. Position</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sortedCountries.length > 0 ? (
+                      sortedCountries.map((row, idx) => (
+                        <TableRow key={idx} className="text-xs hover:bg-muted/40">
+                          <TableCell className="font-medium text-foreground">
+                            {formatCountry(row.country)}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {row.clicks.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right text-muted-foreground">
+                            {row.impressions.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right text-muted-foreground">
+                            {row.ctr}%
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant="outline" className="text-[11px] font-mono">
+                              #{row.position}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-28 text-center text-xs text-muted-foreground">
+                          No country data available.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {/* 6. GA4 Pages & Titles */}
+            {activeTab === "ga4pages" && (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="w-[45%] text-xs">Page Title & Path (GA4)</TableHead>
+                      <TableHead className="text-right text-xs">Page Views</TableHead>
+                      <TableHead className="text-right text-xs">Active Users</TableHead>
+                      <TableHead className="text-right text-xs">Sessions</TableHead>
+                      <TableHead className="text-right text-xs">Bounce Rate</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredGa4Pages.length > 0 ? (
+                      filteredGa4Pages.map((row, idx) => (
+                        <TableRow key={idx} className="text-xs hover:bg-muted/40">
+                          <TableCell className="max-w-md">
+                            <p className="font-medium text-foreground truncate" title={row.title} dir="auto">
+                              {row.title}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground font-mono truncate" title={row.path}>
+                              {row.path}
+                            </p>
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {row.views.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right text-muted-foreground">
+                            {row.activeUsers.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right text-muted-foreground">
+                            {row.sessions.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant="outline" className="text-[11px] font-mono">
+                              {row.bounceRate}%
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-28 text-center text-xs text-muted-foreground">
+                          No GA4 page title data available.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {/* 7. GA4 Key Events & Goals */}
+            {activeTab === "events" && (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="w-[60%] text-xs">Event Name</TableHead>
+                      <TableHead className="text-right text-xs">Total Event Count</TableHead>
+                      <TableHead className="text-right text-xs">Conversions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredEvents.length > 0 ? (
+                      filteredEvents.map((row, idx) => (
+                        <TableRow key={idx} className="text-xs hover:bg-muted/40">
+                          <TableCell className="font-mono text-xs font-semibold text-foreground">
+                            <span className="flex items-center gap-1.5">
+                              <Award className="w-3.5 h-3.5 text-purple-500" />
+                              <span>{row.eventName}</span>
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {row.count.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {row.conversions > 0 ? (
+                              <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px]">
+                                {row.conversions.toLocaleString()} Goals
+                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground text-xs">—</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={3} className="h-28 text-center text-xs text-muted-foreground">
+                          No key events or conversions recorded for this timeframe.
                         </TableCell>
                       </TableRow>
                     )}
