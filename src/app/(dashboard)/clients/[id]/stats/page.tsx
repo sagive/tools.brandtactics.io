@@ -53,9 +53,11 @@ import {
   ArrowDownRight,
   FileText,
   Sparkles,
+  HelpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -648,6 +650,108 @@ export default function ClientStatsPage({
                 {copiedEmail ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedEmail ? "Copied" : "Copy Service Email"}</span>
               </Button>
+
+              {/* Where to put this email? Interactive Popover / Tooltip */}
+              <Popover>
+                <PopoverTrigger
+                  className="h-9 px-2.5 text-xs text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-md border border-dashed flex items-center gap-1.5 transition-colors cursor-pointer"
+                  title="Where to add this email in Google?"
+                >
+                  <HelpCircle className="w-3.5 h-3.5 text-primary shrink-0" />
+                  <span>Where to put this?</span>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-3.5 shadow-xl border bg-popover text-popover-foreground rounded-xl" side="bottom" align="end">
+                  <div className="space-y-3 text-xs">
+                    <div className="flex items-center gap-1.5 font-semibold text-foreground border-b pb-2">
+                      <HelpCircle className="w-4 h-4 text-primary" />
+                      <span>Where to add this Google Email?</span>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="text-[11px] text-muted-foreground">Master Service Account:</p>
+                      <div className="flex items-center gap-1.5 bg-muted/60 p-1.5 rounded font-mono text-[10px] break-all border">
+                        <span className="flex-1">{serviceAccountEmail}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 shrink-0"
+                          onClick={() => copyToClipboard(serviceAccountEmail)}
+                        >
+                          {copiedEmail ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Step 1: Search Console */}
+                    <div className="space-y-1 p-2 rounded-lg bg-blue-500/5 border border-blue-500/20">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-blue-600 dark:text-blue-400">1. Google Search Console</span>
+                        <a
+                          href={`https://search.google.com/search-console/users?resource_id=${encodeURIComponent(clientWebsite || "https://brandtactics.co.il/")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline text-[11px] inline-flex items-center gap-0.5 font-medium"
+                        >
+                          <span>Open Users ↗</span>
+                        </a>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        Click <strong>Add user</strong>, paste the email above, and select <strong>Viewer</strong> (or Full) permission.
+                      </p>
+                    </div>
+
+                    {/* Step 2: GA4 */}
+                    <div className="space-y-1 p-2 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">2. Google Analytics 4</span>
+                        <a
+                          href="https://analytics.google.com/analytics/web/#/admin"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-emerald-600 dark:text-emerald-400 hover:underline text-[11px] inline-flex items-center gap-0.5 font-medium"
+                        >
+                          <span>Open GA4 Admin ↗</span>
+                        </a>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        Go to <strong>Property Access Management</strong>, click <strong>+</strong>, paste this email and assign <strong>Viewer</strong> role.
+                      </p>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+
+          {/* Quick Helper Strip with Direct Links directly inside the card */}
+          <div className="pt-3 mt-3 border-t border-border/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <HelpCircle className="w-3.5 h-3.5 text-primary shrink-0" />
+              <span>
+                Give <strong>Viewer</strong> access to <code>{serviceAccountEmail}</code>:
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                href={`https://search.google.com/search-console/users?resource_id=${encodeURIComponent(clientWebsite || "https://brandtactics.co.il/")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 font-semibold text-primary hover:underline bg-muted/60 px-2.5 py-1 rounded border border-border/60 hover:bg-muted transition-colors"
+                title="Open Search Console Users & Permissions for this website"
+              >
+                <Search className="w-3 h-3" />
+                <span>1. Open Search Console Users ↗</span>
+              </a>
+              <a
+                href="https://analytics.google.com/analytics/web/#/admin"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400 hover:underline bg-muted/60 px-2.5 py-1 rounded border border-border/60 hover:bg-muted transition-colors"
+                title="Open Google Analytics Admin to manage Property Access"
+              >
+                <BarChart3 className="w-3 h-3" />
+                <span>2. Open GA4 Admin Access ↗</span>
+              </a>
             </div>
           </div>
         </Card>
