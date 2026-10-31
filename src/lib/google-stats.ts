@@ -194,12 +194,23 @@ export async function getSearchConsoleStats(params: {
     },
   });
 
-  const [primaryRes, compareRes, queriesRes, pagesRes, dailyRes] = await Promise.all([
+  // 6. Devices breakdown
+  const devicesPromise = searchconsole.searchanalytics.query({
+    siteUrl,
+    requestBody: {
+      startDate,
+      endDate,
+      dimensions: ['device'],
+    },
+  });
+
+  const [primaryRes, compareRes, queriesRes, pagesRes, dailyRes, devicesRes] = await Promise.all([
     primaryPromise,
     comparePromise,
     queriesPromise,
     pagesPromise,
     dailyPromise,
+    devicesPromise,
   ]);
 
   const pRow = primaryRes.data.rows?.[0] || { clicks: 0, impressions: 0, ctr: 0, position: 0 };
@@ -229,6 +240,13 @@ export async function getSearchConsoleStats(params: {
     })),
     topPages: (pagesRes.data.rows || []).map((r) => ({
       page: r.keys?.[0] || '',
+      clicks: r.clicks || 0,
+      impressions: r.impressions || 0,
+      ctr: r.ctr ? Number((r.ctr * 100).toFixed(2)) : 0,
+      position: r.position ? Number(r.position.toFixed(1)) : 0,
+    })),
+    devices: (devicesRes.data.rows || []).map((r) => ({
+      device: r.keys?.[0] || 'DESKTOP',
       clicks: r.clicks || 0,
       impressions: r.impressions || 0,
       ctr: r.ctr ? Number((r.ctr * 100).toFixed(2)) : 0,

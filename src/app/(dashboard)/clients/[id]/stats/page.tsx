@@ -43,6 +43,9 @@ import {
   Settings2,
   ChevronDown,
   ChevronUp,
+  Laptop,
+  Smartphone,
+  Tablet,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
@@ -87,6 +90,13 @@ interface StatsData {
   }>;
   dailyTrend: Array<{
     date: string;
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+  }>;
+  devices?: Array<{
+    device: string;
     clicks: number;
     impressions: number;
     ctr: number;
@@ -338,13 +348,24 @@ export default function ClientStatsPage({
     );
   }, [gscData?.topQueries, querySearch]);
 
-  // Filter pages
+  function decodePath(url: string): string {
+    try {
+      const path = url.replace(/^https?:\/\/[^/]+/i, "") || "/";
+      return decodeURIComponent(path);
+    } catch {
+      return url.replace(/^https?:\/\/[^/]+/i, "") || "/";
+    }
+  }
+
+  // Filter pages (supports searching decoded Hebrew paths too!)
   const filteredPages = useMemo(() => {
     if (!gscData?.topPages) return [];
     if (!pageSearch.trim()) return gscData.topPages;
-    return gscData.topPages.filter((p) =>
-      p.page.toLowerCase().includes(pageSearch.toLowerCase())
-    );
+    const term = pageSearch.toLowerCase();
+    return gscData.topPages.filter((p) => {
+      const decoded = decodePath(p.page).toLowerCase();
+      return p.page.toLowerCase().includes(term) || decoded.includes(term);
+    });
   }, [gscData?.topPages, pageSearch]);
 
   const cleanDisplayWebsite = useMemo(() => {
@@ -884,6 +905,53 @@ export default function ClientStatsPage({
           </Card>
         )}
 
+        {/* Search Console Devices Breakdown */}
+        {gscData?.devices && gscData.devices.length > 0 && (
+          <Card className="shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Laptop className="w-4 h-4 text-primary" />
+                Search Traffic by Device (Google Search Console)
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Clicks and organic impressions across Desktop, Mobile, and Tablet
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {gscData.devices.map((dev) => {
+                  const isMobile = dev.device.toUpperCase() === "MOBILE";
+                  const isTablet = dev.device.toUpperCase() === "TABLET";
+                  const Icon = isMobile ? Smartphone : isTablet ? Tablet : Laptop;
+                  const label = isMobile ? "Mobile (טלפונים)" : isTablet ? "Tablet (טאבלטים)" : "Desktop (מחשבים)";
+
+                  return (
+                    <div key={dev.device} className="p-3 rounded-lg border bg-muted/20 flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold">{label}</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {dev.impressions.toLocaleString()} חשיפות ({dev.ctr}% CTR)
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-base font-bold text-foreground">
+                          {dev.clicks.toLocaleString()}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground block">קליקים</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* GA4 Channels & Daily Traffic (if connected) */}
         {ga4Data && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -1099,19 +1167,34 @@ export default function ClientStatsPage({
                   <TableBody>
                     {filteredPages.length > 0 ? (
                       filteredPages.slice(0, 50).map((row, idx) => {
-                        const cleanPath = row.page.replace(/^https?:\/\/[^/]+/i, "") || "/";
+                        const decoded = decodePath(row.page);
+                        const isRoot = decoded === "/";
+                        const displayName = isRoot ? "דף הבית (/)" : decoded;
+
                         return (
-                          <TableRow key={idx} className="text-xs">
-                            <TableCell className="font-mono text-[11px] text-foreground max-w-sm truncate" title={row.page}>
-                              <a
-                                href={row.page}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="hover:underline flex items-center gap-1 group"
-                              >
-                                <span className="truncate">{cleanPath}</span>
-                                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-70 shrink-0" />
-                              </a>
+                          <TableRow key={idx} className="text-xs hover:bg-muted/40">
+                            <TableCell className="max-w-md">
+                              <div className="flex items-center gap-2">
+                                <a
+                                  href={row.page}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-muted-foreground hover:text-primary p-1 rounded hover:bg-muted shrink-0 transition-colors"
+                                  title="פתח דף בחלון חדש"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                </a>
+                                <a
+                                  href={row.page}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="font-medium text-foreground hover:underline truncate"
+                                  title={decoded}
+                                  dir="auto"
+                                >
+                                  {displayName}
+                                </a>
+                              </div>
                             </TableCell>
                             <TableCell className="text-right font-semibold">
                               {row.clicks.toLocaleString()}
