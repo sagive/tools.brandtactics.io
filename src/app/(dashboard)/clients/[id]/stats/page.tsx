@@ -343,6 +343,11 @@ export default function ClientStatsPage({
     );
   }, [gscData?.topPages, pageSearch]);
 
+  const cleanDisplayWebsite = useMemo(() => {
+    if (!clientWebsite) return "";
+    return clientWebsite.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+  }, [clientWebsite]);
+
   return (
     <div className="space-y-6 pb-12">
       {/* Top Header */}
@@ -460,16 +465,59 @@ export default function ClientStatsPage({
 
       {/* Notice if GSC error occurs */}
       {gscError && (
-        <Card className="border-amber-500/30 bg-amber-500/5">
+        <Card className="border-amber-500/30 bg-amber-500/5 shadow-sm">
           <CardContent className="p-4 flex items-start gap-3 text-xs">
             <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <p className="font-semibold text-foreground">Google Search Console Notice</p>
-              <p className="text-muted-foreground">{gscError}</p>
-              <p className="text-[11px] text-muted-foreground">
-                Make sure <strong>{serviceAccountEmail}</strong> has Viewer permission for{" "}
-                <strong>{clientWebsite || "the website"}</strong> in Google Search Console.
-              </p>
+            <div className="space-y-2 flex-1">
+              <div>
+                <p className="font-semibold text-foreground">Google Search Console Notice</p>
+                <p className="text-muted-foreground">{gscError}</p>
+              </div>
+
+              {gscError.includes("credentials not found") ? (
+                <div className="space-y-1.5 pt-1 border-t border-amber-500/20">
+                  <p className="text-[11px] text-muted-foreground">
+                    To enable live stats on production (Vercel), add the Service Account key to your Vercel Environment Variables:
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <a
+                      href="https://vercel.com/dashboard"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 font-semibold text-primary hover:underline bg-background px-2.5 py-1 rounded border border-border"
+                    >
+                      <span>Open Vercel Dashboard Settings</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-1.5 pt-1 border-t border-amber-500/20">
+                  <p className="text-[11px] text-muted-foreground">
+                    Make sure <strong>{serviceAccountEmail}</strong> has Viewer permission in Google Search Console:
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <a
+                      href={`https://search.google.com/search-console/users?resource_id=${encodeURIComponent(clientWebsite || "https://brandtactics.co.il/")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 font-semibold text-primary hover:underline bg-background px-2.5 py-1 rounded border border-border"
+                    >
+                      <span>Open Search Console Users for {cleanDisplayWebsite || "Website"}</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-[11px] gap-1"
+                      onClick={() => copyToClipboard(serviceAccountEmail)}
+                    >
+                      {copiedEmail ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedEmail ? "Copied" : "Copy Email"}</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
