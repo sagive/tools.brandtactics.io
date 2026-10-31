@@ -40,6 +40,9 @@ import {
   BarChart3,
   Calendar,
   AlertCircle,
+  Settings2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
@@ -142,6 +145,7 @@ export default function ClientStatsPage({
     "brandtactics-seo-reader@seo-connectors.iam.gserviceaccount.com"
   );
   const [copiedEmail, setCopiedEmail] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
 
   // Date range presets: "7d" | "28d" | "90d" | "thisMonth"
   const [datePreset, setDatePreset] = useState("28d");
@@ -368,19 +372,33 @@ export default function ClientStatsPage({
 
         {/* Action Controls */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Date Range Selector */}
-          <Select value={datePreset} onValueChange={(val) => setDatePreset(val || "28d")}>
-            <SelectTrigger className="w-[140px] h-9 text-xs">
-              <Calendar className="w-3.5 h-3.5 mr-1.5 opacity-70" />
-              <SelectValue placeholder="Date range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">Last 7 Days</SelectItem>
-              <SelectItem value="28d">Last 28 Days</SelectItem>
-              <SelectItem value="90d">Last 3 Months</SelectItem>
-              <SelectItem value="thisMonth">Month to Date</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* Date Range Selector & Dates inline right next to 28D */}
+          <div className="flex items-center gap-1.5 bg-muted/30 p-0.5 rounded-lg border border-border/60">
+            <Select value={datePreset} onValueChange={(val) => setDatePreset(val || "28d")}>
+              <SelectTrigger className="w-[125px] h-8 text-xs bg-background border-none shadow-none font-medium">
+                <Calendar className="w-3.5 h-3.5 mr-1.5 opacity-70" />
+                <SelectValue placeholder="Date range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7d">Last 7 Days</SelectItem>
+                <SelectItem value="28d">Last 28 Days</SelectItem>
+                <SelectItem value="90d">Last 3 Months</SelectItem>
+                <SelectItem value="thisMonth">Month to Date</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Dates displayed immediately beside 28D */}
+            <div className="text-xs text-muted-foreground hidden sm:flex items-center gap-1 px-2 border-l border-border/60">
+              <span className="font-semibold text-foreground">{dateRange.startDate}</span>
+              <span>to</span>
+              <span className="font-semibold text-foreground">{dateRange.endDate}</span>
+              {dateRange.compareStartDate && (
+                <span className="text-[11px] text-muted-foreground/80 ml-1">
+                  (vs {dateRange.compareStartDate} – {dateRange.compareEndDate})
+                </span>
+              )}
+            </div>
+          </div>
 
           {/* Compare Toggle */}
           <Button
@@ -403,65 +421,90 @@ export default function ClientStatsPage({
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isDataLoading ? "animate-spin" : ""}`} />
           </Button>
+
+          {/* Collapsible Config Toggle Button */}
+          <Button
+            variant={showConfig ? "secondary" : "outline"}
+            size="sm"
+            className="h-9 text-xs gap-1.5"
+            onClick={() => setShowConfig(!showConfig)}
+          >
+            <Settings2 className="w-3.5 h-3.5" />
+            <span>Settings</span>
+            {showConfig ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </Button>
         </div>
       </div>
 
-      {/* Clean Single-Row Configuration Bar */}
-      <Card className="p-4 shadow-sm border bg-card">
-        <div className="flex flex-col md:flex-row items-center gap-4">
-          {/* Field 1: Client Website */}
-          <div className="flex-1 w-full space-y-1.5">
-            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5 text-primary" />
-              Client Website (Search Console)
-            </label>
-            <Input
-              value={clientWebsite}
-              onChange={(e) => setClientWebsite(e.target.value)}
-              placeholder="e.g. https://brandtactics.co.il/"
-              className="h-9 text-xs font-mono"
-            />
-          </div>
+      {/* Collapsible Configuration Bar (Hidden by default so screen is 100% clean) */}
+      {showConfig && (
+        <Card className="p-4 shadow-sm border bg-card transition-all">
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            {/* Field 1: Client Website */}
+            <div className="flex-1 w-full space-y-1.5">
+              <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-primary" />
+                Client Website (Search Console)
+              </label>
+              <Input
+                value={clientWebsite}
+                onChange={(e) => setClientWebsite(e.target.value)}
+                placeholder="e.g. https://brandtactics.co.il/"
+                className="h-9 text-xs font-mono"
+              />
+            </div>
 
-          {/* Field 2: GA4 Property ID */}
-          <div className="flex-1 w-full space-y-1.5">
-            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-              <BarChart3 className="w-3.5 h-3.5 text-primary" />
-              Google Analytics 4 Property ID (Optional)
-            </label>
-            <Input
-              value={inputGa4Property}
-              onChange={(e) => setInputGa4Property(e.target.value)}
-              placeholder="e.g. 456789123"
-              className="h-9 text-xs font-mono"
-            />
-          </div>
+            {/* Field 2: GA4 Property ID with Direct Link to GA4 Admin */}
+            <div className="flex-1 w-full space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <BarChart3 className="w-3.5 h-3.5 text-primary" />
+                  Google Analytics 4 Property ID (Optional)
+                </label>
+                <a
+                  href="https://analytics.google.com/analytics/web/#/admin"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline font-normal text-[11px] inline-flex items-center gap-0.5"
+                >
+                  <span>Where to find in GA4?</span>
+                  <ExternalLink className="w-2.5 h-2.5" />
+                </a>
+              </div>
+              <Input
+                value={inputGa4Property}
+                onChange={(e) => setInputGa4Property(e.target.value)}
+                placeholder="e.g. 456789123"
+                className="h-9 text-xs font-mono"
+              />
+            </div>
 
-          {/* Buttons on the same row */}
-          <div className="flex items-center gap-2 shrink-0 self-end">
-            <Button
-              size="sm"
-              className="h-9 text-xs gap-1.5 px-4"
-              onClick={handleSaveSettings}
-              disabled={isSavingSettings}
-            >
-              {isSavingSettings ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-              Save Selection
-            </Button>
+            {/* Buttons on the same row */}
+            <div className="flex items-center gap-2 shrink-0 self-end">
+              <Button
+                size="sm"
+                className="h-9 text-xs gap-1.5 px-4"
+                onClick={handleSaveSettings}
+                disabled={isSavingSettings}
+              >
+                {isSavingSettings ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                Save Selection
+              </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 text-xs text-muted-foreground gap-1 px-3"
-              onClick={() => copyToClipboard(serviceAccountEmail)}
-              title={`Service email: ${serviceAccountEmail}`}
-            >
-              {copiedEmail ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copiedEmail ? "Copied" : "Copy Service Email"}</span>
-            </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 text-xs text-muted-foreground gap-1 px-3"
+                onClick={() => copyToClipboard(serviceAccountEmail)}
+                title={`Service email: ${serviceAccountEmail}`}
+              >
+                {copiedEmail ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedEmail ? "Copied" : "Copy Service Email"}</span>
+              </Button>
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      )}
 
       {/* Notice if GSC error occurs */}
       {gscError && (
@@ -523,21 +566,14 @@ export default function ClientStatsPage({
         </Card>
       )}
 
-      {/* Date range subtitle & loading state */}
-      <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-        <span>
-          Showing data from <strong className="text-foreground">{dateRange.startDate}</strong> to{" "}
-          <strong className="text-foreground">{dateRange.endDate}</strong>
-          {dateRange.compareStartDate && (
-            <> (compared to {dateRange.compareStartDate} – {dateRange.compareEndDate})</>
-          )}
-        </span>
-        {isDataLoading && (
-          <span className="flex items-center gap-1.5 text-primary">
+      {/* Loading state indicator */}
+      {isDataLoading && (
+        <div className="flex items-center justify-end text-xs text-primary px-1">
+          <span className="flex items-center gap-1.5">
             <Loader2 className="w-3.5 h-3.5 animate-spin" /> Fetching live metrics...
           </span>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Main Stats Display */}
       <div className="space-y-6">
