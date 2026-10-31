@@ -363,7 +363,9 @@ export default function ClientStatsPage({
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedEmail(true);
-    toast.success("Service account email copied to clipboard!");
+    toast.success("אימייל הועתק ללוח!", {
+      description: "הוסף אותו כ-Viewer ב-Search Console וב-GA4 (לחץ על 'Where to put this?' לקישורים ישירים).",
+    });
     setTimeout(() => setCopiedEmail(false), 2500);
   };
 
