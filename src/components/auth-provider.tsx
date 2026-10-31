@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
@@ -25,41 +25,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const profileFetchPending = useRef<string | null>(null);
 
-  useEffect(() => {
-    async function getProfile(u: User | null) {
-      if (!u) {
-        setProfile(null);
-        return;
-      }
-      const { data } = await supabase.from('users').select('*').eq('email', u.email).single();
+  const fetchProfile = async (email: string) => {
+    if (profileFetchPending.current === email) return;
+    profileFetchPending.current = email;
+    try {
+      const { data } = await supabase.from('users').select('*').eq('email', email).single();
       
       // If the user was invited, mark them as active upon first successful login/session
       if (data && data.status === 'invited') {
-        await supabase.from('users').update({ status: 'active' }).eq('email', u.email);
-        data.status = 'active'; // reflect locally
+        await supabase.from('users').update({ status: 'active' }).eq('email', email);
+        data.status = 'active';
       }
 
       setProfile(data || null);
+    } catch (e) {
+      console.error("Failed to load user profile:", e);
+    } finally {
+      profileFetchPending.current = null;
     }
+  };
 
-    // Check active sessions and sets the user
+  useEffect(() => {
+    // Initial session load
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       const u = session?.user ?? null;
       setUser(u);
-      getProfile(u);
+      if (u?.email) {
+        fetchProfile(u.email);
+      } else {
+        setProfile(null);
+      }
       setIsLoading(false);
     });
 
-    // Listen for changes on auth state (log in, log out, etc.)
+    // Listen for changes on auth state
+    // CRITICAL: onAuthStateChange must remain strictly synchronous and NOT execute DB queries directly inside,
+    // otherwise Supabase internal auth locks deadlock on TOKEN_REFRESHED when the tab is idle.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        const u = session?.user ?? null;
+      (event, newSession) => {
+        setSession(newSession);
+        const u = newSession?.user ?? null;
         setUser(u);
-        getProfile(u);
         setIsLoading(false);
+
+        if (event === "SIGNED_OUT" || !u) {
+          setProfile(null);
+        } else if (event === "SIGNED_IN") {
+          // Defer fetch outside the auth lock cycle
+          if (u.email) {
+            setTimeout(() => {
+              fetchProfile(u.email!);
+            }, 0);
+          }
+        }
+        // TOKEN_REFRESHED: do NOT re-fetch profile, profile doesn't change on JWT refresh!
       }
     );
 
@@ -67,9 +89,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const refreshProfile = async () => {
-    if (user) {
-      const { data } = await supabase.from('users').select('*').eq('email', user.email).single();
-      setProfile(data || null);
+    if (user?.email) {
+      profileFetchPending.current = null;
+      await fetchProfile(user.email);
     }
   };
 

@@ -1,22 +1,74 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, MoreHorizontal, Trash2 } from "lucide-react";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
+import { Plus, Search, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth-provider";
 import { cn } from "@/lib/utils";
+
+function extractDomain(client: any): string | null {
+  const raw = (client.website || client.name || "").trim();
+  if (!raw) return null;
+
+  try {
+    let urlStr = raw;
+    if (!/^https?:\/\//i.test(urlStr)) {
+      urlStr = "https://" + urlStr;
+    }
+    const url = new URL(urlStr);
+    const host = url.hostname.replace(/^www\./i, "").toLowerCase();
+    if (host && host.includes(".") && !host.endsWith(".")) {
+      return host;
+    }
+  } catch {
+    const cleaned = raw.replace(/^https?:\/\//i, "").replace(/\/.*$/, "").replace(/^www\./i, "").trim().toLowerCase();
+    if (cleaned && cleaned.includes(".") && !cleaned.includes(" ")) {
+      return cleaned;
+    }
+  }
+  return null;
+}
+
+function isOurSite(client: any): boolean {
+  if (client.type === "Our site") return true;
+  const name = (client.name || "").toLowerCase();
+  const website = (client.website || "").toLowerCase();
+  if (name.includes("brandtactics") || website.includes("brandtactics")) {
+    return true;
+  }
+  return false;
+}
+
+function ClientFavicon({ client }: { client: any }) {
+  const domain = extractDomain(client);
+  const [hasError, setHasError] = useState(false);
+
+  if (!domain || hasError) {
+    return (
+      <div className="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center shrink-0 border border-gray-200">
+        <Globe className="w-4 h-4 text-gray-400" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-8 h-8 rounded-lg bg-white p-1 flex items-center justify-center shrink-0 border border-gray-200 shadow-xs">
+      <img
+        src={`https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`}
+        alt=""
+        className="w-5 h-5 object-contain"
+        onError={() => setHasError(true)}
+        loading="lazy"
+      />
+    </div>
+  );
+}
 
 export default function ClientsPage() {
   const router = useRouter();
@@ -25,6 +77,7 @@ export default function ClientsPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isCreating, setIsCreating] = React.useState(false);
   const [showArchived, setShowArchived] = React.useState(false);
+  const [filterType, setFilterType] = React.useState<"all" | "client" | "ours">("all");
   const { profile, isLoading: isAuthLoading } = useAuth();
   const isAdmin = profile?.role === 'admin';
 
@@ -51,11 +104,27 @@ export default function ClientsPage() {
     }
   }, [isAuthLoading, profile?.id]);
 
-  const filteredClients = clients.filter(c => {
-    const matchesSearch = (c.name || "").toLowerCase().includes(search.toLowerCase());
-    const matchesArchived = showArchived || c.status !== "Archived";
-    return matchesSearch && matchesArchived;
-  });
+  const filteredClients = clients
+    .filter(c => {
+      const matchesSearch = (c.name || "").toLowerCase().includes(search.toLowerCase());
+      const matchesArchived = showArchived || c.status !== "Archived";
+      const isOurs = isOurSite(c);
+      const matchesType = 
+        filterType === "all" ? true :
+        filterType === "ours" ? isOurs :
+        !isOurs; // filterType === "client"
+
+      return matchesSearch && matchesArchived && matchesType;
+    })
+    .sort((a, b) => {
+      const aOurs = isOurSite(a) ? 1 : 0;
+      const bOurs = isOurSite(b) ? 1 : 0;
+      // Clients first (0), Ours last (1)
+      if (aOurs !== bOurs) {
+        return aOurs - bOurs;
+      }
+      return (a.name || "").localeCompare(b.name || "");
+    });
 
   const handleNewClient = async () => {
     setIsCreating(true);
@@ -77,8 +146,6 @@ export default function ClientsPage() {
     }
   };
 
-
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -95,7 +162,7 @@ export default function ClientsPage() {
         </Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center gap-4">
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
         <div className="relative flex-1 max-w-md w-full">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
           <Input
@@ -105,23 +172,66 @@ export default function ClientsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        
-        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-200">
-           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Show Archived</span>
-           <button 
-             onClick={() => setShowArchived(!showArchived)}
-             className={cn(
-               "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
-               showArchived ? "bg-blue-600" : "bg-gray-200"
-             )}
-           >
-             <span
-               className={cn(
-                 "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-                 showArchived ? "translate-x-4" : "translate-x-0"
-               )}
-             />
-           </button>
+
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Segmented filter: All / Clients / Ours */}
+          <div className="inline-flex items-center p-1 bg-gray-100 rounded-lg border border-gray-200 text-xs font-medium">
+            <button
+              type="button"
+              onClick={() => setFilterType("all")}
+              className={cn(
+                "px-3 py-1 rounded-md transition-all",
+                filterType === "all"
+                  ? "bg-white text-gray-900 shadow-xs font-semibold"
+                  : "text-gray-600 hover:text-gray-900"
+              )}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterType("client")}
+              className={cn(
+                "px-3 py-1 rounded-md transition-all",
+                filterType === "client"
+                  ? "bg-white text-blue-700 shadow-xs font-semibold"
+                  : "text-gray-600 hover:text-gray-900"
+              )}
+            >
+              Clients
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterType("ours")}
+              className={cn(
+                "px-3 py-1 rounded-md transition-all",
+                filterType === "ours"
+                  ? "bg-white text-purple-700 shadow-xs font-semibold"
+                  : "text-gray-600 hover:text-gray-900"
+              )}
+            >
+              Ours
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-200">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Show Archived</span>
+            <button 
+              type="button"
+              onClick={() => setShowArchived(!showArchived)}
+              className={cn(
+                "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                showArchived ? "bg-blue-600" : "bg-gray-200"
+              )}
+            >
+              <span
+                className={cn(
+                  "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                  showArchived ? "translate-x-4" : "translate-x-0"
+                )}
+              />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -136,47 +246,47 @@ export default function ClientsPage() {
            </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredClients.map((client) => (
-            <Card key={client.id} className="hover:shadow-md transition-shadow relative group border-gray-200">
-              <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-                <span className={cn(
-                  "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset",
-                  client.status === "Archived" 
-                    ? "bg-gray-50 text-gray-700 ring-gray-600/20" 
-                    : "bg-green-50 text-green-700 ring-green-600/20"
-                )}>
-                  {client.status || "Active"}
-                </span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-8 w-8 text-gray-400 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem className="cursor-pointer font-medium" onClick={() => router.push(`/clients/${client.id}`)}>
-                      View Dashboard
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              
-              <Link href={`/clients/${client.id}`} className="block">
-                <CardContent className="p-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0 border border-blue-100">
-                      {(client.name || "UN").substring(0, 2).toUpperCase()}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredClients.map((client) => {
+            const isOurs = isOurSite(client);
+            return (
+              <Card key={client.id} className="hover:shadow-md transition-shadow relative group border-gray-200">
+                <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+                  <span className={cn(
+                    "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset",
+                    isOurs
+                      ? "bg-purple-50 text-purple-700 ring-purple-600/20"
+                      : "bg-blue-50 text-blue-700 ring-blue-600/20"
+                  )}>
+                    {isOurs ? "Ours" : "Client"}
+                  </span>
+
+                  <span className={cn(
+                    "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset",
+                    client.status === "Archived" 
+                      ? "bg-gray-50 text-gray-700 ring-gray-600/20" 
+                      : "bg-green-50 text-green-700 ring-green-600/20"
+                  )}>
+                    {client.status || "Active"}
+                  </span>
+                </div>
+                
+                <Link href={`/clients/${client.id}`} className="block">
+                  <CardContent className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <ClientFavicon client={client} />
+                      <div className="min-w-0 pr-24">
+                        <h3 className="font-bold text-sm text-gray-900 leading-tight truncate">
+                          {client.name || "Unnamed Client"}
+                        </h3>
+                        <p className="text-xs text-gray-500 mt-0.5 truncate">{client.contact_email || "No email"}</p>
+                      </div>
                     </div>
-                    <div className="min-w-0 pr-16">
-                      <h3 className="font-bold text-base text-gray-900 leading-tight truncate">
-                        {client.name || "Unnamed Client"}
-                      </h3>
-                      <p className="text-xs text-gray-500 mt-0.5 truncate">{client.contact_email || "No email"}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Link>
-            </Card>
-          ))}
+                  </CardContent>
+                </Link>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
