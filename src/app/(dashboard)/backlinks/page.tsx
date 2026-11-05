@@ -31,6 +31,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { LanguageFlag } from "@/components/language-flag";
+import { BacklinkInfoPopover } from "@/components/backlink-info-popover";
 
 const CATEGORY_COLORS: Record<string, string> = {
   'General': 'bg-blue-100 text-blue-600',
@@ -342,6 +343,7 @@ function BacklinkCard({
 
               {/* Language Flag Badge */}
               <LanguageFlag language={backlink.language} />
+              <BacklinkInfoPopover description={backlink.description} />
             </div>
           </div>
         </div>

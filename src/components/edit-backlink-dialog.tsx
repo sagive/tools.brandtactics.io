@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -27,6 +28,7 @@ export function EditBacklinkDialog({
   const [globalUsername, setGlobalUsername] = useState(backlink?.global_username || "");
   const [globalPassword, setGlobalPassword] = useState(backlink?.global_password || "");
   const [language, setLanguage] = useState(backlink?.language || "english");
+  const [description, setDescription] = useState(backlink?.description || "");
   const [isSaving, setIsSaving] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
 
@@ -43,6 +45,7 @@ export function EditBacklinkDialog({
       setGlobalUsername(backlink.global_username || "");
       setGlobalPassword(backlink.global_password || "");
       setLanguage(backlink.language || "english");
+      setDescription(backlink.description || "");
     }
   }, [backlink]);
 
@@ -68,7 +71,8 @@ export function EditBacklinkDialog({
         rank: parseInt(rank.toString()) || 0,
         global_username: globalUsername,
         global_password: globalPassword,
-        language
+        language,
+        description: description?.trim() || null
       };
       
       let error;
@@ -113,6 +117,7 @@ export function EditBacklinkDialog({
         setUrl("");
         setGlobalUsername("");
         setGlobalPassword("");
+        setDescription("");
       }
       
       // Close dialog
@@ -136,16 +141,16 @@ export function EditBacklinkDialog({
       <DialogHeader>
         <DialogTitle>{isEditing ? "Edit Backlink Source" : "Add New Backlink Source"}</DialogTitle>
       </DialogHeader>
-      <div className="space-y-4 py-4">
+      <div className="space-y-4 py-4 max-h-[75vh] overflow-y-auto px-1">
         <div className="space-y-2">
           <Label htmlFor="backlink-name">Website Name</Label>
           <Input 
             id="backlink-name"
-            data-type="website_name" 
-            data-value={websiteName} 
+            data-type="name"
+            data-value={websiteName}
             value={websiteName} 
             onChange={(e) => setWebsiteName(e.target.value)} 
-            placeholder="e.g. Clutch.co" 
+            placeholder="e.g. Medium, Dev.to" 
           />
         </div>
         <div className="space-y-2">
@@ -236,8 +241,23 @@ export function EditBacklinkDialog({
             />
           </div>
         </div>
+
+        {/* Description / Notes field */}
+        <div className="space-y-2">
+          <Label htmlFor="backlink-description" className="flex justify-between">
+            Description / Instructions
+            <span className="text-[10px] text-gray-400 font-normal">Optional</span>
+          </Label>
+          <Textarea 
+            id="backlink-description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Add guidelines, requirements, account rules or text snippet..."
+            className="min-h-[85px] text-xs resize-y"
+          />
+        </div>
       </div>
-      <div className="flex items-center justify-between pt-4">
+      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
         <div className="flex items-center gap-2">
           <Label htmlFor="backlink-language" className="text-xs text-gray-500 font-medium">Language:</Label>
           <Select value={language} onValueChange={setLanguage}>

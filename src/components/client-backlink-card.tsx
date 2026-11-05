@@ -13,6 +13,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { EditTaskDialog } from "@/components/edit-task-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { LanguageFlag } from "@/components/language-flag";
+import { BacklinkInfoPopover } from "@/components/backlink-info-popover";
 
 interface ClientBacklinkCardProps {
   clientId: string;
@@ -275,6 +276,7 @@ export function ClientBacklinkCard({
               {backlink.backlink_categories?.name || "General"}
             </span>
             <LanguageFlag language={backlink.language} />
+            <BacklinkInfoPopover description={backlink.description} />
             <a 
               data-type="url" 
               data-url={backlink.url} 
