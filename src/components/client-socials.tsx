@@ -133,42 +133,56 @@ function SortableSocialItem({
         {(social.username || social.password) && (
           <div className="flex items-center gap-1.5 mr-2">
             {social.username && (
-              <div className="relative flex items-center">
-                <User className="absolute left-2 w-3 h-3 text-gray-400 pointer-events-none z-10" />
-                <Input
-                  type="text"
-                  readOnly
-                  disabled
-                  value={social.username}
-                  data-user={social.username}
-                  className="h-7 text-[11px] pl-6 pr-2 w-[120px] bg-white border-gray-200 font-medium text-gray-700 cursor-pointer select-all truncate focus-visible:ring-0 disabled:opacity-100 disabled:cursor-pointer"
-                  onClick={(e) => {
-                    (e.target as HTMLInputElement).select();
-                    navigator.clipboard.writeText(social.username || "");
-                    toast.success("Username copied");
-                  }}
-                  title="Click to copy username"
-                />
-              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const text = social.username || "";
+                  if (navigator?.clipboard?.writeText) {
+                    navigator.clipboard.writeText(text);
+                  } else {
+                    const ta = document.createElement("textarea");
+                    ta.value = text;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(ta);
+                  }
+                  toast.success("Username copied: " + text);
+                }}
+                className="relative flex items-center gap-1.5 h-7 px-2 bg-gray-50/80 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-md text-[11px] font-medium text-gray-700 hover:text-blue-700 transition-colors cursor-pointer max-w-[130px]"
+                title={"Click to copy username: " + social.username}
+              >
+                <User className="w-3 h-3 text-gray-400 shrink-0" />
+                <span className="truncate select-none">{social.username}</span>
+              </button>
             )}
             {social.password && (
-              <div className="relative flex items-center">
-                <Lock className="absolute left-2 w-3 h-3 text-gray-400 pointer-events-none z-10" />
-                <Input
-                  type="text"
-                  readOnly
-                  disabled
-                  value={social.password}
-                  data-pass={social.password}
-                  className="h-7 text-[11px] pl-6 pr-2 w-[110px] bg-white border-gray-200 font-medium text-gray-700 cursor-pointer select-all truncate focus-visible:ring-0 disabled:opacity-100 disabled:cursor-pointer"
-                  onClick={(e) => {
-                    (e.target as HTMLInputElement).select();
-                    navigator.clipboard.writeText(social.password || "");
-                    toast.success("Password copied");
-                  }}
-                  title="Click to copy password"
-                />
-              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const text = social.password || "";
+                  if (navigator?.clipboard?.writeText) {
+                    navigator.clipboard.writeText(text);
+                  } else {
+                    const ta = document.createElement("textarea");
+                    ta.value = text;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(ta);
+                  }
+                  toast.success("Password copied");
+                }}
+                className="relative flex items-center gap-1.5 h-7 px-2 bg-gray-50/80 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-md text-[11px] font-medium text-gray-700 hover:text-blue-700 transition-colors cursor-pointer max-w-[120px]"
+                title="Click to copy password"
+              >
+                <Lock className="w-3 h-3 text-gray-400 shrink-0" />
+                <span className="truncate select-none">{social.password}</span>
+              </button>
             )}
           </div>
         )}

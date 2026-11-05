@@ -25,6 +25,7 @@ import { Check, Trash2, Eye, Circle } from "lucide-react";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { EditTaskDialog } from "@/components/edit-task-dialog";
 import { SendSeoUpdateDialog } from "@/components/send-seo-update-dialog";
+import { QuickClientNav } from "@/components/quick-client-nav";
 
 const REQUIRED_INFO_FIELDS = [
   "company_name_he",
@@ -204,6 +205,7 @@ export function TopNav() {
       )}
 
       <div className="flex items-center gap-3 sm:gap-4 ml-auto">
+        <QuickClientNav />
         <span className="text-xs font-semibold text-gray-400 select-none">v1.0.4</span>
         
         <div className="h-5 w-px bg-gray-200" />
