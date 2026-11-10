@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Gauge, Calendar, Pencil, Trash2 } from "lucide-react";
+import { GripVertical, Gauge, Calendar, Pencil, Trash2, Link2, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -39,7 +39,52 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
   const [status, setStatus] = useState(task.status);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
+
+  const getTaskDirectUrl = () => {
+    if (typeof window === 'undefined') return '';
+    const origin = window.location.origin;
+    if (task?.client_id) {
+      return `${origin}/clients/${task.client_id}/tasks?task=${task.id}`;
+    }
+    return `${origin}/tasks?task=${task?.id || ''}`;
+  };
+
+  const handleCopyTaskLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const directUrl = getTaskDirectUrl();
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(directUrl).then(() => {
+        setCopiedLink(true);
+        toast.success("Task link copied to clipboard!");
+        setTimeout(() => setCopiedLink(false), 2000);
+      }).catch(() => fallbackCopy(directUrl));
+    } else {
+      fallbackCopy(directUrl);
+    }
+  };
+
+  const fallbackCopy = (text: string) => {
+    try {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopiedLink(true);
+      toast.success("Task link copied to clipboard!");
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch {
+      toast.error("Failed to copy link");
+    }
+  };
 
   const handleStatusChange = async (val: string) => {
     setStatus(val);
@@ -232,6 +277,31 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
               </SelectContent>
             </Select>
           </div>
+
+          {/* Copy Direct Link Button */}
+          <TooltipProvider delay={200}>
+            <Tooltip>
+              <TooltipTrigger render={
+                <button
+                  type="button"
+                  data-testid="task-copy-link-btn"
+                  data-task-id={task.id}
+                  onClick={handleCopyTaskLink}
+                  className="cursor-pointer flex items-center justify-center border-0 p-0 outline-none w-7 h-7 rounded-full shrink-0 transition-all text-gray-400 hover:text-blue-600 hover:bg-blue-50 bg-transparent"
+                  title={copiedLink ? "הקישור הועתק!" : "העתק קישור ישיר למשימה"}
+                >
+                  {copiedLink ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : (
+                    <Link2 className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              } />
+              <TooltipContent side="top">
+                <p>{copiedLink ? "הקישור הועתק ללוח!" : "העתק קישור ישיר למשימה"}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           {/* Delete Button with 2nd-click confirmation (to the left in LTR, to the right in RTL) */}
           <TooltipProvider delay={200}>

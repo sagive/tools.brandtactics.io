@@ -25,8 +25,18 @@ export default function GlobalTasksPage() {
   const [statusFilter, setStatusFilter] = useState<'open' | 'completed'>('open');
   const [miniTaskFilter, setMiniTaskFilter] = useState<'all' | 'mini'>('all');
   const [direction, setDirection] = useState<'ltr' | 'rtl'>('ltr');
+  const [autoOpenTaskId, setAutoOpenTaskId] = useState<string | null>(null);
   const { profile, isLoading: isAuthLoading } = useAuth();
   const isAdmin = profile?.role === 'admin';
+
+  useEffect(() => {
+    // Check URL query for ?task=ID or ?taskId=ID
+    if (typeof window !== 'undefined') {
+      const sp = new URLSearchParams(window.location.search);
+      const tid = sp.get('task') || sp.get('taskId');
+      if (tid) setAutoOpenTaskId(tid);
+    }
+  }, []);
 
   useEffect(() => {
     if (!isAuthLoading) {
@@ -249,13 +259,13 @@ export default function GlobalTasksPage() {
           <>
             {statusFilter === 'open' ? (
               <>
-                <SortableTaskList title="Pending" initialTasks={pending} onRefresh={fetchTasks} />
-                <SortableTaskList title="Working on it / Review" initialTasks={active} onRefresh={fetchTasks} />
-                <SortableTaskList title="Update Ready" initialTasks={updateReady} onRefresh={fetchTasks} />
-                <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} onRefresh={fetchTasks} />
+                <SortableTaskList title="Pending" initialTasks={pending} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
+                <SortableTaskList title="Working on it / Review" initialTasks={active} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
+                <SortableTaskList title="Update Ready" initialTasks={updateReady} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
+                <SortableTaskList title="Need Help / Stuck" initialTasks={stuck} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
               </>
             ) : (
-              <SortableTaskList title="Completed" initialTasks={completed} onRefresh={fetchTasks} />
+              <SortableTaskList title="Completed" initialTasks={completed} onRefresh={fetchTasks} autoOpenTaskId={autoOpenTaskId} />
             )}
             
             {filteredTasks.length === 0 && (

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { Button } from "@/components/ui/button";
-import { BellIcon, Link2, List, Bold, Italic, Underline, Strikethrough, SmilePlus, X, Send, Trash2, Pencil, ChevronDownIcon, FileText } from "lucide-react";
+import { BellIcon, Link2, List, Bold, Italic, Underline, Strikethrough, SmilePlus, X, Send, Trash2, Pencil, ChevronDownIcon, FileText, Check } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -103,7 +103,79 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
     return [];
   });
   const [isMiniTask, setIsMiniTask] = useState<boolean>(task?.is_mini_task || savedChoices?.isMiniTask || false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const [isEditingDesc, setIsEditingDesc] = useState(!isEditing);
+
+  const getTaskDirectUrl = () => {
+    if (typeof window === 'undefined') return '';
+    const origin = window.location.origin;
+    if (task?.client_id) {
+      return `${origin}/clients/${task.client_id}/tasks?task=${task.id}`;
+    }
+    return `${origin}/tasks?task=${task?.id || ''}`;
+  };
+
+  const handleCopyTaskLink = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!task?.id) {
+      toast.error("Save the task first to get a direct link");
+      return;
+    }
+    const directUrl = getTaskDirectUrl();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(directUrl).then(() => {
+        setCopiedLink(true);
+        toast.success("Task link copied to clipboard!");
+        setTimeout(() => setCopiedLink(false), 2000);
+      }).catch(() => fallbackCopy(directUrl));
+    } else {
+      fallbackCopy(directUrl);
+    }
+  };
+
+  const fallbackCopy = (text: string) => {
+    try {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopiedLink(true);
+      toast.success("Task link copied to clipboard!");
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch {
+      toast.error("Failed to copy link");
+    }
+  };
+
+  // Sync URL query (?task=ID) when dialog opens/closes in editing mode
+  useEffect(() => {
+    if (!isEditing || !task?.id || typeof window === 'undefined') return;
+
+    const url = new URL(window.location.href);
+    const prevQuery = url.searchParams.get('task');
+    url.searchParams.set('task', task.id);
+    window.history.replaceState({}, '', url.toString());
+
+    return () => {
+      const cleanupUrl = new URL(window.location.href);
+      if (cleanupUrl.searchParams.get('task') === task.id) {
+        if (prevQuery && prevQuery !== task.id) {
+          cleanupUrl.searchParams.set('task', prevQuery);
+        } else {
+          cleanupUrl.searchParams.delete('task');
+        }
+        window.history.replaceState({}, '', cleanupUrl.toString());
+      }
+    };
+  }, [isEditing, task?.id]);
 
   const [dueDate, setDueDate] = useState<string>(task?.end_date ? new Date(task.end_date).toISOString().split('T')[0] : (savedChoices?.dueDate || ""));
   const [clients, setClients] = useState<any[]>([]);
@@ -599,6 +671,22 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                />
              </div>
              
+             {/* Copy Direct Link Button */}
+             {isEditing && task?.id && (
+               <button
+                 type="button"
+                 onClick={handleCopyTaskLink}
+                 className="hover:text-blue-600 focus:outline-none outline-none ring-0 border-0 bg-transparent p-0 flex items-center shadow-none h-auto w-auto transition-colors cursor-pointer"
+                 title={copiedLink ? "Link copied!" : "Copy direct task link"}
+               >
+                 {copiedLink ? (
+                   <Check className="w-4 h-4 text-emerald-600" />
+                 ) : (
+                   <Link2 className="w-4 h-4 text-gray-400 hover:text-blue-600" />
+                 )}
+               </button>
+             )}
+
              {/* Reminder Dropdown */}
              <DropdownMenu>
                <DropdownMenuTrigger className="hover:text-gray-900 focus:outline-none outline-none ring-0 border-0 bg-transparent p-0 flex items-center shadow-none h-auto w-auto">
