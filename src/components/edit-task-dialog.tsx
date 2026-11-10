@@ -748,7 +748,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
 
             {/* Mini Task Checkbox / Toggle */}
             <div className="pt-2">
-              <label className="flex items-center gap-2.5 p-3 rounded-lg border border-purple-200/80 bg-purple-50/50 hover:bg-purple-50 cursor-pointer transition-colors select-none">
+              <label className="flex items-center gap-2 px-3 py-2 rounded-lg border border-purple-200/80 bg-purple-50/50 hover:bg-purple-50 cursor-pointer transition-colors select-none">
                 <input
                   type="checkbox"
                   checked={isMiniTask}
@@ -761,17 +761,9 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                   }}
                   className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 border-purple-300"
                 />
-                <div className="flex-1">
-                  <div className="flex items-center gap-1.5 font-bold text-sm text-purple-900">
-                    <span>Mini Task</span>
-                    <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.2 bg-purple-200 text-purple-800 rounded">
-                      Quick
-                    </span>
-                  </div>
-                  <p className="text-xs text-purple-700/80 mt-0.5">
-                    Mark this task as a lightweight Mini Task
-                  </p>
-                </div>
+                <span className="font-bold text-sm text-purple-900">
+                  Mini Task
+                </span>
               </label>
             </div>
 
