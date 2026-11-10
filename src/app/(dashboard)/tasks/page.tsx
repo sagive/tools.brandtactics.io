@@ -23,6 +23,7 @@ export default function GlobalTasksPage() {
   const [clientFilter, setClientFilter] = useState("");
   const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'open' | 'completed'>('open');
+  const [miniTaskFilter, setMiniTaskFilter] = useState<'all' | 'mini'>('all');
   const [direction, setDirection] = useState<'ltr' | 'rtl'>('ltr');
   const { profile, isLoading: isAuthLoading } = useAuth();
   const isAdmin = profile?.role === 'admin';
@@ -103,7 +104,8 @@ export default function GlobalTasksPage() {
       (profile?.full_name && t.assignee === profile.full_name) || 
       (profile?.email && t.assignee === profile.email)
     );
-    return matchesSearch && matchesClient && matchesMyTasks;
+    const matchesMiniTask = miniTaskFilter === 'all' || (miniTaskFilter === 'mini' && !!t.is_mini_task);
+    return matchesSearch && matchesClient && matchesMyTasks && matchesMiniTask;
   });
   
   const myTasksCount = tasks.filter(t => (
@@ -210,6 +212,26 @@ export default function GlobalTasksPage() {
               Completed
             </Button>
           </div>
+
+          {/* Mini Task Filter Toggle */}
+          <Button
+            variant={miniTaskFilter === 'mini' ? "default" : "outline"}
+            size="sm"
+            onClick={() => setMiniTaskFilter(prev => prev === 'all' ? 'mini' : 'all')}
+            className={cn(
+              "h-10 px-3 font-semibold transition-all border-gray-200",
+              miniTaskFilter === 'mini' 
+                ? "bg-purple-600 hover:bg-purple-700 text-white border-purple-600 shadow-xs" 
+                : "bg-white text-gray-700 hover:text-purple-700 hover:bg-purple-50/50"
+            )}
+            title="Filter by Mini Tasks"
+          >
+            <span className={cn(
+              "w-2 h-2 rounded-full mr-2",
+              miniTaskFilter === 'mini' ? "bg-white" : "bg-purple-500"
+            )} />
+            Mini Tasks
+          </Button>
           
           <Dialog>
             <DialogTrigger render={<Button className="h-10 bg-blue-600 text-white hover:bg-blue-700 font-semibold px-4 new-task" data-action="new-task" />}>

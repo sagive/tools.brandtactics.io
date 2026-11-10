@@ -102,6 +102,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
     if (pathnameClientId) return [pathnameClientId];
     return [];
   });
+  const [isMiniTask, setIsMiniTask] = useState<boolean>(task?.is_mini_task || savedChoices?.isMiniTask || false);
   const [isEditingDesc, setIsEditingDesc] = useState(!isEditing);
 
   const [dueDate, setDueDate] = useState<string>(task?.end_date ? new Date(task.end_date).toISOString().split('T')[0] : (savedChoices?.dueDate || ""));
@@ -131,10 +132,10 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
   // Save to storage whenever choices change (only for new tasks)
   useEffect(() => {
     if (!isEditing) {
-      const choices = { title, status, priority, assignee: assignees.join(','), requester, selectedClientIds, dueDate };
+      const choices = { title, status, priority, assignee: assignees.join(','), requester, selectedClientIds, dueDate, isMiniTask };
       saveStoredTaskChoices(choices);
     }
-  }, [isEditing, title, status, priority, assignees, requester, selectedClientIds, dueDate]);
+  }, [isEditing, title, status, priority, assignees, requester, selectedClientIds, dueDate, isMiniTask]);
 
   const toggleClient = (clientId: string) => {
     setSelectedClientIds(prev => 
@@ -176,7 +177,8 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
     requester: "Requester",
     end_date: "Due Date",
     comments: "Comments",
-    client_id: "Client"
+    client_id: "Client",
+    is_mini_task: "Mini Task"
   };
 
   useEffect(() => {
@@ -487,7 +489,8 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
             requester,
             end_date: dueDate || null,
             client_id: cId,
-            comments: comments || []
+            comments: comments || [],
+            is_mini_task: !!isMiniTask
           });
         }
       }
@@ -741,6 +744,35 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
               {!isEditing && assignees.length > 0 && (
                 <p className="text-[11px] text-gray-400 mt-0.5">{assignees.length} person(s) selected</p>
               )}
+            </div>
+
+            {/* Mini Task Checkbox / Toggle */}
+            <div className="pt-2">
+              <label className="flex items-center gap-2.5 p-3 rounded-lg border border-purple-200/80 bg-purple-50/50 hover:bg-purple-50 cursor-pointer transition-colors select-none">
+                <input
+                  type="checkbox"
+                  checked={isMiniTask}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setIsMiniTask(checked);
+                    if (isEditing) {
+                      updateField("is_mini_task", checked);
+                    }
+                  }}
+                  className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 border-purple-300"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-1.5 font-bold text-sm text-purple-900">
+                    <span>Mini Task</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.2 bg-purple-200 text-purple-800 rounded">
+                      Quick
+                    </span>
+                  </div>
+                  <p className="text-xs text-purple-700/80 mt-0.5">
+                    Mark this task as a lightweight Mini Task
+                  </p>
+                </div>
+              </label>
             </div>
 
           </div>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Gauge, Calendar, Pencil } from "lucide-react";
+import { GripVertical, Gauge, Calendar, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -37,6 +37,8 @@ function stripHtml(html: string) {
 
 export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hideClientBadge }: { task: any, onDelete?: () => void, onUpdate?: () => void, autoOpenTaskId?: string | null, hideClientBadge?: boolean }) {
   const [status, setStatus] = useState(task.status);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
 
   const handleStatusChange = async (val: string) => {
@@ -51,8 +53,21 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
     }
   };
 
-  const handleDelete = async (e: React.MouseEvent) => {
+  const handleDeleteClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
+
+    if (!confirmDelete) {
+      // First click: activate confirmation
+      setConfirmDelete(true);
+      setTimeout(() => {
+        setConfirmDelete(false);
+      }, 3500);
+      return;
+    }
+
+    // Second click: perform deletion
+    setIsDeleting(true);
     try {
       const { error } = await supabase.from('tasks').delete().eq('id', task.id);
       if (error) throw error;
@@ -60,6 +75,8 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
       toast.success("Task deleted");
     } catch (error: any) {
       toast.error("Failed to delete task");
+      setIsDeleting(false);
+      setConfirmDelete(false);
     }
   };
 
@@ -144,6 +161,17 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
               </TooltipProvider>
             </div>
 
+            {/* Mini Task Badge (soft purple) right next to the users */}
+            {task.is_mini_task && (
+              <Badge 
+                variant="outline" 
+                data-testid="task-mini-badge" 
+                className="text-[10px] font-bold px-1.5 py-0 rounded-full border-purple-200 bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors shrink-0 select-none"
+              >
+                Mini Task
+              </Badge>
+            )}
+
             <TooltipProvider delay={300}>
               <Tooltip>
                 <TooltipTrigger>
@@ -204,6 +232,33 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
               </SelectContent>
             </Select>
           </div>
+
+          {/* Delete Button with 2nd-click confirmation (to the left in LTR, to the right in RTL) */}
+          <TooltipProvider delay={200}>
+            <Tooltip>
+              <TooltipTrigger render={
+                <button
+                  type="button"
+                  data-testid="task-delete-btn"
+                  data-task-id={task.id}
+                  onClick={handleDeleteClick}
+                  disabled={isDeleting}
+                  className={cn(
+                    "cursor-pointer flex items-center justify-center border-0 p-0 outline-none w-7 h-7 rounded-full shrink-0 transition-all",
+                    confirmDelete 
+                      ? "bg-red-500 text-white hover:bg-red-600 scale-105 shadow-xs" 
+                      : "text-gray-400 hover:text-red-600 hover:bg-red-50 bg-transparent"
+                  )}
+                  title={confirmDelete ? "לחץ שוב לאישור מחיקה" : "מחק משימה"}
+                >
+                  <Trash2 className={cn("w-3.5 h-3.5", confirmDelete && "animate-pulse")} />
+                </button>
+              } />
+              <TooltipContent side="top">
+                <p>{confirmDelete ? "לחץ שוב לאישור מחיקה!" : "מחק משימה"}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           {/* Edit Button — far right */}
           {hideClientBadge ? (

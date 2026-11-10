@@ -24,6 +24,7 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
   const [isLoading, setIsLoading] = useState(true);
   const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'open' | 'completed'>('open');
+  const [miniTaskFilter, setMiniTaskFilter] = useState<'all' | 'mini'>('all');
   const { profile } = useAuth();
 
   const [autoOpenTaskId, setAutoOpenTaskId] = useState<string | null>(null);
@@ -81,7 +82,8 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
       (profile?.full_name && t.assignee === profile.full_name) || 
       (profile?.email && t.assignee === profile.email)
     );
-    return matchesSearch && matchesMyTasks;
+    const matchesMiniTask = miniTaskFilter === 'all' || (miniTaskFilter === 'mini' && !!t.is_mini_task);
+    return matchesSearch && matchesMyTasks && matchesMiniTask;
   });
 
   const myTasksCount = tasks.filter(t => (
@@ -165,6 +167,26 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
               Completed
             </Button>
           </div>
+
+          {/* Mini Task Filter Toggle */}
+          <Button
+            variant={miniTaskFilter === 'mini' ? "default" : "outline"}
+            size="sm"
+            onClick={() => setMiniTaskFilter(prev => prev === 'all' ? 'mini' : 'all')}
+            className={cn(
+              "h-10 px-3 font-semibold transition-all border-gray-200",
+              miniTaskFilter === 'mini' 
+                ? "bg-purple-600 hover:bg-purple-700 text-white border-purple-600 shadow-xs" 
+                : "bg-white text-gray-700 hover:text-purple-700 hover:bg-purple-50/50"
+            )}
+            title="Filter by Mini Tasks"
+          >
+            <span className={cn(
+              "w-2 h-2 rounded-full mr-2",
+              miniTaskFilter === 'mini' ? "bg-white" : "bg-purple-500"
+            )} />
+            Mini Tasks
+          </Button>
         </div>
       </div>
 
