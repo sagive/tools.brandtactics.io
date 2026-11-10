@@ -40,7 +40,23 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(autoOpenTaskId === task.id);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setDialogOpen(open);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (open) {
+        url.searchParams.set('task', task.id);
+      } else {
+        if (url.searchParams.get('task') === task.id) {
+          url.searchParams.delete('task');
+        }
+      }
+      window.history.replaceState({}, '', url.toString());
+    }
+  };
 
   const getTaskDirectUrl = () => {
     if (typeof window === 'undefined') return '';
@@ -142,7 +158,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
         </button>
 
         {/* Task Description */}
-        <Dialog defaultOpen={autoOpenTaskId === task.id}>
+        <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
           <DialogTrigger className={cn(
             "flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 cursor-pointer min-w-0 bg-transparent border-0 p-0 mx-0 outline-none group/title",
             "text-left rtl:text-right"
@@ -332,7 +348,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
 
           {/* Edit Button — far right */}
           {hideClientBadge ? (
-            <Dialog>
+            <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
               <DialogTrigger data-testid="task-action-btn" data-name="edit-task" data-task-id={task.id} className="focus:outline-none">
                 <Badge variant="outline" className="text-[10px] text-gray-600 bg-gray-100 border-gray-200 uppercase tracking-wide shrink-0 font-bold px-2 h-[30px] cursor-pointer hover:bg-gray-200 transition-colors flex items-center gap-1 rounded-none">
                   <Pencil className="w-3 h-3" />
@@ -342,7 +358,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
               <EditTaskDialog task={task} onTaskCreated={onUpdate} />
             </Dialog>
           ) : (
-            <Dialog>
+            <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
               <TooltipProvider delay={300}>
                 <Tooltip>
                   <TooltipTrigger render={

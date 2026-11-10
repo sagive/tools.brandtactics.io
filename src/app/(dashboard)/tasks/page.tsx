@@ -44,6 +44,33 @@ export default function GlobalTasksPage() {
     }
   }, [isAuthLoading, profile?.id, statusFilter]);
 
+  // Realtime subscription and window focus listener for fresh data
+  useEffect(() => {
+    const handleRefresh = () => {
+      fetchTasks();
+    };
+
+    window.addEventListener("taskCreated", handleRefresh);
+    window.addEventListener("focus", handleRefresh);
+
+    const channel = supabase
+      .channel('tasks-global-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tasks' },
+        () => {
+          fetchTasks();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      window.removeEventListener("taskCreated", handleRefresh);
+      window.removeEventListener("focus", handleRefresh);
+      supabase.removeChannel(channel);
+    };
+  }, [statusFilter, profile?.id, isAdmin]);
+
   useEffect(() => {
     const saved = localStorage.getItem('tasks-direction');
     if (saved === 'rtl' || saved === 'ltr') {

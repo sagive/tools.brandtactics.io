@@ -39,7 +39,24 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
     
     const handleRefresh = () => { if (id) fetchTasks(); };
     window.addEventListener("taskCreated", handleRefresh);
-    return () => window.removeEventListener("taskCreated", handleRefresh);
+    window.addEventListener("focus", handleRefresh);
+
+    const channel = supabase
+      .channel(`client-tasks-realtime-${id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tasks', filter: `client_id=eq.${id}` },
+        () => {
+          if (id) fetchTasks();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      window.removeEventListener("taskCreated", handleRefresh);
+      window.removeEventListener("focus", handleRefresh);
+      supabase.removeChannel(channel);
+    };
   }, [id, statusFilter]);
 
   const fetchTasks = async () => {

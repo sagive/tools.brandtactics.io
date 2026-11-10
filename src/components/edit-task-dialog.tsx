@@ -165,6 +165,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
     window.history.replaceState({}, '', url.toString());
 
     return () => {
+      if (typeof window === 'undefined') return;
       const cleanupUrl = new URL(window.location.href);
       if (cleanupUrl.searchParams.get('task') === task.id) {
         if (prevQuery && prevQuery !== task.id) {
@@ -579,6 +580,9 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
       );
       
       onTaskCreated?.();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event("taskCreated"));
+      }
 
       const assignerName = profile?.full_name || profile?.email || "Someone";
 
