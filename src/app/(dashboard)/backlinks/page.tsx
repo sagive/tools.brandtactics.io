@@ -195,6 +195,14 @@ export default function BacklinksDashboard() {
                 </section>
               );
            })}
+
+           {filteredBacklinks.length === 0 && (
+             <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+               <Link2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+               <h3 className="text-base font-bold text-gray-700">No backlinks found matching your search</h3>
+               <p className="text-xs text-gray-400 mt-1">Try searching with a different term or clear the search field</p>
+             </div>
+           )}
         </div>
       )}
     </div>

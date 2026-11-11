@@ -262,7 +262,23 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
         }
 
         setClients(finalClients);
-        if (usersRes.data) setUsers(usersRes.data);
+
+        if (usersRes.data && usersRes.data.length > 0) {
+          setUsers(usersRes.data);
+        } else {
+          // Fallback to secure API endpoint to guarantee users list is always populated
+          try {
+            const apiRes = await fetch('/api/users');
+            if (apiRes.ok) {
+              const apiJson = await apiRes.json();
+              if (apiJson.users && apiJson.users.length > 0) {
+                setUsers(apiJson.users);
+              }
+            }
+          } catch (apiErr) {
+            console.error("Failed to fallback fetch users:", apiErr);
+          }
+        }
       } catch (error) {
         console.error("Failed to fetch task dialog data:", error);
       }
@@ -779,6 +795,16 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                 multiple
                 size={Math.min(Math.max(users.length, 3), 6)}
                 value={isEditing ? (assignee ? [assignee] : []) : assignees}
+                onMouseDown={(e) => {
+                  const target = e.target as HTMLElement;
+                  if (target.tagName !== 'OPTION') return;
+                  if (isEditing) {
+                    const optVal = (target as HTMLOptionElement).value;
+                    const newVal = assignee === optVal ? "" : optVal;
+                    setAssignee(newVal);
+                    updateField("assignee", newVal);
+                  }
+                }}
                 onChange={(e) => {
                   const selected = Array.from(e.currentTarget.selectedOptions, o => o.value);
                   if (isEditing) {
@@ -793,24 +819,28 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
                 data-name="task-assignee"
                 data-type="assignee"
               >
-                {users.map(u => {
-                  const userVal = u.full_name || u.email;
-                  return (
-                    <option 
-                      key={u.id} 
-                      value={userVal} 
-                      data-name={userVal}
-                      onMouseDown={(e) => {
-                        if (!isEditing) {
-                          e.preventDefault();
-                          toggleAssignee(userVal);
-                        }
-                      }}
-                    >
-                      {userVal}
-                    </option>
-                  );
-                })}
+                {users.length === 0 ? (
+                  <option value="" disabled className="text-gray-400">Loading users...</option>
+                ) : (
+                  users.map(u => {
+                    const userVal = u.full_name || u.email;
+                    return (
+                      <option 
+                        key={u.id} 
+                        value={userVal} 
+                        data-name={userVal}
+                        onMouseDown={(e) => {
+                          if (!isEditing) {
+                            e.preventDefault();
+                            toggleAssignee(userVal);
+                          }
+                        }}
+                      >
+                        {userVal}
+                      </option>
+                    );
+                  })
+                )}
               </select>
               {!isEditing && assignees.length > 0 && (
                 <p className="text-[11px] text-gray-400 mt-0.5">{assignees.length} person(s) selected</p>

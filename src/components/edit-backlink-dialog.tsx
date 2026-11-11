@@ -178,36 +178,41 @@ export function EditBacklinkDialog({
           <div className="space-y-2">
             <Label htmlFor="backlink-category">Category</Label>
             {categories.length > 0 ? (
-              <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger id="backlink-category" data-type="category" data-value={categoryId} className="w-full">
-                  <SelectValue>
-                    {categories.find(c => c.id === categoryId)?.name || "Select category"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <select
+                id="backlink-category"
+                data-type="category"
+                data-value={categoryId}
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+                className="w-full h-10 rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring cursor-pointer"
+              >
+                <option value="">Select category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
             ) : (
               <div className="h-10 w-full bg-gray-50 animate-pulse rounded-md border border-gray-200" />
             )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="backlink-rank">Rank</Label>
-            <Select value={rank.toString()} onValueChange={(val) => setRank(parseInt(val))}>
-              <SelectTrigger id="backlink-rank" data-type="rank" data-value={rank.toString()} className="w-full">
-                <SelectValue placeholder="Rank" />
-              </SelectTrigger>
-              <SelectContent>
-                {[...Array(10)].map((_, i) => (
-                  <SelectItem key={i + 1} value={(i + 1).toString()}>
-                    {i + 1}
-                  </SelectItem>
-                )).reverse()}
-              </SelectContent>
-            </Select>
+            <select
+              id="backlink-rank"
+              data-type="rank"
+              data-value={rank.toString()}
+              value={rank.toString()}
+              onChange={(e) => setRank(parseInt(e.target.value) || 0)}
+              className="w-full h-10 rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring cursor-pointer"
+            >
+              {[...Array(11)].map((_, i) => (
+                <option key={i} value={i.toString()}>
+                  {i}
+                </option>
+              )).reverse()}
+            </select>
           </div>
         </div>
 
@@ -260,15 +265,17 @@ export function EditBacklinkDialog({
       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
         <div className="flex items-center gap-2">
           <Label htmlFor="backlink-language" className="text-xs text-gray-500 font-medium">Language:</Label>
-          <Select value={language} onValueChange={setLanguage}>
-            <SelectTrigger id="backlink-language" className="h-8 w-28 text-xs bg-white">
-              <SelectValue placeholder="Language" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="english" className="text-xs">English 🇺🇸</SelectItem>
-              <SelectItem value="hebrew" className="text-xs">Hebrew 🇮🇱</SelectItem>
-            </SelectContent>
-          </Select>
+          <select
+            id="backlink-language"
+            data-type="language"
+            data-value={language}
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="h-8 rounded-md border border-input bg-white px-2 py-1 text-xs shadow-none outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring cursor-pointer"
+          >
+            <option value="english">English 🇺🇸</option>
+            <option value="hebrew">Hebrew 🇮🇱</option>
+          </select>
         </div>
         <div className="flex items-center gap-3">
           <DialogClose ref={closeRef}>
