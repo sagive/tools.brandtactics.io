@@ -155,28 +155,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
     }
   };
 
-  // Sync URL query (?task=ID) when dialog opens/closes in editing mode
-  useEffect(() => {
-    if (!isEditing || !task?.id || typeof window === 'undefined') return;
 
-    const url = new URL(window.location.href);
-    const prevQuery = url.searchParams.get('task');
-    url.searchParams.set('task', task.id);
-    window.history.replaceState({}, '', url.toString());
-
-    return () => {
-      if (typeof window === 'undefined') return;
-      const cleanupUrl = new URL(window.location.href);
-      if (cleanupUrl.searchParams.get('task') === task.id) {
-        if (prevQuery && prevQuery !== task.id) {
-          cleanupUrl.searchParams.set('task', prevQuery);
-        } else {
-          cleanupUrl.searchParams.delete('task');
-        }
-        window.history.replaceState({}, '', cleanupUrl.toString());
-      }
-    };
-  }, [isEditing, task?.id]);
 
   const [dueDate, setDueDate] = useState<string>(task?.end_date ? new Date(task.end_date).toISOString().split('T')[0] : (savedChoices?.dueDate || ""));
   const [clients, setClients] = useState<any[]>([]);

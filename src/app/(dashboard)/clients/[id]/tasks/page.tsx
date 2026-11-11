@@ -39,7 +39,6 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
     
     const handleRefresh = () => { if (id) fetchTasks(); };
     window.addEventListener("taskCreated", handleRefresh);
-    window.addEventListener("focus", handleRefresh);
 
     const channel = supabase
       .channel(`client-tasks-realtime-${id}`)
@@ -54,7 +53,6 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
 
     return () => {
       window.removeEventListener("taskCreated", handleRefresh);
-      window.removeEventListener("focus", handleRefresh);
       supabase.removeChannel(channel);
     };
   }, [id, statusFilter]);

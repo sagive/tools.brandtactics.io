@@ -44,14 +44,13 @@ export default function GlobalTasksPage() {
     }
   }, [isAuthLoading, profile?.id, statusFilter]);
 
-  // Realtime subscription and window focus listener for fresh data
+  // Realtime subscription for fresh data
   useEffect(() => {
     const handleRefresh = () => {
       fetchTasks();
     };
 
     window.addEventListener("taskCreated", handleRefresh);
-    window.addEventListener("focus", handleRefresh);
 
     const channel = supabase
       .channel('tasks-global-realtime')
@@ -66,7 +65,6 @@ export default function GlobalTasksPage() {
 
     return () => {
       window.removeEventListener("taskCreated", handleRefresh);
-      window.removeEventListener("focus", handleRefresh);
       supabase.removeChannel(channel);
     };
   }, [statusFilter, profile?.id, isAdmin]);
