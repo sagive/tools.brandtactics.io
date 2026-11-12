@@ -105,7 +105,7 @@ export default function GlobalTasksPage() {
         query = query.eq('status', 'Completed');
       }
 
-      const { data, error } = await query.order("created_at", { ascending: false });
+      const { data, error } = await query.order("created_at", { ascending: true });
         
       if (error) throw error;
       
