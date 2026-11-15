@@ -206,7 +206,17 @@ export function TopNav() {
 
       <div className="flex items-center gap-3 sm:gap-4 ml-auto">
         <QuickClientNav />
-        <span className="text-xs font-semibold text-gray-400 select-none">v1.0.4</span>
+        <span 
+          className="text-xs font-semibold text-gray-400 select-none tracking-tight font-mono"
+          title={process.env.NEXT_PUBLIC_GIT_COMMIT_SHA ? `Git commit: ${process.env.NEXT_PUBLIC_GIT_COMMIT_SHA}` : undefined}
+        >
+          v{process.env.NEXT_PUBLIC_APP_VERSION || "1.0.5"}
+          {process.env.NEXT_PUBLIC_GIT_COMMIT_SHA && (
+            <span className="text-[10px] text-gray-400 ml-1 font-normal opacity-80">
+              ({process.env.NEXT_PUBLIC_GIT_COMMIT_SHA})
+            </span>
+          )}
+        </span>
         
         <div className="h-5 w-px bg-gray-200" />
 
