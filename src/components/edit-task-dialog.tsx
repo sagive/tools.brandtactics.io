@@ -92,7 +92,23 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
     return [];
   });
   const [requester, setRequester] = useState(task?.requester || savedChoices?.requester || "");
-  const [comments, setComments] = useState<any[]>(task?.comments || []);
+  const [comments, setComments] = useState<any[]>(() => {
+    if (!task?.comments) return [];
+    if (Array.isArray(task.comments)) return task.comments;
+    if (typeof task.comments === 'string') {
+      try {
+        const parsed = JSON.parse(task.comments);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {}
+      return [{
+        id: 'legacy-comment',
+        text: `<p>${task.comments}</p>`,
+        user: task.requester || 'User',
+        timestamp: task.created_at || new Date().toISOString()
+      }];
+    }
+    return [];
+  });
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>(() => {
     if (task?.client_id) return [task.client_id];
     if (savedChoices?.selectedClientIds && Array.isArray(savedChoices.selectedClientIds) && savedChoices.selectedClientIds.length > 0) {

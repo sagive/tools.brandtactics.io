@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Gauge, Calendar, Pencil, Trash2, Link2, Check } from "lucide-react";
@@ -42,6 +42,12 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
   const [copiedLink, setCopiedLink] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(autoOpenTaskId === task.id);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
+
+  useEffect(() => {
+    if (autoOpenTaskId === task.id) {
+      setDialogOpen(true);
+    }
+  }, [autoOpenTaskId, task.id]);
 
   const handleDialogOpenChange = (open: boolean) => {
     setDialogOpen(open);
