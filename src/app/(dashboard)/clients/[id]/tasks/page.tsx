@@ -35,7 +35,20 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
     // Check URL for direct task link ?task=ID
     const searchParams = new URLSearchParams(window.location.search);
     const taskId = searchParams.get('task');
-    if (taskId) setAutoOpenTaskId(taskId);
+    if (taskId) {
+      setAutoOpenTaskId(taskId);
+      Promise.resolve(
+        supabase
+          .from('tasks')
+          .select('id, status')
+          .eq('id', taskId)
+          .single()
+      ).then(({ data }: any) => {
+        if (data?.status === 'Completed') {
+          setStatusFilter('completed');
+        }
+      }).catch(() => {});
+    }
     
     const handleRefresh = () => { if (id) fetchTasks(); };
     window.addEventListener("taskCreated", handleRefresh);

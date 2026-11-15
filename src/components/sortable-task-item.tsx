@@ -174,7 +174,7 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
               {stripHtml(task.description || task.title).length > 75 ? '...' : ''}
             </span>
           </DialogTrigger>
-          <EditTaskDialog task={task} onTaskCreated={onUpdate} />
+          {dialogOpen && <EditTaskDialog task={task} onTaskCreated={onUpdate} />}
         </Dialog>
 
         {/* Icons Area (Metadata + Actions) */}
@@ -354,31 +354,39 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
 
           {/* Edit Button — far right */}
           {hideClientBadge ? (
-            <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-              <DialogTrigger data-testid="task-action-btn" data-name="edit-task" data-task-id={task.id} className="focus:outline-none">
-                <Badge variant="outline" className="text-[10px] text-gray-600 bg-gray-100 border-gray-200 uppercase tracking-wide shrink-0 font-bold px-2 h-[30px] cursor-pointer hover:bg-gray-200 transition-colors flex items-center gap-1 rounded-none">
-                  <Pencil className="w-3 h-3" />
-                  Edit
-                </Badge>
-              </DialogTrigger>
-              <EditTaskDialog task={task} onTaskCreated={onUpdate} />
-            </Dialog>
+            <button 
+              type="button"
+              data-testid="task-action-btn" 
+              data-name="edit-task" 
+              data-task-id={task.id} 
+              onClick={() => handleDialogOpenChange(true)}
+              className="focus:outline-none bg-transparent border-0 p-0 m-0"
+            >
+              <Badge variant="outline" className="text-[10px] text-gray-600 bg-gray-100 border-gray-200 uppercase tracking-wide shrink-0 font-bold px-2 h-[30px] cursor-pointer hover:bg-gray-200 transition-colors flex items-center gap-1 rounded-none">
+                <Pencil className="w-3 h-3" />
+                Edit
+              </Badge>
+            </button>
           ) : (
-            <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-              <TooltipProvider delay={300}>
-                <Tooltip>
-                  <TooltipTrigger render={
-                    <DialogTrigger data-testid="task-action-btn" data-name="edit-task" data-task-id={task.id} className="text-gray-400 hover:text-blue-600 cursor-pointer flex items-center justify-center bg-transparent border-0 p-0 outline-none w-7 h-7 rounded-full hover:bg-gray-100 shrink-0">
-                        <Pencil className="w-4 h-4" />
-                    </DialogTrigger>
-                  } />
-                  <TooltipContent side="top">
-                    <p>Edit</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <EditTaskDialog task={task} onTaskCreated={onUpdate} />
-            </Dialog>
+            <TooltipProvider delay={300}>
+              <Tooltip>
+                <TooltipTrigger render={
+                  <button 
+                    type="button"
+                    data-testid="task-action-btn" 
+                    data-name="edit-task" 
+                    data-task-id={task.id} 
+                    onClick={() => handleDialogOpenChange(true)}
+                    className="text-gray-400 hover:text-blue-600 cursor-pointer flex items-center justify-center bg-transparent border-0 p-0 outline-none w-7 h-7 rounded-full hover:bg-gray-100 shrink-0"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                } />
+                <TooltipContent side="top">
+                  <p>Edit</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
       </div>

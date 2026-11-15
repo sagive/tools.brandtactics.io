@@ -34,7 +34,21 @@ export default function GlobalTasksPage() {
     if (typeof window !== 'undefined') {
       const sp = new URLSearchParams(window.location.search);
       const tid = sp.get('task') || sp.get('taskId');
-      if (tid) setAutoOpenTaskId(tid);
+      if (tid) {
+        setAutoOpenTaskId(tid);
+        // If task is completed, automatically switch filter to completed so it renders and opens
+        Promise.resolve(
+          supabase
+            .from('tasks')
+            .select('id, status')
+            .eq('id', tid)
+            .single()
+        ).then(({ data }: any) => {
+          if (data?.status === 'Completed') {
+            setStatusFilter('completed');
+          }
+        }).catch(() => {});
+      }
     }
   }, []);
 
