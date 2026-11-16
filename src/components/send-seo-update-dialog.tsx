@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Check, ChevronsUpDown, FileText, AlertCircle, Plus, Send } from "lucide-react";
+import { Check, ChevronsUpDown, FileText, AlertCircle, Plus, Send, Code2, LayoutList } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth-provider";
@@ -100,6 +100,8 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
   const [templates, setTemplates] = useState<any[]>([]);
   const [openTemplateDropdown, setOpenTemplateDropdown] = useState(false);
   const [templateId, setTemplateId] = useState("");
+  const [isJsonMode, setIsJsonMode] = useState(false);
+  const [jsonInput, setJsonInput] = useState("");
 
   useEffect(() => {
     if (isOpen) {
@@ -123,20 +125,107 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
     }
   }
 
+  const parseScheduledFromObj = (parsed: any): string => {
+    // If explicit scheduledDate and scheduledTime are provided
+    if (parsed.scheduledDate && parsed.scheduledTime) {
+      return `${parsed.scheduledDate}T${parsed.scheduledTime}`;
+    }
+    if (parsed.scheduledDate && !parsed.scheduledTime) {
+      return `${parsed.scheduledDate}T09:00`;
+    }
+    if (parsed.scheduledFor) {
+      return String(parsed.scheduledFor);
+    }
+    if (parsed.date) {
+      return String(parsed.date);
+    }
+    return "";
+  };
+
+  const getScheduledParts = (isoOrStr: string) => {
+    if (!isoOrStr) return { date: "", time: "" };
+    try {
+      const parts = isoOrStr.split("T");
+      return {
+        date: parts[0] || "",
+        time: parts[1] ? parts[1].substring(0, 5) : ""
+      };
+    } catch {
+      return { date: "", time: "" };
+    }
+  };
+
+  const toggleJsonMode = () => {
+    if (!isJsonMode) {
+      // Switching into JSON mode: serialize current values into formatted JSON
+      const { date, time } = getScheduledParts(scheduledFor);
+      const payload = {
+        subject: subject || "נושא העדכון",
+        message: body || "<p>תוכן העדכון...</p>",
+        scheduledDate: date || "",
+        scheduledTime: time || ""
+      };
+      setJsonInput(JSON.stringify(payload, null, 2));
+      setIsJsonMode(true);
+    } else {
+      // Switching back to Form mode: try parsing JSON to populate fields
+      if (jsonInput.trim()) {
+        try {
+          const parsed = JSON.parse(jsonInput);
+          if (parsed.subject !== undefined) setSubject(String(parsed.subject));
+          const calculatedSchedule = parseScheduledFromObj(parsed);
+          setScheduledFor(calculatedSchedule);
+          if (parsed.message !== undefined || parsed.body !== undefined) {
+            setBody(String(parsed.message || parsed.body || ""));
+          }
+          setIsJsonMode(false);
+        } catch (err: any) {
+          toast.error("Invalid JSON syntax: " + err.message);
+          return;
+        }
+      } else {
+        setIsJsonMode(false);
+      }
+    }
+  };
+
   const handleSendUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clientId) {
       toast.error("Please select a client.");
       return;
     }
+
+    let finalSubject = subject;
+    let finalScheduledFor = scheduledFor;
+    let currentBody = body;
+
+    if (isJsonMode) {
+      if (!jsonInput.trim()) {
+        toast.error("Please enter a JSON payload or switch to normal mode.");
+        return;
+      }
+      try {
+        const parsed = JSON.parse(jsonInput);
+        if (parsed.subject !== undefined) finalSubject = String(parsed.subject);
+        finalScheduledFor = parseScheduledFromObj(parsed);
+        if (parsed.message !== undefined || parsed.body !== undefined) {
+          currentBody = String(parsed.message || parsed.body || "");
+        }
+      } catch (err: any) {
+        toast.error("Invalid JSON syntax: " + err.message);
+        return;
+      }
+    }
+
     setSending(true);
     
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token || '';
 
-      let finalBody = sanitizeAndFixLinks(body);
-      if (body.includes("data:image/")) {
+      let finalBody = sanitizeAndFixLinks(currentBody);
+      if (currentBody.includes("data:image/")) {
         const toastId = toast.loading("Compressing & uploading image...");
         try {
           finalBody = await processAndUploadEmailImages(finalBody, clientId);
@@ -154,7 +243,7 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}` 
         },
-        body: JSON.stringify({ clientId, subject, body: finalBody, scheduledFor }),
+        body: JSON.stringify({ clientId, subject: finalSubject, body: finalBody, scheduledFor: finalScheduledFor }),
       });
       
       const data = await res.json();
@@ -170,10 +259,12 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
         userName: profile?.full_name || profile?.email || "Someone",
         clientId: clientId,
         actionType: 'seo_update_sent',
-        content: `sent SEO update <b>"${subject}"</b> to <b>${selectedClient?.name || "Client"}</b>`
+        content: `sent SEO update <b>"${finalSubject}"</b> to <b>${selectedClient?.name || "Client"}</b>`
       });
 
       setBody("");
+      setJsonInput("");
+      setIsJsonMode(false);
       setIsOpen(false);
       onSuccess?.();
     } catch (err: any) {
@@ -341,34 +432,87 @@ export function SendSeoUpdateDialog({ defaultClientId, trigger, onSuccess, open:
               </Popover>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {!isJsonMode ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Subject</Label>
+                  <Input id="seoUpdateSubject" data-name="seo update subject" value={subject} onChange={e => setSubject(e.target.value)} className="bg-white" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Schedule Send (Optional)</Label>
+                  <DateTimePicker
+                    id="seoUpdateSchedule"
+                    data-name="seo update schedule"
+                    value={scheduledFor} 
+                    onChange={setScheduledFor} 
+                    className="bg-white" 
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Message</Label>
+                <div id="seoUpdateMessage" data-name="seo update message" className="bg-white rounded-md border border-input shadow-sm [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[200px]">
+                  <ReactQuill 
+                    theme="snow" 
+                    value={body} 
+                    onChange={setBody}
+                    modules={QUILL_MODULES}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Subject</Label>
-              <Input id="seoUpdateSubject" data-name="seo update subject" value={subject} onChange={e => setSubject(e.target.value)} className="bg-white" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Schedule Send (Optional)</Label>
-              <DateTimePicker
-                id="seoUpdateSchedule"
-                data-name="seo update schedule"
-                value={scheduledFor} 
-                onChange={setScheduledFor} 
-                className="bg-white" 
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Raw JSON Payload (Subject, Date, HTML Message)
+                </Label>
+                <span className="text-[11px] text-gray-400">
+                  Accepts fields: <code>subject</code>, <code>message</code> (HTML), <code>scheduledDate</code> (YYYY-MM-DD), <code>scheduledTime</code> (HH:mm)
+                </span>
+              </div>
+              <textarea
+                id="seoUpdateJsonInput"
+                data-name="seo update json input"
+                rows={14}
+                value={jsonInput}
+                onChange={e => setJsonInput(e.target.value)}
+                placeholder={`{\n  "subject": "נושא העדכון",\n  "message": "<p>תוכן העדכון...</p>",\n  "scheduledDate": "2026-11-16",\n  "scheduledTime": "13:35"\n}`}
+                className="w-full font-mono text-xs p-3 bg-slate-900 text-emerald-400 rounded-md border border-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner"
+                spellCheck={false}
               />
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Message</Label>
-            <div id="seoUpdateMessage" data-name="seo update message" className="bg-white rounded-md border border-input shadow-sm [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:bg-gray-50/50 [&_.ql-container]:border-0 [&_.ql-editor]:min-h-[200px]">
-              <ReactQuill 
-                theme="snow" 
-                value={body} 
-                onChange={setBody}
-                modules={QUILL_MODULES}
-              />
-            </div>
-          </div>
-          <div className="flex justify-end pt-2">
+          )}
+
+          <div className="flex items-center justify-between pt-2">
+            <Button
+              type="button"
+              id="seoUpdateToggleJsonBtn"
+              data-name="seo update toggle json"
+              variant="outline"
+              size="sm"
+              onClick={toggleJsonMode}
+              className={cn(
+                "h-9 px-3 text-xs font-bold gap-1.5 transition-colors border-dashed",
+                isJsonMode 
+                  ? "bg-slate-900 text-white border-slate-700 hover:bg-slate-800" 
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:text-blue-600"
+              )}
+            >
+              {isJsonMode ? (
+                <>
+                  <LayoutList className="w-4 h-4 text-blue-400" />
+                  <span>Switch to Form View</span>
+                </>
+              ) : (
+                <>
+                  <Code2 className="w-4 h-4 text-purple-600" />
+                  <span>Insert JSON Payload</span>
+                </>
+              )}
+            </Button>
+
             <Button 
               id="seoUpdateSubmitBtn"
               data-name="seo update submit"
