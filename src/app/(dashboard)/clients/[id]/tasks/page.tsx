@@ -95,6 +95,13 @@ export default function ClientTasks({ params }: { params: Promise<{ id: string }
         client: t.clients?.name || "Unknown Client",
         due: t.end_date ? new Date(t.end_date).toISOString().split('T')[0] : "No date"
       }));
+
+      // High Priority tasks always appear at the top
+      formatted.sort((a: any, b: any) => {
+        const aHigh = a.priority === 'High' ? 1 : 0;
+        const bHigh = b.priority === 'High' ? 1 : 0;
+        return bHigh - aHigh;
+      });
       setTasks(formatted);
     } catch (error: any) {
       toast.error(error.message || "Failed to load tasks");

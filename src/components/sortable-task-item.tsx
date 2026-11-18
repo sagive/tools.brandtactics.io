@@ -228,6 +228,17 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
               </TooltipProvider>
             </div>
 
+            {/* High Priority Badge (red) */}
+            {task.priority === 'High' && (
+              <Badge 
+                variant="outline" 
+                data-testid="task-high-priority-badge" 
+                className="text-[10px] font-bold px-1.5 py-0 rounded-full border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition-colors shrink-0 select-none uppercase tracking-wide"
+              >
+                High
+              </Badge>
+            )}
+
             {/* Mini Task Badge (soft purple) right next to the users */}
             {task.is_mini_task && (
               <Badge 

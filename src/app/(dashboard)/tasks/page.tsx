@@ -129,6 +129,13 @@ export default function GlobalTasksPage() {
         client_id: t.client_id, // ensure client_id is kept for filtering
         due: t.end_date ? new Date(t.end_date).toISOString().split('T')[0] : "No date"
       }));
+
+      // High Priority tasks always appear at the top
+      formatted.sort((a: any, b: any) => {
+        const aHigh = a.priority === 'High' ? 1 : 0;
+        const bHigh = b.priority === 'High' ? 1 : 0;
+        return bHigh - aHigh;
+      });
       
       if (profile && !isAdmin) {
         const allowed = profile.accessible_clients || [];
