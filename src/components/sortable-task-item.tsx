@@ -166,9 +166,18 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
         {/* Task Description */}
         <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
           <DialogTrigger className={cn(
-            "flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 cursor-pointer min-w-0 bg-transparent border-0 p-0 mx-0 outline-none group/title",
+            "flex-1 flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 cursor-pointer min-w-0 bg-transparent border-0 p-0 mx-0 outline-none group/title",
             "text-left rtl:text-right"
           )}>
+            {task.priority === 'High' && (
+              <Badge 
+                variant="outline" 
+                data-testid="task-high-priority-badge" 
+                className="text-[10px] font-bold px-1.5 py-0 rounded-full border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition-colors shrink-0 select-none uppercase tracking-wide inline-flex items-center gap-1"
+              >
+                High
+              </Badge>
+            )}
             <span data-testid="task-title" className="font-medium text-sm text-gray-900 truncate pr-2 block group-hover/title:text-blue-600 transition-colors">
               {stripHtml(task.description || task.title).substring(0, 75)}
               {stripHtml(task.description || task.title).length > 75 ? '...' : ''}
@@ -227,17 +236,6 @@ export function SortableTaskItem({ task, onDelete, onUpdate, autoOpenTaskId, hid
                 </Tooltip>
               </TooltipProvider>
             </div>
-
-            {/* High Priority Badge (red) */}
-            {task.priority === 'High' && (
-              <Badge 
-                variant="outline" 
-                data-testid="task-high-priority-badge" 
-                className="text-[10px] font-bold px-1.5 py-0 rounded-full border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition-colors shrink-0 select-none uppercase tracking-wide"
-              >
-                High
-              </Badge>
-            )}
 
             {/* Mini Task Badge (soft purple) right next to the users */}
             {task.is_mini_task && (
