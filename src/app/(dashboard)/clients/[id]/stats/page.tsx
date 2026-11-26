@@ -181,9 +181,9 @@ interface GA4StatsData {
 export default function ClientStatsPage({
   params,
 }: {
-  params: Promise<{ id: string }> | { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const clientId = (React.use(params as Promise<{ id: string }>) || (params as any)).id;
+  const { id: clientId } = React.use(params);
 
   // Single-row configuration fields
   const [clientWebsite, setClientWebsite] = useState("");

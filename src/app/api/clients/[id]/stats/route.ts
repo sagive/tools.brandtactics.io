@@ -24,11 +24,10 @@ function getErrorMessage(err: unknown): string {
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const resolvedParams = await Promise.resolve(params);
-    const clientId = resolvedParams.id;
+    const { id: clientId } = await params;
 
     const { searchParams } = new URL(req.url);
     let gscSiteUrl = searchParams.get('gscSiteUrl') || '';

@@ -19,11 +19,10 @@ function getSupabase() {
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const resolvedParams = await Promise.resolve(params);
-    const clientId = resolvedParams.id;
+    const { id: clientId } = await params;
 
     // 1. Fetch available accounts from Google
     const accountsData = await listAvailableAccounts();
@@ -91,11 +90,10 @@ export async function GET(
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const resolvedParams = await Promise.resolve(params);
-    const clientId = resolvedParams.id;
+    const { id: clientId } = await params;
     const body = await req.json();
 
     const { gsc_site_url, ga4_property_id } = body;
