@@ -3,11 +3,20 @@ import fs from 'fs';
 import path from 'path';
 
 export function getGoogleCredentials() {
-  // Support split keys for hosting environments with field size limits (e.g. SiteGround)
-  if (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY) {
+  // Support split keys for hosting environments with field size limits (e.g. SiteGround: max ~500 bytes per field)
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && (process.env.GOOGLE_PRIVATE_KEY || process.env.GOOGLE_PRIVATE_KEY_1)) {
+    const rawKey =
+      (process.env.GOOGLE_PRIVATE_KEY || '') +
+      (process.env.GOOGLE_PRIVATE_KEY_PART2 || '') +
+      (process.env.GOOGLE_PRIVATE_KEY_1 || '') +
+      (process.env.GOOGLE_PRIVATE_KEY_2 || '') +
+      (process.env.GOOGLE_PRIVATE_KEY_3 || '') +
+      (process.env.GOOGLE_PRIVATE_KEY_4 || '') +
+      (process.env.GOOGLE_PRIVATE_KEY_5 || '');
+
     return {
       client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      private_key: (process.env.GOOGLE_PRIVATE_KEY + (process.env.GOOGLE_PRIVATE_KEY_PART2 || '')).replace(/\\n/g, '\n'),
+      private_key: rawKey.replace(/\\n/g, '\n'),
     };
   }
 
