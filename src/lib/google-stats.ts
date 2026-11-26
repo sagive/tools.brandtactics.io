@@ -3,6 +3,14 @@ import fs from 'fs';
 import path from 'path';
 
 export function getGoogleCredentials() {
+  // Support split keys for hosting environments with field size limits (e.g. SiteGround)
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY) {
+    return {
+      client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      private_key: (process.env.GOOGLE_PRIVATE_KEY + (process.env.GOOGLE_PRIVATE_KEY_PART2 || '')).replace(/\\n/g, '\n'),
+    };
+  }
+
   if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
     try {
       return JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
