@@ -49,7 +49,7 @@ export function getGoogleCredentials() {
     }
   }
 
-  // Fallback to internal encoded credentials file
+  // Fallback to internal encoded key combined with GOOGLE_SERVICE_ACCOUNT_EMAIL from ENV
   const encodedPaths = [
     path.join(process.cwd(), 'src', 'lib', 'google-credentials.data'),
     path.join(__dirname, 'google-credentials.data'),
@@ -58,8 +58,12 @@ export function getGoogleCredentials() {
     if (fs.existsSync(ep)) {
       try {
         const raw = fs.readFileSync(ep, 'utf8').trim();
-        const decoded = Buffer.from(raw, 'base64').toString('utf8');
-        return JSON.parse(decoded);
+        const decodedKey = Buffer.from(raw, 'base64').toString('utf8');
+        const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || 'brandtactics-seo-reader@seo-connectors.iam.gserviceaccount.com';
+        return {
+          client_email: clientEmail,
+          private_key: decodedKey,
+        };
       } catch (err) {
         console.error(`Error reading encoded credentials at ${ep}:`, err);
       }
