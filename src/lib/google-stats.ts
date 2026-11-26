@@ -49,6 +49,23 @@ export function getGoogleCredentials() {
     }
   }
 
+  // Fallback to internal encoded credentials file
+  const encodedPaths = [
+    path.join(process.cwd(), 'src', 'lib', 'google-credentials.data'),
+    path.join(__dirname, 'google-credentials.data'),
+  ];
+  for (const ep of encodedPaths) {
+    if (fs.existsSync(ep)) {
+      try {
+        const raw = fs.readFileSync(ep, 'utf8').trim();
+        const decoded = Buffer.from(raw, 'base64').toString('utf8');
+        return JSON.parse(decoded);
+      } catch (err) {
+        console.error(`Error reading encoded credentials at ${ep}:`, err);
+      }
+    }
+  }
+
   return null;
 }
 
