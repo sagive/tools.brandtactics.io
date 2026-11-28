@@ -52,7 +52,7 @@ export async function POST(req: Request) {
 
     // 3. Send email via Resend
     await resend.emails.send({
-      from: 'BrandTactics Tools <system@updates.brandtactics.io>',
+      from: 'BrandTactics <updates@tools.brandtactics.io>',
       to: email,
       subject: 'Your Login Link - Brandtactics Tools',
       html: `

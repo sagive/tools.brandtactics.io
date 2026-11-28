@@ -165,12 +165,18 @@ class QueryBuilder {
           orderBy: this.orderConfig,
           limit: this.limitCount,
           offset: this.offsetCount,
+          count: this.countOption?.count,
+          head: this.countOption?.head,
         }),
       });
       const json = await res.json();
-      return json;
+      return {
+        data: json.data || [],
+        count: json.count ?? (json.data ? json.data.length : 0),
+        error: json.error || null,
+      };
     } catch (err: any) {
-      return { data: null, error: err };
+      return { data: [], count: 0, error: err };
     }
   }
 
