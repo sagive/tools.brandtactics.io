@@ -5,7 +5,7 @@ let pool: mysql.Pool | null = null;
 export function getDbPool(): mysql.Pool {
   if (!pool) {
     pool = mysql.createPool({
-      host: process.env.MYSQL_HOST || 'localhost',
+      host: process.env.MYSQL_HOST || '127.0.0.1',
       user: process.env.MYSQL_USER || 'u7eqdcvmbhbta',
       password: process.env.MYSQL_PASSWORD || 'meobortbiaje',
       database: process.env.MYSQL_DATABASE || 'dbbicuxtdki0br',

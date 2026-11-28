@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { supabase } from "@/lib/supabase";
 import { ClientBacklinkCard } from "@/components/client-backlink-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,8 +13,7 @@ import { Loader2, Search, Link2, TrendingUp, Info, Share2, Tag, ListChecks, X } 
 import { BulkTaskDialog } from "@/components/bulk-task-dialog";
 import { cn } from "@/lib/utils";
 
-export default function ClientBacklinksPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id: clientId } = React.use(params);
+function ClientBacklinksContent({ clientId }: { clientId: string }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [backlinks, setBacklinks] = useState<any[]>([]);
@@ -294,5 +293,14 @@ export default function ClientBacklinksPage({ params }: { params: Promise<{ id: 
          </div>
       )}
     </div>
+  );
+}
+
+export default function ClientBacklinksPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: clientId } = React.use(params);
+  return (
+    <Suspense fallback={<div className="p-8 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>}>
+      <ClientBacklinksContent clientId={clientId} />
+    </Suspense>
   );
 }
