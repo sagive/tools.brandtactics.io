@@ -49,40 +49,6 @@ export function getGoogleCredentials() {
     }
   }
 
-  /**
-   * ARCHITECTURE / SECURITY WORKAROUND NOTE (SiteGround Migration):
-   * -------------------------------------------------------------
-   * Why does this exist?
-   * 1. SiteGround Node.js Projects web UI enforces a strict byte/character limit (~255 bytes)
-   *    per environment variable value (rejects standard RSA private keys of ~1,700 bytes).
-   * 2. GitHub Push Protection correctly blocks raw RSA keys in git commits.
-   * 
-   * How it works (Split Security Pattern):
-   * - The raw RSA private key (stripped of any email/project IDs) is Base64 encoded inside `google-credentials.data`.
-   *   Because it lacks identifiers and raw RSA headers, it is completely inert on its own.
-   * - The identifying email is provided via the `GOOGLE_SERVICE_ACCOUNT_EMAIL` environment variable in SiteGround.
-   * - At runtime, this fallback recombines the email from ENV with the decoded private key from the local file.
-   */
-  const encodedPaths = [
-    path.join(process.cwd(), 'src', 'lib', 'google-credentials.data'),
-    path.join(__dirname, 'google-credentials.data'),
-  ];
-  for (const ep of encodedPaths) {
-    if (fs.existsSync(ep)) {
-      try {
-        const raw = fs.readFileSync(ep, 'utf8').trim();
-        const decodedKey = Buffer.from(raw, 'base64').toString('utf8');
-        const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || 'brandtactics-seo-reader@seo-connectors.iam.gserviceaccount.com';
-        return {
-          client_email: clientEmail,
-          private_key: decodedKey,
-        };
-      } catch (err) {
-        console.error(`Error reading encoded credentials at ${ep}:`, err);
-      }
-    }
-  }
-
   return null;
 }
 

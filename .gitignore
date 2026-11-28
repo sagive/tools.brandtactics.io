@@ -35,6 +35,7 @@ yarn-error.log*
 .env*
 /secrets
 *service_account*.json
+*.data
 backup_supabase/
 
 # vercel
