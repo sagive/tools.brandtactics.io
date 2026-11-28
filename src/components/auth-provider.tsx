@@ -1,8 +1,27 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useRef } from "react";
-import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+
+export interface User {
+  id: string;
+  email: string;
+  full_name?: string;
+  role?: string;
+  avatar_url?: string;
+  accessible_clients?: string[];
+  status?: string;
+  user_metadata?: {
+    full_name?: string;
+    avatar_url?: string;
+    [key: string]: any;
+  };
+}
+
+export interface Session {
+  user: User;
+  access_token: string;
+}
 
 type AuthContextType = {
   user: User | null;
@@ -33,7 +52,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data } = await supabase.from('users').select('*').eq('email', email).single();
       
-      // If the user was invited, mark them as active upon first successful login/session
       if (data && data.status === 'invited') {
         await supabase.from('users').update({ status: 'active' }).eq('email', email);
         data.status = 'active';
@@ -47,53 +65,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  useEffect(() => {
-    // Initial session load
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      const u = session?.user ?? null;
-      setUser(u);
-      if (u?.email) {
-        fetchProfile(u.email);
-      } else {
-        setProfile(null);
-      }
-      setIsLoading(false);
-    });
-
-    // Listen for changes on auth state
-    // CRITICAL: onAuthStateChange must remain strictly synchronous and NOT execute DB queries directly inside,
-    // otherwise Supabase internal auth locks deadlock on TOKEN_REFRESHED when the tab is idle.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
-        setSession(newSession);
-        const u = newSession?.user ?? null;
-        setUser(u);
-        setIsLoading(false);
-
-        if (event === "SIGNED_OUT" || !u) {
-          setProfile(null);
-        } else if (event === "SIGNED_IN") {
-          // Defer fetch outside the auth lock cycle
-          if (u.email) {
-            setTimeout(() => {
-              fetchProfile(u.email!);
-            }, 0);
-          }
-        }
-        // TOKEN_REFRESHED: do NOT re-fetch profile, profile doesn't change on JWT refresh!
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   const refreshProfile = async () => {
     if (user?.email) {
-      profileFetchPending.current = null;
       await fetchProfile(user.email);
     }
   };
+
+  useEffect(() => {
+    async function initAuth() {
+      try {
+        const res = await fetch('/api/auth/session');
+        const json = await res.json();
+        if (json.authenticated && json.user) {
+          const u = json.user;
+          const s = { user: u, access_token: 'mysql_token' };
+          setSession(s);
+          setUser(u);
+          await fetchProfile(u.email);
+        } else {
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+        }
+      } catch (err) {
+        console.error("Auth initialization error:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    initAuth();
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, session, profile, isLoading, refreshProfile }}>
@@ -102,6 +104,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);

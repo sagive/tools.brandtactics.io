@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase';
 import { getSearchConsoleStats, getAnalyticsStats, listAvailableAccounts } from '@/lib/google-stats';
 
 export const dynamic = 'force-dynamic';

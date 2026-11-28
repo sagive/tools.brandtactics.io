@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase';
 import { generateSeoMeta } from '@/lib/seo';
 import { uploadAndReplaceBase64Images } from '@/lib/article-image-upload';
 

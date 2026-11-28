@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase';
 import { supabase } from '@/lib/supabase';
 import { sanitizeAndFixLinks } from '@/lib/link-utils';
 

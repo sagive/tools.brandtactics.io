@@ -111,7 +111,7 @@ export function TopNav() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'notifications' },
-        (payload) => fetchNotifications()
+        (payload: any) => fetchNotifications()
       )
       .subscribe();
 

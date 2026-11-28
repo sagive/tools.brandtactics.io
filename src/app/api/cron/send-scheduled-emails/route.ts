@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase';
 import { Resend } from 'resend';
 import { repairCorruptedEmailDoctype } from '@/lib/link-utils';
 

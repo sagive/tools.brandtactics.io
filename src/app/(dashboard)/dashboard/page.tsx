@@ -86,7 +86,7 @@ export default function DashboardPage() {
     if (profile && !isAdmin) {
       const allowed = profile.accessible_clients || [];
       if (!allowed.includes('all')) {
-        finalClients = finalClients.filter(c => allowed.includes(c.id));
+        finalClients = finalClients.filter((c: any) => allowed.includes(c.id));
       }
     }
     

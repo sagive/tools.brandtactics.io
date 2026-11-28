@@ -269,7 +269,7 @@ export function EditTaskDialog({ task, defaultClientId, defaultDescription, onTa
         let finalClients = clientsRes.data || [];
         
         // If any selected clients aren't in the list, fetch them specifically
-        const missingIds = targetIds.filter(id => !finalClients.some(c => c.id === id));
+        const missingIds = targetIds.filter(id => !finalClients.some((c: any) => c.id === id));
         if (missingIds.length > 0) {
           const { data: specific } = await supabase.from('clients').select('id, name').in('id', missingIds);
           if (specific) {

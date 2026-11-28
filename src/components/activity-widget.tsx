@@ -22,7 +22,7 @@ export function ActivityWidget() {
         event: 'INSERT', 
         schema: 'public', 
         table: 'activity_logs' 
-      }, (payload) => {
+      }, (payload: any) => {
         setLogs(prev => [payload.new, ...prev.slice(0, 19)]);
       })
       .subscribe();
