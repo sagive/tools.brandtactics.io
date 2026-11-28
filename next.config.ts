@@ -14,6 +14,7 @@ if (!gitCommitSha) {
 }
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   env: {
     NEXT_PUBLIC_APP_VERSION: packageJson.version,
     NEXT_PUBLIC_GIT_COMMIT_SHA: gitCommitSha,

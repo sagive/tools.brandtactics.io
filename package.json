@@ -6,8 +6,8 @@
     "dev": "next dev",
     "prebuild": "node scripts/cleanup-deployments.js",
     "build": "next build --webpack",
-    "postbuild": "node -e \"const fs = require('fs'); try { fs.rmSync('.next/cache', { recursive: true, force: true }); console.log('[SiteGround Anti-Bloat] Purged .next/cache to save Inodes'); } catch (e) {}\"",
-    "start": "next start",
+    "postbuild": "node scripts/postbuild-siteground.js",
+    "start": "node .next/standalone/server.js",
     "lint": "eslint"
   },
   "dependencies": {
