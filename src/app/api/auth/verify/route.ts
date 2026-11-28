@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 import { query } from '@/lib/mysql';
-import { createSession } from '@/lib/auth';
+import { createSessionResponse } from '@/lib/auth';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.AUTH_SECRET || process.env.CRON_SECRET || 'brandtactics_super_secure_auth_secret_2026'
@@ -19,7 +19,9 @@ export async function GET(req: Request) {
   }
 
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, JWT_SECRET, {
+      clockTolerance: 60, // allow 60s clock skew
+    });
     if (!payload || !payload.email || payload.type !== 'magiclink') {
       return NextResponse.redirect(`${protocol}://${host}/login?error=Invalid or expired login link`);
     }
@@ -39,7 +41,7 @@ export async function GET(req: Request) {
       accessible = typeof user.accessible_clients === 'string' ? JSON.parse(user.accessible_clients) : user.accessible_clients;
     }
 
-    await createSession({
+    return await createSessionResponse({
       id: user.id,
       email: user.email,
       full_name: user.full_name || '',
@@ -47,9 +49,7 @@ export async function GET(req: Request) {
       avatar_url: user.avatar_url || '',
       accessible_clients: accessible,
       status: user.status,
-    });
-
-    return NextResponse.redirect(`${protocol}://${host}/dashboard`);
+    }, `${protocol}://${host}/dashboard`);
   } catch (err) {
     console.error('Magic link verification error:', err);
     return NextResponse.redirect(`${protocol}://${host}/login?error=Login link has expired. Please request a new one.`);

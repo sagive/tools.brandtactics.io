@@ -66,7 +66,7 @@ export async function GET(req: Request) {
       accessible = typeof user.accessible_clients === 'string' ? JSON.parse(user.accessible_clients) : user.accessible_clients;
     }
 
-    await createSession({
+    return await createSessionResponse({
       id: user.id,
       email: user.email,
       full_name: user.full_name || googleUser.name || '',
@@ -74,9 +74,7 @@ export async function GET(req: Request) {
       avatar_url: user.avatar_url || googleUser.picture || '',
       accessible_clients: accessible,
       status: user.status,
-    });
-
-    return NextResponse.redirect(`${protocol}://${host}/dashboard`);
+    }, `${protocol}://${host}/dashboard`);
   } catch (err: any) {
     console.error('Google OAuth callback error:', err);
     return NextResponse.redirect(`${protocol}://${host}/login?error=Authentication failed. Please try again.`);

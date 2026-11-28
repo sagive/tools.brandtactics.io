@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 import { query, execute } from './mysql';
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -21,7 +22,7 @@ export interface AuthUser {
 /**
  * Creates an encrypted JWT session cookie (valid for 30 days)
  */
-export async function createSession(user: AuthUser) {
+export async function createSessionResponse(user: AuthUser, redirectUrl: string) {
   const token = await new SignJWT({
     userId: user.id,
     email: user.email,
@@ -33,8 +34,8 @@ export async function createSession(user: AuthUser) {
     .setExpirationTime('30d')
     .sign(JWT_SECRET);
 
-  const cookieStore = await cookies();
-  cookieStore.set(COOKIE_NAME, token, {
+  const response = NextResponse.redirect(redirectUrl);
+  response.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -42,7 +43,7 @@ export async function createSession(user: AuthUser) {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   });
 
-  return token;
+  return response;
 }
 
 /**
